@@ -1,0 +1,6 @@
+export enum PositionStatus{
+    DEPOSITED = 'DEPOSITED',
+    WITHDREW1 = 'WITHDREW1',
+    WITHDREW2 = 'WITHDREW2',
+    LIQUIDATED = 'LIQUIDATED'
+}
