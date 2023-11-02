@@ -1,16 +1,17 @@
-import { Repository,EntityRepository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Deposit } from "./deposit.entity";
 import { CreateDepositDto } from './dto/create-deposit.dto';
 import { PositionStatus } from './deposit-status.enum';
 import { GetDepositFilterDto } from './dto/get-deposit-filter.dto';
 
-@EntityRepository(DepositsRepository)
+// @EntityRepository(Deposit)
 export class DepositsRepository extends Repository<Deposit>{
     
     async getDeposits(getDepositFilterDto:GetDepositFilterDto):Promise<Deposit[]>{
         const {
             address,
             collateralType,
+            index,
             depositedAmount,
             depositedTime,
             ethPrice,
@@ -24,6 +25,9 @@ export class DepositsRepository extends Repository<Deposit>{
         }
         if(collateralType){
             query.andWhere('deposit.collateralType = :collateralType',{collateralType});
+        }
+        if(index){
+            query.andWhere('deposit.index = :index',{index});
         }
         if(depositedAmount){
             query.andWhere('deposit.depositedAmount = :depositedAmount',{depositedAmount});
@@ -50,6 +54,7 @@ export class DepositsRepository extends Repository<Deposit>{
         const{
             address,
             collateralType,
+            index,
             depositedAmount,
             depositedTime,
             ethPrice,
@@ -60,6 +65,7 @@ export class DepositsRepository extends Repository<Deposit>{
         const deposit = this.create({
             address,
             collateralType,
+            index,
             depositedAmount,
             depositedTime,
             ethPrice,

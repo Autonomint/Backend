@@ -9,6 +9,9 @@ export class CreateDepositDto{
     collateralType:string;
 
     @IsNotEmpty()
+    index:number;
+
+    @IsNotEmpty()
     depositedAmount:number;
 
     @IsNotEmpty()

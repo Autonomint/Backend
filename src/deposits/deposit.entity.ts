@@ -11,6 +11,9 @@ export class Deposit{
     collateralType:string;
 
     @Column()
+    index:number;
+
+    @Column()
     depositedAmount:number;
 
     @Column()

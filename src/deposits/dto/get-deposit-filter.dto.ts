@@ -12,6 +12,10 @@ export class GetDepositFilterDto{
 
     @IsOptional()
     @IsNumber()
+    index:number;
+
+    @IsOptional()
+    @IsNumber()
     depositedAmount:number;
 
     @IsOptional()
