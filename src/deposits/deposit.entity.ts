@@ -1,9 +1,12 @@
-import { Entity,PrimaryColumnOptions,Column } from 'typeorm'
+import { Entity,Column, PrimaryGeneratedColumn } from 'typeorm'
 import { PositionStatus } from './deposit-status.enum';
 
 
 @Entity()
 export class Deposit{
+    @PrimaryGeneratedColumn('uuid')
+    id:string;
+    
     @Column()
     address:string;
 

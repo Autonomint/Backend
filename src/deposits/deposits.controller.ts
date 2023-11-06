@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query} from '@nestjs/common';
+import { Body, Controller, Get, Post, Query} from '@nestjs/common';
 import { DepositsService } from './deposits.service';
 import { PositionStatus } from './deposit-status.enum';
 import { CreateDepositDto } from './dto/create-deposit.dto';
@@ -15,7 +15,7 @@ export class DepositsController {
     }
 
     @Post()
-    createDeposit(createDepositDto:CreateDepositDto):Promise<Deposit>{
+    createDeposit(@Body() createDepositDto:CreateDepositDto):Promise<Deposit>{
         return this.depositsService.createDeposit(createDepositDto);
     }
 }

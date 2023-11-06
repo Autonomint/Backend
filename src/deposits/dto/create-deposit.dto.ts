@@ -1,10 +1,9 @@
-import { PositionStatus } from "../deposit-status.enum";
-import{IsNotEmpty,IsEnum} from "class-validator"
+import {IsNotEmpty} from "class-validator";
 
 export class CreateDepositDto{
     @IsNotEmpty()
     address:string;
-
+    
     @IsNotEmpty()
     collateralType:string;
 

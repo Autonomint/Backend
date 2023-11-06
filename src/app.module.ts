@@ -7,11 +7,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     DepositsModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 3456,
+      host: 'ec2-43-204-73-16.ap-south-1.compute.amazonaws.com',
+      port: 5432,
       username: '',
       password: '',
-      database:'',
+      database:'borrowing',
       autoLoadEntities:true,
       synchronize:true
     })],

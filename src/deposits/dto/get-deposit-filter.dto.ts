@@ -1,5 +1,6 @@
 import {IsOptional,IsEnum,IsString,IsNumber} from 'class-validator';
 import { PositionStatus } from '../deposit-status.enum';
+import { Type } from 'class-transformer';
 
 export class GetDepositFilterDto{
     @IsOptional()
@@ -11,27 +12,27 @@ export class GetDepositFilterDto{
     collateralType:string;
 
     @IsOptional()
-    @IsNumber()
+    @Type(() => Number)
     index:number;
 
     @IsOptional()
-    @IsNumber()
+    @Type(() => Number)
     depositedAmount:number;
 
     @IsOptional()
-    @IsNumber()
+    @Type(() => Number)
     depositedTime:number;
 
     @IsOptional()
-    @IsNumber()
+    @Type(() => Number)
     ethPrice:number;
 
     @IsOptional()
-    @IsNumber()
+    @Type(() => Number)
     noOfAmintMinted:number;
 
     @IsOptional()
-    @IsNumber()
+    @Type(() => Number)
     strikePrice:number;
 
     @IsOptional()

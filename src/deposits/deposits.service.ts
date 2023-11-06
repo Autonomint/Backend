@@ -4,21 +4,85 @@ import { PositionStatus } from './deposit-status.enum';
 import { CreateDepositDto } from './dto/create-deposit.dto';
 import { GetDepositFilterDto } from './dto/get-deposit-filter.dto';
 import { Deposit } from './deposit.entity';
-import { DepositsRepository } from './deposits.repository';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class DepositsService {
 
     constructor(
-        @InjectRepository(DepositsRepository)
-        private depositsRepository:DepositsRepository
+        @InjectRepository(Deposit)
+        private depositsRepository: Repository<Deposit>
     ){}
 
     getDeposits(getDepositFilterDto:GetDepositFilterDto):Promise<Deposit[]>{
-        return this.depositsRepository.getDeposits(getDepositFilterDto);
+        const {
+            address,
+            collateralType,
+            index,
+            depositedAmount,
+            depositedTime,
+            ethPrice,
+            noOfAmintMinted,
+            strikePrice,
+            status} = getDepositFilterDto;
+        const query = this.depositsRepository.createQueryBuilder('deposit');
+
+        if(address){
+            query.andWhere('deposit.address = :address',{address});
+        }
+        if(collateralType){
+            query.andWhere('deposit.collateralType = :collateralType',{collateralType});
+        }
+        if(index){
+            query.andWhere('deposit.index = :index',{index});
+        }
+        if(depositedAmount){
+            query.andWhere('deposit.depositedAmount = :depositedAmount',{depositedAmount});
+        }
+        if(depositedTime){
+            query.andWhere('deposit.depositedTime = :depositedTime',{depositedTime});
+        }
+        if(ethPrice){
+            query.andWhere('deposit.ethPrice = :ethPrice',{ethPrice});
+        }
+        if(noOfAmintMinted){
+            query.andWhere('deposit.noOfAmintMinted = :noOfAmintMinted',{noOfAmintMinted});
+        }
+        if(strikePrice){
+            query.andWhere('deposit.strikePrice = :strikePrice',{strikePrice});
+        }
+        if(status){
+            query.andWhere('deposit.status = :status',{status});
+        }
+        const deposits = query.getMany();
+        return deposits;
     }
 
-    createDeposit(createDepositDto:CreateDepositDto):Promise<Deposit>{
-        return this.depositsRepository.createDeposit(createDepositDto);
+    async createDeposit(createDepositDto:CreateDepositDto):Promise<Deposit>{
+        const{
+            address,
+            collateralType,
+            index,
+            depositedAmount,
+            depositedTime,
+            ethPrice,
+            noOfAmintMinted,
+            strikePrice
+        } = createDepositDto;
+
+        const deposit = this.depositsRepository.create({
+            address,
+            collateralType,
+            index,
+            depositedAmount,
+            depositedTime,
+            ethPrice,
+            noOfAmintMinted,
+            strikePrice,
+            status:PositionStatus.DEPOSITED
+        });
+
+        await this.depositsRepository.save(deposit);
+        return deposit;
     }
 }
