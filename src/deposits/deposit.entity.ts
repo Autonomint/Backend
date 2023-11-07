@@ -1,20 +1,19 @@
-import { Entity,Column, PrimaryGeneratedColumn } from 'typeorm'
+import { Entity,Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm'
 import { PositionStatus } from './deposit-status.enum';
+import { Depositor } from './depositor.entity';
 
 
 @Entity()
 export class Deposit{
+
     @PrimaryGeneratedColumn('uuid')
     id:string;
-    
-    @Column()
-    address:string;
-
-    @Column()
-    collateralType:string;
 
     @Column()
     index:number;
+
+    @Column()
+    collateralType:string;
 
     @Column()
     depositedAmount:number;
@@ -33,4 +32,7 @@ export class Deposit{
 
     @Column()
     status: PositionStatus;
+
+    @ManyToOne(() =>Depositor,(depositor) => depositor.deposits)
+    depositor:Depositor;
 }

@@ -3,9 +3,12 @@ import { DepositsController } from './deposits.controller';
 import { DepositsService } from './deposits.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Deposit } from './deposit.entity';
+import { Depositor } from './depositor.entity';
 
 @Module({
-  imports:[TypeOrmModule.forFeature([Deposit])],
+  imports:[
+    TypeOrmModule.forFeature([Deposit,Depositor])
+  ],
   controllers: [DepositsController],
   providers: [DepositsService]
 })

@@ -1,17 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
 import { PositionStatus } from './deposit-status.enum';
 import { CreateDepositDto } from './dto/create-deposit.dto';
 import { GetDepositFilterDto } from './dto/get-deposit-filter.dto';
 import { Deposit } from './deposit.entity';
 import { Repository } from 'typeorm';
+import { Depositor } from './depositor.entity';
 
 @Injectable()
 export class DepositsService {
 
     constructor(
         @InjectRepository(Deposit)
-        private depositsRepository: Repository<Deposit>
+        private depositsRepository: Repository<Deposit>,
+        @InjectRepository(Depositor)
+        private depositorRepository: Repository<Depositor>,
     ){}
 
     getDeposits(getDepositFilterDto:GetDepositFilterDto):Promise<Deposit[]>{
@@ -27,9 +30,6 @@ export class DepositsService {
             status} = getDepositFilterDto;
         const query = this.depositsRepository.createQueryBuilder('deposit');
 
-        if(address){
-            query.andWhere('deposit.address = :address',{address});
-        }
         if(collateralType){
             query.andWhere('deposit.collateralType = :collateralType',{collateralType});
         }
@@ -58,6 +58,33 @@ export class DepositsService {
         return deposits;
     }
 
+    async getDepositsById(id:string):Promise<Deposit>{
+        const found = await this.depositsRepository.findOne({where:{id:id}});
+        if(!found){
+            throw new NotFoundException(`Deposit with ID "${id}" not found`);
+        }else{
+            return found;
+        }
+    }
+
+    async getDepositorByAddress(address:string):Promise<Depositor>{
+        const found = await this.depositorRepository.findOne({where:{address}});
+        if(!found){
+            throw new NotFoundException(`Deposit with address "${address}" not found`);
+        }else{
+            return found;
+        }
+    }
+
+    async getDepositorIndexByAddress(address:string):Promise<number>{
+        const found = await this.depositorRepository.findOne({where:{address}});
+        if(!found){
+            return 1;
+        }else{
+            return found.totalIndex;
+        }
+    }
+
     async createDeposit(createDepositDto:CreateDepositDto):Promise<Deposit>{
         const{
             address,
@@ -70,19 +97,45 @@ export class DepositsService {
             strikePrice
         } = createDepositDto;
 
-        const deposit = this.depositsRepository.create({
-            address,
-            collateralType,
-            index,
-            depositedAmount,
-            depositedTime,
-            ethPrice,
-            noOfAmintMinted,
-            strikePrice,
-            status:PositionStatus.DEPOSITED
-        });
+        const currentIndex = await this.getDepositorIndexByAddress(address);
+        if(currentIndex == (index-1) || currentIndex == 1){
+            const deposit = this.depositsRepository.create({
+                index,
+                collateralType,
+                depositedAmount,
+                depositedTime,
+                ethPrice,
+                noOfAmintMinted,
+                strikePrice,
+                status:PositionStatus.DEPOSITED
+            });
 
-        await this.depositsRepository.save(deposit);
-        return deposit;
+            let depositor = await this.depositorRepository.findOne({where:{address}});
+
+            if(!depositor){
+                depositor = new Depositor();
+                depositor.totalDepositedAmount = depositedAmount;
+                depositor.totalAmint = noOfAmintMinted;
+                (depositor.deposits) = [deposit];
+            }else{
+                depositor.totalDepositedAmount += depositedAmount;
+                depositor.totalAmint == noOfAmintMinted;
+                (depositor.deposits).push(deposit);
+            }
+            depositor.address = address;
+            depositor.totalIndex = index;
+            depositor.totalAbond = 0;
+
+            console.log(depositor);
+            
+        
+            await this.depositsRepository.save(deposit);
+            await this.depositorRepository.save(depositor);
+            return deposit;
+        }else{
+            return ;
+        }
+
+
     }
 }
