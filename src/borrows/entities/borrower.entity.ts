@@ -1,8 +1,9 @@
 import { Column, Entity,OneToMany, PrimaryGeneratedColumn } from "typeorm";
-import { Deposit } from "./deposit.entity";
+import { BorrowInfo } from "./borrow.entity";
+import { Type } from "class-transformer";
 
 @Entity()
-export class Depositor{
+export class BorrowerInfo{
 
     @PrimaryGeneratedColumn('uuid')
     id:string;
@@ -22,7 +23,6 @@ export class Depositor{
     @Column()
     totalAbond:number;
 
-
-    @OneToMany(() => Deposit, (deposit) => deposit.depositor)
-    deposits:Deposit[]
+    @OneToMany(() => BorrowInfo, (borrowInfo) => borrowInfo.borrower)
+    borrows:BorrowInfo[]
 }

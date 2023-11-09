@@ -1,8 +1,8 @@
 import {IsOptional,IsEnum,IsString,IsNumber} from 'class-validator';
-import { PositionStatus } from '../deposit-status.enum';
+import { PositionStatus } from '../borrow-status.enum';
 import { Type } from 'class-transformer';
 
-export class GetDepositFilterDto{
+export class GetBorrowFilterDto{
     @IsOptional()
     @IsString()
     address:string;

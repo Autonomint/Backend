@@ -1,6 +1,6 @@
 import {IsNotEmpty} from "class-validator";
 
-export class CreateDepositDto{
+export class AddBorrowDto{
     @IsNotEmpty()
     address:string;
     
@@ -11,7 +11,7 @@ export class CreateDepositDto{
     index:number;
 
     @IsNotEmpty()
-    depositedAmount:number;
+    depositedAmount:string;
 
     @IsNotEmpty()
     depositedTime:number;
@@ -20,7 +20,7 @@ export class CreateDepositDto{
     ethPrice:number;
 
     @IsNotEmpty()
-    noOfAmintMinted:number;
+    noOfAmintMinted:string;
 
     @IsNotEmpty()
     strikePrice:number;
