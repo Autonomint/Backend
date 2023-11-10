@@ -24,6 +24,14 @@ export class GetCdsFilterDto{
     ethPrice:number;
 
     @IsOptional()
+    @Type(() => Number)
+    apr:number;
+
+    @IsOptional()
+    @Type(() => Number)
+    lockingPeriod:number;
+
+    @IsOptional()
     optedForLiquidation:boolean;
 
     @IsOptional()

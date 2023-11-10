@@ -10,15 +10,15 @@ import { WithdrawCdsDto } from './dto/withdraw-cds.dto';
 export class CdsController {
     constructor(private cdsService:CdsService){}
 
-    @Get('/:id')
-    getDepositsById(@Param('id') id:string):Promise<CdsInfo>{
-        return this.cdsService.getCdsDepositsById(id);
-    }
+    // @Get('/:id')
+    // getDepositsById(@Param('id') id:string):Promise<CdsInfo>{
+    //     return this.cdsService.getCdsDepositsById(id);
+    // }
 
-    @Get('/:address')
-    getDepositorIndexByAddress(@Param('address') address:string):Promise<number>{
-            return this.cdsService.getCdsDepositorIndexByAddress(address);
-    }
+    // @Get('/:address')
+    // getDepositorIndexByAddress(@Param('address') address:string):Promise<number>{
+    //         return this.cdsService.getCdsDepositorIndexByAddress(address);
+    // }
 
     @Get('/:address')
     getDepositorByAddress(@Param('address') address:string):Promise<CdsDepositorInfo>{

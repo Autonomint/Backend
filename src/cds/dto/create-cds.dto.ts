@@ -1,4 +1,4 @@
-import {IsNotEmpty} from "class-validator";
+import {IsBoolean, IsNotEmpty} from "class-validator";
 
 export class AddCdsDto{
     @IsNotEmpty()
@@ -8,13 +8,19 @@ export class AddCdsDto{
     index:number;
 
     @IsNotEmpty()
-    depositedAmount:string;
+    depositedAmint:string;
 
     @IsNotEmpty()
     depositedTime:number;
 
     @IsNotEmpty()
     ethPriceAtDeposit:number;
+
+    @IsNotEmpty()
+    apr:number;
+
+    @IsNotEmpty()
+    lockingPeriod:number;
 
     @IsNotEmpty()
     optedForLiquidation:boolean;

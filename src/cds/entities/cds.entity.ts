@@ -15,8 +15,10 @@ export class CdsInfo{
     @Column()
     index:number;
 
-    @Column({type:'decimal'})
-    depositedAmount:string;
+    @Column({
+        type:'decimal',
+        nullable:true})
+    depositedAmint:string;
 
     @Column()
     depositedTime:number;
@@ -26,13 +28,23 @@ export class CdsInfo{
 
     @Column({
         type:'decimal',
+        nullable:true})
+    apr:number;
+
+    @Column({
+        type:'decimal',
+        nullable:true})
+    lockingPeriod:number;
+
+    @Column({
+        type:'decimal',
         nullable: true })
     ethPriceAtWithdraw:number;
 
     @Column()
     liquidationAmount:string;
 
-    @Column()
+    @Column({type:'boolean'})
     optedForLiquidation:boolean;
 
     @Column({ nullable: true })
@@ -42,7 +54,6 @@ export class CdsInfo{
         type:'decimal',
         nullable: true })
     withdrawAmount:number;
-
 
     @Column({
         type:'decimal',

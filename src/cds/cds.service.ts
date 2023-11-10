@@ -47,9 +47,11 @@ export class CdsService {
         const{
             address,
             index,
-            depositedAmount,
+            depositedAmint,
             depositedTime,
             ethPriceAtDeposit,
+            apr,
+            lockingPeriod,
             liquidationAmount,
             optedForLiquidation
         } = addCdsDto;
@@ -59,9 +61,11 @@ export class CdsService {
             const cds = this.cdsRepository.create({
                 address,
                 index,
-                depositedAmount,
+                depositedAmint,
                 depositedTime,
                 ethPriceAtDeposit,
+                apr,
+                lockingPeriod,
                 liquidationAmount,
                 optedForLiquidation,
                 status:CdsPositionStatus.DEPOSITED
@@ -71,10 +75,10 @@ export class CdsService {
 
             if(!cdsDepositor){
                 cdsDepositor = new CdsDepositorInfo();
-                cdsDepositor.totalDepositedAmount = parseInt(depositedAmount);
+                cdsDepositor.totalDepositedAmint = parseInt(depositedAmint);
                 // cdsDepositor.totalLiquidationAmount = parseInt(liquidationAmount);
             }else{
-                cdsDepositor.totalDepositedAmount += parseInt(depositedAmount);
+                cdsDepositor.totalDepositedAmint += parseInt(depositedAmint);
                 // cdsDepositor.totalLiquidationAmount += parseInt(liquidationAmount);
             }
             cdsDepositor.address = address;
@@ -110,7 +114,7 @@ export class CdsService {
         found.ethPriceAtWithdraw = ethPriceAtWithdraw;
         found.withdrawAmount = withdrawAmount;
         found.withdrawEthAmount = withdrawEthAmount;
-        cdsDepositor.totalDepositedAmount -= parseInt(found.depositedAmount);
+        cdsDepositor.totalDepositedAmint -= parseInt(found.depositedAmint);
         found.status = CdsPositionStatus.WITHDREW;
 
         await this.cdsRepository.save(found);
