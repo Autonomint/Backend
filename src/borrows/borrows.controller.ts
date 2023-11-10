@@ -16,15 +16,15 @@ export class BorrowsController {
         return this.borrowsService.getDeposits(getBorrowFilterDto);
     }
 
-    @Get('/:id')
-    getDepositsById(@Param('id') id:string):Promise<BorrowInfo>{
-        return this.borrowsService.getDepositsById(id);
-    }
+    // @Get('/:id')
+    // getDepositsById(@Param('id') id:string):Promise<BorrowInfo>{
+    //     return this.borrowsService.getDepositsById(id);
+    // }
 
-    @Get('/:address')
-    getDepositorIndexByAddress(@Param('address') address:string):Promise<number>{
-            return this.borrowsService.getDepositorIndexByAddress(address);
-    }
+    // @Get('/:address')
+    // getDepositorIndexByAddress(@Param('address') address:string):Promise<number>{
+    //         return this.borrowsService.getDepositorIndexByAddress(address);
+    // }
 
     @Get('/:address')
     getDepositorByAddress(@Param('address') address:string):Promise<BorrowerInfo>{
