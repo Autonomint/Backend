@@ -5,15 +5,16 @@ import { CdsInfo } from './entities/cds.entity';
 import { CdsDepositorInfo } from './entities/cdsDepositor.entity';
 import { AddCdsDto } from './dto/create-cds.dto';
 import { WithdrawCdsDto } from './dto/withdraw-cds.dto';
+import { GetCdsDeposit } from './dto/get-cds-deposit.dto';
 
 @Controller('cds')
 export class CdsController {
     constructor(private cdsService:CdsService){}
 
-    // @Get('/:id')
-    // getDepositsById(@Param('id') id:string):Promise<CdsInfo>{
-    //     return this.cdsService.getCdsDepositsById(id);
-    // }
+    @Get()
+    getDepositsById(@Body() getCdsDeposit:GetCdsDeposit):Promise<CdsInfo>{
+        return this.cdsService.getCdsDeposit(getCdsDeposit);
+    }
 
     // @Get('/:address')
     // getDepositorIndexByAddress(@Param('address') address:string):Promise<number>{

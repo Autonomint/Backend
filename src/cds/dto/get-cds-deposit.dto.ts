@@ -1,0 +1,11 @@
+import { Type } from "class-transformer";
+import { IsNumber, IsString } from "class-validator";
+
+export class GetCdsDeposit{
+    @IsString()
+    address:string;
+
+    @IsNumber()
+    @Type(() => Number)
+    index:number;
+}

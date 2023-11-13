@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { AddCdsDto } from './dto/create-cds.dto';
 import { CdsPositionStatus } from './cds-status.enum';
 import { WithdrawCdsDto } from './dto/withdraw-cds.dto';
+import { GetCdsDeposit } from './dto/get-cds-deposit.dto';
 
 @Injectable()
 export class CdsService {
@@ -16,10 +17,15 @@ export class CdsService {
         private cdsDepositorRepository: Repository<CdsDepositorInfo>
     ){}
 
-    async getCdsDepositsById(id:string):Promise<CdsInfo>{
-        const found = await this.cdsRepository.findOne({where:{id:id}});
+    async getCdsDeposit(getCdsDeposit:GetCdsDeposit):Promise<CdsInfo>{
+        const{address,index} = getCdsDeposit;
+        const found = await this.cdsRepository.findOne(
+            {where:{
+                address:address,
+                index:index
+            }});
         if(!found){
-            throw new NotFoundException(`Deposit with ID "${id}" not found`);
+            throw new NotFoundException(`Deposit with address "${address}" & index "${index}" not found`);
         }else{
             return found;
         }
@@ -100,7 +106,9 @@ export class CdsService {
             ethPriceAtWithdraw,
             withdrawTime,
             withdrawAmount,
-            withdrawEthAmount
+            withdrawEthAmount,
+            fees,
+            feesWithdrawn
         } = cdsWithdrawDto;
 
         const found = await this.cdsRepository.findOne(
@@ -114,7 +122,10 @@ export class CdsService {
         found.ethPriceAtWithdraw = ethPriceAtWithdraw;
         found.withdrawAmount = withdrawAmount;
         found.withdrawEthAmount = withdrawEthAmount;
+        found.fees = fees;
         cdsDepositor.totalDepositedAmint -= parseInt(found.depositedAmint);
+        cdsDepositor.totalFees += parseInt(fees);
+        cdsDepositor.totalFeesWithdrawn += parseInt(feesWithdrawn);
         found.status = CdsPositionStatus.WITHDREW;
 
         await this.cdsRepository.save(found);
