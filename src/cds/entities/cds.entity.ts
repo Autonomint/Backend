@@ -15,9 +15,7 @@ export class CdsInfo{
     @Column()
     index:number;
 
-    @Column({
-        type:'decimal',
-        nullable:true})
+    @Column({nullable:true})
     depositedAmint:string;
 
     @Column()
@@ -59,6 +57,11 @@ export class CdsInfo{
         type:'decimal',
         nullable: true })
     withdrawEthAmount:number;
+
+    @Column({
+        type:'decimal',
+        nullable: true })
+    fees:string;
 
     @Column()
     status: CdsPositionStatus;

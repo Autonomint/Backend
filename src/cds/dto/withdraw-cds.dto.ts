@@ -19,4 +19,10 @@ export class WithdrawCdsDto{
 
     @IsNotEmpty()
     ethPriceAtWithdraw:number;
+
+    @IsNotEmpty()
+    fees:string;
+
+    @IsNotEmpty()
+    feesWithdrawn:string;
 }

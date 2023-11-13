@@ -15,7 +15,13 @@ export class CdsDepositorInfo{
     totalIndex:number;
 
     @Column()
-    totalDepositedAmint:number
+    totalDepositedAmint:number;
+
+    @Column({nullable:true})
+    totalFees:number;
+
+    @Column({nullable:true})
+    totalFeesWithdrawn:number;
 
     @OneToMany(() => CdsInfo, (cdsInfo) => cdsInfo.cdsDepositor)
     deposits:CdsInfo[]
