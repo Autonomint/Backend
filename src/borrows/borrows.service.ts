@@ -7,6 +7,7 @@ import { BorrowInfo } from './entities/borrow.entity';
 import { Repository } from 'typeorm';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
+import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
 
 @Injectable()
 export class BorrowsService {
@@ -68,8 +69,22 @@ export class BorrowsService {
         }
     }
 
+    async getBorrowDeposit(getBorrowDeposit:GetBorrowDeposit):Promise<BorrowInfo>{
+        const{address,index} = getBorrowDeposit;
+        const found = await this.borrowRepository.findOne(
+            {where:{
+                address:address,
+                index:index
+            }});
+        if(!found){
+            throw new NotFoundException(`Deposit with address "${address}" & index "${index}" not found`);
+        }else{
+            return found;
+        }
+    }
+
     async getDepositorByAddress(address:string):Promise<BorrowerInfo>{
-        const found = await this.borrowerRepository.findOne({where:{address}});
+        const found = await this.borrowerRepository.findOne({where:{address:address}});
         if(!found){
             throw new NotFoundException(`Deposit with address "${address}" not found`);
         }else{

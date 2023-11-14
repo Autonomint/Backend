@@ -11,7 +11,7 @@ import { GetCdsDeposit } from './dto/get-cds-deposit.dto';
 export class CdsController {
     constructor(private cdsService:CdsService){}
 
-    @Get()
+    @Get('/deposit')
     getDepositsById(@Body() getCdsDeposit:GetCdsDeposit):Promise<CdsInfo>{
         return this.cdsService.getCdsDeposit(getCdsDeposit);
     }

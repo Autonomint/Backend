@@ -6,15 +6,21 @@ import { GetBorrowFilterDto } from './dto/get-borrow-filter.dto';
 import { BorrowInfo } from './entities/borrow.entity';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
+import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
 
 @Controller('borrows')
 export class BorrowsController {
     constructor(private borrowsService: BorrowsService) {}
 
-    @Get()
-    getDeposits(@Query() getBorrowFilterDto:GetBorrowFilterDto):Promise<BorrowInfo[]>{
-        return this.borrowsService.getDeposits(getBorrowFilterDto);
+    @Get('/deposit')
+    getDepositsById(@Body() getBorrowDeposit:GetBorrowDeposit):Promise<BorrowInfo>{
+        return this.borrowsService.getBorrowDeposit(getBorrowDeposit);
     }
+
+    // @Get()
+    // getDeposits(@Query() getBorrowFilterDto:GetBorrowFilterDto):Promise<BorrowInfo[]>{
+    //     return this.borrowsService.getDeposits(getBorrowFilterDto);
+    // }
 
     // @Get('/:id')
     // getDepositsById(@Param('id') id:string):Promise<BorrowInfo>{
