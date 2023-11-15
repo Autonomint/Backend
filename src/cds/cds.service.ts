@@ -82,14 +82,15 @@ export class CdsService {
             if(!cdsDepositor){
                 cdsDepositor = new CdsDepositorInfo();
                 cdsDepositor.totalDepositedAmint = parseInt(depositedAmint);
+                cdsDepositor.deposits = [cds]
                 // cdsDepositor.totalLiquidationAmount = parseInt(liquidationAmount);
             }else{
                 cdsDepositor.totalDepositedAmint += parseInt(depositedAmint);
+                cdsDepositor.deposits.push(cds);
                 // cdsDepositor.totalLiquidationAmount += parseInt(liquidationAmount);
             }
             cdsDepositor.address = address;
             cdsDepositor.totalIndex = index;
-            cdsDepositor.deposits = [cds];
 
             await this.cdsRepository.save(cds);
             await this.cdsDepositorRepository.save(cdsDepositor);

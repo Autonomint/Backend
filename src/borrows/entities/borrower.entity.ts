@@ -23,6 +23,6 @@ export class BorrowerInfo{
     @Column()
     totalAbond:number;
 
-    @OneToMany(() => BorrowInfo, (borrowInfo) => borrowInfo.borrower)
+    @OneToMany(() => BorrowInfo, (borrowInfo) => borrowInfo.borrower,{ eager: true })
     borrows:BorrowInfo[]
 }

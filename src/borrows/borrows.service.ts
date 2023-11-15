@@ -133,6 +133,7 @@ export class BorrowsService {
                 borrower = new BorrowerInfo();
                 borrower.totalDepositedAmount = parseInt(depositedAmount);
                 borrower.totalAmint = parseInt(noOfAmintMinted);
+                borrower.borrows = [borrow];
             }else{
                 borrower.totalDepositedAmount += parseInt(depositedAmount);
                 borrower.totalAmint += parseInt(noOfAmintMinted);
@@ -140,7 +141,7 @@ export class BorrowsService {
             borrower.address = address;
             borrower.totalIndex = index;
             borrower.totalAbond = 0;
-            borrower.borrows = [borrow];
+            borrower.borrows.push(borrow);
 
             await this.borrowRepository.save(borrow);
             await this.borrowerRepository.save(borrower);

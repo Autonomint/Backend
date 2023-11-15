@@ -23,6 +23,6 @@ export class CdsDepositorInfo{
     @Column({nullable:true})
     totalFeesWithdrawn:number;
 
-    @OneToMany(() => CdsInfo, (cdsInfo) => cdsInfo.cdsDepositor)
+    @OneToMany(() => CdsInfo, (cdsInfo) => cdsInfo.cdsDepositor,{ eager: true })
     deposits:CdsInfo[]
 }
