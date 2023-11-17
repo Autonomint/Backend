@@ -2,7 +2,7 @@ import { Controller,Get,Res } from '@nestjs/common';
 import { Response } from 'express'
 import { ApiOkResponse } from '@nestjs/swagger'
 import { AppService } from './app.service';
-import * as fs from 'fs'
+import * as fs from 'fs';
 
 @Controller()
 export class AppController {
