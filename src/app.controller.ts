@@ -13,7 +13,7 @@ export class AppController {
     @Get('/.well-known/pki-validation/F894B5F937FBF4E7BEA92EDCFB4A9E96.txt')
     async giveCertificateData(@Res() res: Response) {
         try {
-        const file = fs.readFileSync('/home/ubuntu/Backend/src/.well-known/pki-validation/F894B5F937FBF4E7BEA92EDCFB4A9E96.txt');
+        const file = fs.readFileSync('/home/ubuntu/Backend/src/F894B5F937FBF4E7BEA92EDCFB4A9E96.txt');
         res.setHeader('Content-Type', 'application/octet-stream');
         res.setHeader('Content-Disposition', 'attachment; filename=F894B5F937FBF4E7BEA92EDCFB4A9E96.txt');
         res.send(file);
