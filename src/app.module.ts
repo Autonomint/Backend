@@ -12,8 +12,8 @@ import { AppService } from './app.service';
       type: 'postgres',
       host: 'ec2-43-204-73-16.ap-south-1.compute.amazonaws.com',
       port: 5432,
-      username: '',
-      password: '',
+      username: 'ubuntu',
+      password: 'AutonomintPostgres@2023',
       database:'borrowing',
       autoLoadEntities:true,
       synchronize:true
