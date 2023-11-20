@@ -7,6 +7,7 @@ import { BorrowInfo } from './entities/borrow.entity';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
+import { CriticalPositions } from './entities/liquidation.entity';
 
 @Controller('borrows')
 export class BorrowsController {
@@ -27,22 +28,27 @@ export class BorrowsController {
     //     return this.borrowsService.getDepositsById(id);
     // }
 
-    // @Get('/:address')
-    // getDepositorIndexByAddress(@Param('address') address:string):Promise<number>{
-    //         return this.borrowsService.getDepositorIndexByAddress(address);
-    // }
+    @Get('/index/:address')
+    getDepositorIndexByAddress(@Param('address') address:string):Promise<number>{
+            return this.borrowsService.getDepositorIndexByAddress(address);
+    }
 
     @Get('/:address')
     getDepositorByAddress(@Param('address') address:string):Promise<BorrowerInfo>{
         return this.borrowsService.getDepositorByAddress(address);
     }
 
-    @Post()
+    @Post('/borrowAmint')
     addBorrow(@Body() addBorrowDto:AddBorrowDto):Promise<BorrowInfo>{
         return this.borrowsService.addBorrow(addBorrowDto);
     }
 
-    @Patch()
+    @Post('/criticalposition')
+    addCriticalPositions(@Body() ethPrice:string):Promise<CriticalPositions[]>{
+        return this.borrowsService.createCriticalPositions(ethPrice);
+    }
+
+    @Patch('/withdraw')
     withdraw(@Body() withdrawDto:WithdrawDto):Promise<BorrowInfo>{
         return this.borrowsService.withdraw(withdrawDto);
     }
