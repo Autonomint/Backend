@@ -38,20 +38,16 @@ export class BorrowsController {
         return this.borrowsService.getDepositorByAddress(address);
     }
 
-<<<<<<< HEAD
     @Post('/borrowAmint')
-=======
-    @Post()
     @Header("Access-Control-Allow-Origin" , "*")
     @Header("Access-Control-Allow-Credentials" , 'true')
->>>>>>> 720f9a4b7883fad49a7e2623a45692660deb0d2b
     addBorrow(@Body() addBorrowDto:AddBorrowDto):Promise<BorrowInfo>{
         return this.borrowsService.addBorrow(addBorrowDto);
     }
 
     @Post('/criticalposition')
-    addCriticalPositions(@Body() ethPrice:string):Promise<CriticalPositions[]>{
-        return this.borrowsService.createCriticalPositions(ethPrice);
+    addCriticalPositions():Promise<CriticalPositions[]>{
+        return this.borrowsService.createCriticalPositions();
     }
 
     @Patch('/withdraw')
