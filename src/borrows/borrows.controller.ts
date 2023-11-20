@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query} from '@nestjs/common';
+import { Body, Controller, Get, Header, Param, Patch, Post, Query} from '@nestjs/common';
 import { BorrowsService } from './borrows.service';
 import { PositionStatus } from './borrow-status.enum';
 import { AddBorrowDto } from './dto/create-borrow.dto';
@@ -38,6 +38,8 @@ export class BorrowsController {
     }
 
     @Post()
+    @Header("Access-Control-Allow-Origin" , "*")
+    @Header("Access-Control-Allow-Credentials" , 'true')
     addBorrow(@Body() addBorrowDto:AddBorrowDto):Promise<BorrowInfo>{
         return this.borrowsService.addBorrow(addBorrowDto);
     }
