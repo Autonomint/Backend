@@ -25,7 +25,7 @@ export class BorrowInfo{
     depositedAmount:string;
 
     @Column()
-    depositedTime:number;
+    depositedTime:string;
 
     @Column({
         type:'decimal',
