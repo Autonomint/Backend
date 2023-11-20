@@ -24,7 +24,7 @@ export class BorrowInfo{
         nullable: true })
     depositedAmount:string;
 
-    @Column()
+    @Column({nullable:true})
     depositedTime:string;
 
     @Column({
