@@ -14,8 +14,10 @@ export class BorrowerInfo{
     @Column()
     totalIndex:number;
 
-    @Column()
-    totalDepositedAmount:number
+    @Column({
+        type:'decimal',
+        nullable: true })
+    totalDepositedAmount:number;
 
     @Column()
     totalAmint:number;

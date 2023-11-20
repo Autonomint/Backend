@@ -4,10 +4,11 @@ import { PositionStatus } from './borrow-status.enum';
 import { AddBorrowDto } from './dto/create-borrow.dto';
 import { GetBorrowFilterDto } from './dto/get-borrow-filter.dto';
 import { BorrowInfo } from './entities/borrow.entity';
-import { Repository } from 'typeorm';
+import { Repository,Equal } from 'typeorm';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
+import { CriticalPositions } from './entities/liquidation.entity';
 
 @Injectable()
 export class BorrowsService {
@@ -17,7 +18,10 @@ export class BorrowsService {
         private borrowRepository: Repository<BorrowInfo>,
         @InjectRepository(BorrowerInfo)
         private borrowerRepository: Repository<BorrowerInfo>,
+        @InjectRepository(CriticalPositions)
+        private criticalPositionsRepository: Repository<CriticalPositions>,
     ){}
+
 
     getDeposits(getBorrowFilterDto:GetBorrowFilterDto):Promise<BorrowInfo[]>{
         const {
@@ -115,6 +119,8 @@ export class BorrowsService {
 
         const currentIndex = await this.getDepositorIndexByAddress(address);
         if(currentIndex == (index-1) || currentIndex == 0){
+            const liquidationEthPrice = (ethPrice*80)/100;
+            const criticalEthPrice = (ethPrice*83)/100;
             const borrow = this.borrowRepository.create({
                 address,
                 index,
@@ -122,6 +128,8 @@ export class BorrowsService {
                 depositedAmount,
                 depositedTime,
                 ethPrice,
+                liquidationEthPrice,
+                criticalEthPrice,
                 noOfAmintMinted,
                 strikePrice,
                 status:PositionStatus.DEPOSITED
@@ -190,5 +198,26 @@ export class BorrowsService {
         await this.borrowerRepository.save(borrower);
 
         return found;
+    }
+
+    async createCriticalPositions():Promise<CriticalPositions[]>{
+        let currentEthPrice:number;
+        let positions:BorrowInfo[];
+        positions = await this.borrowRepository.findBy({
+            criticalEthPrice:Equal(currentEthPrice)
+        });
+
+        const criticalPositions = positions.map((position) =>{
+            const criticalPosition = new CriticalPositions();
+            criticalPosition.positionId = position.id
+            criticalPosition.address = position.address
+            criticalPosition.index = position.index
+            criticalPosition.depositedEthAmount = position.depositedAmount
+            criticalPosition.ethPriceAtDeposit = position.ethPrice
+            return criticalPosition;
+        })
+
+        await this.criticalPositionsRepository.save(criticalPositions);
+        return criticalPositions;
     }
 }

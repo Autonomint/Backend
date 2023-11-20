@@ -32,6 +32,16 @@ export class BorrowInfo{
         nullable: true })
     ethPrice:number;
 
+    @Column({
+        type:'decimal',
+        nullable: true })
+    liquidationEthPrice:number;
+
+    @Column({
+        type:'decimal',
+        nullable: true })
+    criticalEthPrice:number;
+
     @Column({nullable:true})
     noOfAmintMinted:string;
 
