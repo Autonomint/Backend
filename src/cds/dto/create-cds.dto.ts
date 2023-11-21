@@ -11,7 +11,7 @@ export class AddCdsDto{
     depositedAmint:string;
 
     @IsNotEmpty()
-    depositedTime:number;
+    depositedTime:string;
 
     @IsNotEmpty()
     ethPriceAtDeposit:number;

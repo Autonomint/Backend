@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query} from '@nestjs/common';
+import { Body, Controller, Get, Param,Header, Patch, Post, Query} from '@nestjs/common';
 import { CdsService } from './cds.service';
 import { GetCdsFilterDto } from './dto/get-cds-filter.dto';
 import { CdsInfo } from './entities/cds.entity';
@@ -16,22 +16,24 @@ export class CdsController {
         return this.cdsService.getCdsDeposit(getCdsDeposit);
     }
 
-    // @Get('/:address')
-    // getDepositorIndexByAddress(@Param('address') address:string):Promise<number>{
-    //         return this.cdsService.getCdsDepositorIndexByAddress(address);
-    // }
+    @Get('/index/:address')
+    getDepositorIndexByAddress(@Param('address') address:string):Promise<number>{
+            return this.cdsService.getCdsDepositorIndexByAddress(address);
+    }
 
     @Get('/:address')
     getDepositorByAddress(@Param('address') address:string):Promise<CdsDepositorInfo>{
         return this.cdsService.getCdsDepositorByAddress(address);
     }
 
-    @Post()
+    @Post('depositAmint')
+    @Header("Access-Control-Allow-Origin" , "*")
+    @Header("Access-Control-Allow-Credentials" , 'true')
     addBorrow(@Body() addCdsDto:AddCdsDto):Promise<CdsInfo>{
         return this.cdsService.addCds(addCdsDto);
     }
 
-    @Patch()
+    @Patch('withdraw')
     withdraw(@Body() withdrawCdsDto:WithdrawCdsDto):Promise<CdsInfo>{
         return this.cdsService.cdsWithdraw(withdrawCdsDto);
     }

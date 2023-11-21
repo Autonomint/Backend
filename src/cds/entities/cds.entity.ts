@@ -19,7 +19,7 @@ export class CdsInfo{
     depositedAmint:string;
 
     @Column()
-    depositedTime:number;
+    depositedTime:string;
 
     @Column({type:'decimal'})
     ethPriceAtDeposit:number;
