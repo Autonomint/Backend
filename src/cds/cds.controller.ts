@@ -26,14 +26,14 @@ export class CdsController {
         return this.cdsService.getCdsDepositorByAddress(address);
     }
 
-    @Post('depositAmint')
+    @Post('/depositAmint')
     @Header("Access-Control-Allow-Origin" , "*")
     @Header("Access-Control-Allow-Credentials" , 'true')
     addBorrow(@Body() addCdsDto:AddCdsDto):Promise<CdsInfo>{
         return this.cdsService.addCds(addCdsDto);
     }
 
-    @Patch('withdraw')
+    @Patch('/withdraw')
     withdraw(@Body() withdrawCdsDto:WithdrawCdsDto):Promise<CdsInfo>{
         return this.cdsService.cdsWithdraw(withdrawCdsDto);
     }
