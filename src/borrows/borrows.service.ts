@@ -146,12 +146,12 @@ export class BorrowsService {
 
             if(!borrower){
                 borrower = new BorrowerInfo();
-                borrower.totalDepositedAmount = BigInt(depositedAmount);
-                borrower.totalAmint = BigInt(noOfAmintMinted);
+                borrower.totalDepositedAmount = BigInt(parseInt(depositedAmount));
+                borrower.totalAmint = BigInt(parseInt(noOfAmintMinted));
                 borrower.borrows = [borrow];
             }else{
-                borrower.totalDepositedAmount = BigInt(borrower.totalDepositedAmount.toString()) + BigInt(depositedAmount);
-                borrower.totalAmint = BigInt(borrower.totalAmint.toString()) + BigInt(noOfAmintMinted);
+                borrower.totalDepositedAmount = BigInt(parseInt(borrower.totalDepositedAmount.toString())) + BigInt(parseInt(depositedAmount));
+                borrower.totalAmint = BigInt(parseInt(borrower.totalAmint.toString())) + BigInt(parseInt(noOfAmintMinted));
             }
             borrower.address = address;
             borrower.totalIndex = index;
@@ -187,16 +187,16 @@ export class BorrowsService {
         if(!found.withdrawAmount1){
             found.withdrawTime1 = withdrawTime;
             found.withdrawAmount1 = withdrawAmount;
-            borrower.totalDepositedAmount = BigInt(borrower.totalDepositedAmount.toString()) - BigInt(found.depositedAmount);
-            borrower.totalAmint = BigInt(borrower.totalAmint.toString()) - BigInt(borrowDebt);
-            borrower.totalAbond = BigInt(borrower.totalAbond.toString()) + BigInt(noOfAbond);
-            found.noOfAbondMinted = BigInt(noOfAbond);
+            borrower.totalDepositedAmount = BigInt(parseInt(borrower.totalDepositedAmount.toString())) - BigInt(parseInt(found.depositedAmount));
+            borrower.totalAmint = BigInt(parseInt(borrower.totalAmint.toString())) - BigInt(parseInt(borrowDebt));
+            borrower.totalAbond = BigInt(parseInt(borrower.totalAbond.toString())) + BigInt(parseInt(noOfAbond));
+            found.noOfAbondMinted = BigInt(parseInt(noOfAbond));
             found.amountYetToWithdraw = amountYetToWithdraw;
             found.status = PositionStatus.WITHDREW1;
         }else{
             found.withdrawTime2 = withdrawTime;  
             found.withdrawAmount2 = withdrawAmount;
-            borrower.totalAbond = BigInt(borrower.totalAbond.toString()) - BigInt(noOfAbond);
+            borrower.totalAbond = BigInt(parseInt(borrower.totalAbond.toString())) - BigInt(parseInt(noOfAbond));
             found.amountYetToWithdraw = BigInt(0);
             found.status = PositionStatus.WITHDREW2;      
         }
