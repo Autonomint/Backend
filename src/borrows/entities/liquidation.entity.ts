@@ -18,11 +18,18 @@ export class CriticalPositions{
     @Column()
     depositedEthAmount:string;
 
-    @Column()
-    ethPriceAtDeposit:number;
+    @Column({
+        type:'decimal',
+        nullable: true })
+    criticalEthPrice:BigInt;
 
     @Column({
         type:'decimal',
         nullable: true })
-    ethPriceAtLiquidation:number;
+    ethPriceAtDeposit:BigInt;
+
+    @Column({
+        type:'decimal',
+        nullable: true })
+    ethPriceAtLiquidation:BigInt;
 }
