@@ -258,7 +258,7 @@ export class BorrowsService {
     }
 
     async getSignerOrProvider(needSigner = false){
-        const provider =  new ethers.providers.JsonRpcProvider("https://sepolia.infura.io/v3/e9cf275f1ddc4b81aa62c5aa0b11ac0f");
+        const provider =  new ethers.providers.JsonRpcProvider("https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/");
         // if(needSigner){
         //     const wallet = new ethers.Wallet('',provider);
         //     return wallet;
