@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Header, Param, Patch, Post, Query} from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, Param, Patch, Post, Query} from '@nestjs/common';
 import { BorrowsService } from './borrows.service';
 import { PositionStatus } from './borrow-status.enum';
 import { AddBorrowDto } from './dto/create-borrow.dto';
@@ -46,8 +46,13 @@ export class BorrowsController {
     }
 
     @Post('/criticalposition')
-    addCriticalPositions():Promise<CriticalPositions[]>{
+    addCriticalPositions(){
         return this.borrowsService.createCriticalPositions();
+    }
+
+    @Delete('/liquidate')
+    liquidate(){
+        return this.borrowsService.liquidate();
     }
 
     @Patch('/withdraw')

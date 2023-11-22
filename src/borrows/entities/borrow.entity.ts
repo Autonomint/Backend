@@ -24,22 +24,24 @@ export class BorrowInfo{
         nullable: true })
     depositedAmount:string;
 
-    @Column({nullable:true})
-    depositedTime:string;
+    @Column({
+        type:'bigint',
+        nullable:true})
+    depositedTime:BigInt;
 
     @Column({
         type:'decimal',
-        nullable: true })
+        nullable:true})
     ethPrice:number;
 
     @Column({
         type:'decimal',
-        nullable: true })
+        nullable:true})
     liquidationEthPrice:number;
 
     @Column({
         type:'decimal',
-        nullable: true })
+        nullable:true})
     criticalEthPrice:number;
 
     @Column({nullable:true})
@@ -47,34 +49,38 @@ export class BorrowInfo{
 
     @Column({
         type:'decimal',
-        nullable: true })
+        nullable:true})
     strikePrice:number;
 
-    @Column({ nullable: true })
-    withdrawTime1:number;
-
-    @Column({ nullable: true })
-    withdrawTime2:number;
+    @Column({
+        type:'bigint',
+        nullable:true})
+    withdrawTime1:BigInt;
 
     @Column({
-        type:'decimal',
-        nullable: true })
-    withdrawAmount1:number;
+        type:'bigint',
+        nullable:true})
+    withdrawTime2:BigInt;
 
     @Column({
-        type:'decimal',
-        nullable: true })
-    withdrawAmount2:number;
+        type:'bigint',
+        nullable:true})
+    withdrawAmount1:BigInt;
 
     @Column({
-        type:'decimal',
-        nullable: true })
-    amountYetToWithdraw:number;
+        type:'bigint',
+        nullable:true})
+    withdrawAmount2:BigInt;
 
     @Column({
-        type:'decimal',
-        nullable: true })
-    noOfAbondMinted:number;
+        type:'bigint',
+        nullable:true})
+    amountYetToWithdraw:BigInt;
+
+    @Column({
+        type:'bigint',
+        nullable:true})
+    noOfAbondMinted:BigInt;
 
     @Column()
     status: PositionStatus;

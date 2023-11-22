@@ -12,13 +12,13 @@ export class WithdrawDto{
     borrowDebt:string;
 
     @IsNotEmpty()
-    withdrawTime:number;
+    withdrawTime:BigInt;
 
     @IsNotEmpty()
-    withdrawAmount:number;
+    withdrawAmount:BigInt;
 
     @IsNotEmpty()
-    amountYetToWithdraw:number;
+    amountYetToWithdraw:BigInt;
 
     @IsNotEmpty()
     noOfAbond:string;

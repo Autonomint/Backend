@@ -4,11 +4,18 @@ import { PositionStatus } from './borrow-status.enum';
 import { AddBorrowDto } from './dto/create-borrow.dto';
 import { GetBorrowFilterDto } from './dto/get-borrow-filter.dto';
 import { BorrowInfo } from './entities/borrow.entity';
-import { Repository,Equal } from 'typeorm';
+import { Repository,Equal,Not,MoreThanOrEqual } from 'typeorm';
+import { ethers,utils,BigNumber } from 'ethers';
+import  Web3Modal  from 'web3modal'
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
 import { CriticalPositions } from './entities/liquidation.entity';
+import {
+    borrowAddress,cdsAddress,treasuryAddress,optionsAddress,
+    borrowABI,cdsABI,treasuryABI
+} from '../utils/index';
+require('dotenv').config();
 
 @Injectable()
 export class BorrowsService {
@@ -120,7 +127,7 @@ export class BorrowsService {
         const currentIndex = await this.getDepositorIndexByAddress(address);
         if(currentIndex == (index-1) || currentIndex == 0){
             const liquidationEthPrice = (ethPrice*80)/100;
-            const criticalEthPrice = (ethPrice*83)/100;
+            const criticalEthPrice = (ethPrice*83)/100;;
             const borrow = this.borrowRepository.create({
                 address,
                 index,
@@ -139,16 +146,16 @@ export class BorrowsService {
 
             if(!borrower){
                 borrower = new BorrowerInfo();
-                borrower.totalDepositedAmount = parseInt(depositedAmount);
-                borrower.totalAmint = parseInt(noOfAmintMinted);
+                borrower.totalDepositedAmount = BigInt(depositedAmount);
+                borrower.totalAmint = BigInt(noOfAmintMinted);
                 borrower.borrows = [borrow];
             }else{
-                borrower.totalDepositedAmount += parseInt(depositedAmount);
-                borrower.totalAmint += parseInt(noOfAmintMinted);
+                borrower.totalDepositedAmount = BigInt(borrower.totalDepositedAmount.toString()) + BigInt(depositedAmount);
+                borrower.totalAmint = BigInt(borrower.totalAmint.toString()) + BigInt(noOfAmintMinted);
             }
             borrower.address = address;
             borrower.totalIndex = index;
-            borrower.totalAbond = 0;
+            borrower.totalAbond = BigInt(0);
             borrower.borrows.push(borrow);
 
             await this.borrowRepository.save(borrow);
@@ -180,17 +187,17 @@ export class BorrowsService {
         if(!found.withdrawAmount1){
             found.withdrawTime1 = withdrawTime;
             found.withdrawAmount1 = withdrawAmount;
-            borrower.totalDepositedAmount -= parseInt(found.depositedAmount);
-            borrower.totalAmint -= parseInt(borrowDebt);
-            borrower.totalAbond += parseInt(noOfAbond);
-            found.noOfAbondMinted = parseInt(noOfAbond);
+            borrower.totalDepositedAmount = BigInt(borrower.totalDepositedAmount.toString()) - BigInt(found.depositedAmount);
+            borrower.totalAmint = BigInt(borrower.totalAmint.toString()) - BigInt(borrowDebt);
+            borrower.totalAbond = BigInt(borrower.totalAbond.toString()) + BigInt(noOfAbond);
+            found.noOfAbondMinted = BigInt(noOfAbond);
             found.amountYetToWithdraw = amountYetToWithdraw;
             found.status = PositionStatus.WITHDREW1;
         }else{
             found.withdrawTime2 = withdrawTime;  
             found.withdrawAmount2 = withdrawAmount;
-            borrower.totalAbond -= parseInt(noOfAbond);
-            found.amountYetToWithdraw = 0;
+            borrower.totalAbond = BigInt(borrower.totalAbond.toString()) - BigInt(noOfAbond);
+            found.amountYetToWithdraw = BigInt(0);
             found.status = PositionStatus.WITHDREW2;      
         }
 
@@ -201,10 +208,12 @@ export class BorrowsService {
     }
 
     async createCriticalPositions():Promise<CriticalPositions[]>{
-        let currentEthPrice:number;
-        let positions:BorrowInfo[];
-        positions = await this.borrowRepository.findBy({
-            criticalEthPrice:Equal(currentEthPrice)
+        const provider = await this.getSignerOrProvider(false);
+        const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,provider);
+        const currentEthPrice = await borrowingContract.getUSDValue();
+        const ethPrice = currentEthPrice.toNumber();
+        const positions = await this.borrowRepository.findBy({
+             criticalEthPrice:MoreThanOrEqual(ethPrice)
         });
 
         const criticalPositions = positions.map((position) =>{
@@ -214,10 +223,47 @@ export class BorrowsService {
             criticalPosition.index = position.index
             criticalPosition.depositedEthAmount = position.depositedAmount
             criticalPosition.ethPriceAtDeposit = position.ethPrice
+            criticalPosition.ethPriceAtLiquidation = position.liquidationEthPrice
+            criticalPosition.criticalEthPrice = position.criticalEthPrice
             return criticalPosition;
         })
 
-        await this.criticalPositionsRepository.save(criticalPositions);
-        return criticalPositions;
+        const existingEntities = await this.criticalPositionsRepository.find();
+        const liquidationPositions = criticalPositions.filter(criticalPosition => !existingEntities.some(existingEntity => existingEntity.positionId === criticalPosition.positionId));
+
+        await this.criticalPositionsRepository.save(liquidationPositions);
+        return liquidationPositions;
     }
+
+    async liquidate():Promise<CriticalPositions[]>{
+        const currentEthPrice = 1600;
+        const liquidationPositions = await this.criticalPositionsRepository.findBy({
+            ethPriceAtLiquidation:MoreThanOrEqual(currentEthPrice)
+        });
+        let liquidatedPositions:BorrowInfo[];
+        for(let i=0;i<liquidationPositions.length;i++){
+            if(!liquidatedPositions){
+                liquidatedPositions = [await this.borrowRepository.findOne({where:
+                    {id:Equal(liquidationPositions[i].positionId)}})]
+            }else{
+                liquidatedPositions.push(await this.borrowRepository.findOne({where:
+                    {id:Equal(liquidationPositions[i].positionId)}
+                }));
+            }
+        }
+        liquidatedPositions.map((liquidatedPosition) =>{liquidatedPosition.status = PositionStatus.LIQUIDATED})
+        await this.criticalPositionsRepository.remove(liquidationPositions);
+        await this.borrowRepository.save(liquidatedPositions);
+        return liquidationPositions;
+    }
+
+    async getSignerOrProvider(needSigner = false){
+        const provider =  new ethers.providers.JsonRpcProvider("https://sepolia.infura.io/v3/e9cf275f1ddc4b81aa62c5aa0b11ac0f");
+        // if(needSigner){
+        //     const wallet = new ethers.Wallet('',provider);
+        //     return wallet;
+        // }
+        return provider;
+    };
+
 }

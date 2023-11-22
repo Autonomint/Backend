@@ -21,15 +21,15 @@ export class CriticalPositions{
     @Column({
         type:'decimal',
         nullable: true })
-    criticalEthPrice:BigInt;
+    criticalEthPrice:number;
 
     @Column({
         type:'decimal',
         nullable: true })
-    ethPriceAtDeposit:BigInt;
+    ethPriceAtDeposit:number;
 
     @Column({
         type:'decimal',
         nullable: true })
-    ethPriceAtLiquidation:BigInt;
+    ethPriceAtLiquidation:number;
 }
