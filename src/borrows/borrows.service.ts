@@ -121,10 +121,11 @@ export class BorrowsService {
             depositedTime,
             ethPrice,
             noOfAmintMinted,
-            strikePrice
+            strikePricePercent
         } = addBorrowDto;
 
         const currentIndex = await this.getDepositorIndexByAddress(address);
+        const strikePrice = (ethPrice * (1 + strikePricePercent/100));
         if(currentIndex == (index-1) || currentIndex == 0){
             const liquidationEthPrice = (ethPrice*80)/100;
             const criticalEthPrice = (ethPrice*83)/100;;

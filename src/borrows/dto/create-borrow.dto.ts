@@ -23,5 +23,5 @@ export class AddBorrowDto{
     noOfAmintMinted:string;
 
     @IsNotEmpty()
-    strikePrice:number;
+    strikePricePercent:number;
 }
