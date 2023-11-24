@@ -17,17 +17,17 @@ export class BorrowerInfo{
     @Column({
         type:'decimal',
         nullable: true })
-    totalDepositedAmount:BigInt;
+    totalDepositedAmount:number;
 
     @Column({
-        type:'bigint',
+        type:'decimal',
         nullable:true})
-    totalAmint:BigInt;
+    totalAmint:number;
 
     @Column({
-        type:'bigint',
+        type:'decimal',
         nullable:true})
-    totalAbond:BigInt;
+    totalAbond:number;
 
     @OneToMany(() => BorrowInfo, (borrowInfo) => borrowInfo.borrower,{ eager: true })
     borrows:BorrowInfo[]

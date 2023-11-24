@@ -118,6 +118,7 @@ export class BorrowsService {
             collateralType,
             index,
             depositedAmount,
+            normalizedAmount,
             depositedTime,
             ethPrice,
             noOfAmintMinted,
@@ -134,6 +135,7 @@ export class BorrowsService {
                 index,
                 collateralType,
                 depositedAmount,
+                normalizedAmount,
                 depositedTime,
                 ethPrice,
                 liquidationEthPrice,
@@ -147,16 +149,16 @@ export class BorrowsService {
 
             if(!borrower){
                 borrower = new BorrowerInfo();
-                borrower.totalDepositedAmount = BigInt(parseInt(depositedAmount));
-                borrower.totalAmint = BigInt(parseInt(noOfAmintMinted));
+                borrower.totalDepositedAmount = parseInt(depositedAmount);
+                borrower.totalAmint = parseInt(noOfAmintMinted);
                 borrower.borrows = [borrow];
             }else{
-                borrower.totalDepositedAmount = BigInt(parseInt(borrower.totalDepositedAmount.toString())) + BigInt(parseInt(depositedAmount));
-                borrower.totalAmint = BigInt(parseInt(borrower.totalAmint.toString())) + BigInt(parseInt(noOfAmintMinted));
+                borrower.totalDepositedAmount += parseInt(depositedAmount);
+                borrower.totalAmint += parseInt(noOfAmintMinted);
             }
             borrower.address = address;
             borrower.totalIndex = index;
-            borrower.totalAbond = BigInt(0);
+            borrower.totalAbond = 0;
             borrower.borrows.push(borrow);
 
             await this.borrowRepository.save(borrow);
@@ -188,16 +190,16 @@ export class BorrowsService {
         if(!found.withdrawAmount1){
             found.withdrawTime1 = withdrawTime;
             found.withdrawAmount1 = withdrawAmount;
-            borrower.totalDepositedAmount = BigInt(parseInt(borrower.totalDepositedAmount.toString())) - BigInt(parseInt(found.depositedAmount));
-            borrower.totalAmint = BigInt(parseInt(borrower.totalAmint.toString())) - BigInt(parseInt(borrowDebt));
-            borrower.totalAbond = BigInt(parseInt(borrower.totalAbond.toString())) + BigInt(parseInt(noOfAbond));
+            borrower.totalDepositedAmount -= parseInt(found.depositedAmount);
+            borrower.totalAmint -= parseInt(borrowDebt);
+            borrower.totalAbond += parseInt(noOfAbond);
             found.noOfAbondMinted = BigInt(parseInt(noOfAbond));
             found.amountYetToWithdraw = amountYetToWithdraw;
             found.status = PositionStatus.WITHDREW1;
         }else{
             found.withdrawTime2 = withdrawTime;  
             found.withdrawAmount2 = withdrawAmount;
-            borrower.totalAbond = BigInt(parseInt(borrower.totalAbond.toString())) - BigInt(parseInt(noOfAbond));
+            borrower.totalAbond -= (parseInt(noOfAbond));
             found.amountYetToWithdraw = BigInt(0);
             found.status = PositionStatus.WITHDREW2;      
         }
@@ -212,7 +214,7 @@ export class BorrowsService {
         const provider = await this.getSignerOrProvider(false);
         const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,provider);
         const currentEthPrice = await borrowingContract.getUSDValue();
-        const ethPrice = currentEthPrice.toNumber();
+        const ethPrice = (currentEthPrice.toNumber())/100;
         const positions = await this.borrowRepository.findBy({
              criticalEthPrice:MoreThanOrEqual(ethPrice)
         });
@@ -237,10 +239,14 @@ export class BorrowsService {
     }
 
     async liquidate():Promise<CriticalPositions[]>{
-        const currentEthPrice = 1600;
+        const provider = await this.getSignerOrProvider(false);
+        const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,provider);
+        const currentEthPrice = await borrowingContract.getUSDValue();
+        const ethPrice = currentEthPrice.toNumber()/100;
         const liquidationPositions = await this.criticalPositionsRepository.findBy({
-            ethPriceAtLiquidation:MoreThanOrEqual(currentEthPrice)
+            ethPriceAtLiquidation:MoreThanOrEqual(ethPrice)
         });
+        if(liquidationPositions){
         let liquidatedPositions:BorrowInfo[];
         for(let i=0;i<liquidationPositions.length;i++){
             if(!liquidatedPositions){
@@ -255,14 +261,15 @@ export class BorrowsService {
         liquidatedPositions.map((liquidatedPosition) =>{liquidatedPosition.status = PositionStatus.LIQUIDATED})
         await this.criticalPositionsRepository.remove(liquidationPositions);
         await this.borrowRepository.save(liquidatedPositions);
+    }
         return liquidationPositions;
     }
 
     async getSignerOrProvider(needSigner = false){
         const provider =  new ethers.providers.JsonRpcProvider("https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/");
         // if(needSigner){
-        //     const wallet = new ethers.Wallet('',provider);
-        //     return wallet;
+            //     const wallet = new ethers.Wallet('',provider);
+            //     return wallet;
         // }
         return provider;
     };

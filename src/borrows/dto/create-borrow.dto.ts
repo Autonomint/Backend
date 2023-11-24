@@ -14,6 +14,9 @@ export class AddBorrowDto{
     depositedAmount:string;
 
     @IsNotEmpty()
+    normalizedAmount:string;
+
+    @IsNotEmpty()
     depositedTime:BigInt;
 
     @IsNotEmpty()

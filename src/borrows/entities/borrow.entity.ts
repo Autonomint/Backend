@@ -25,6 +25,11 @@ export class BorrowInfo{
     depositedAmount:string;
 
     @Column({
+        type:'decimal',
+        nullable: true })
+    normalizedAmount:string;
+
+    @Column({
         type:'bigint',
         nullable:true})
     depositedTime:BigInt;
