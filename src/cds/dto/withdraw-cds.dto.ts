@@ -9,13 +9,13 @@ export class WithdrawCdsDto{
     index:number;
 
     @IsNotEmpty()
-    withdrawAmount:BigInt;
+    withdrawAmount:number;
 
     @IsNotEmpty()
     withdrawTime:BigInt;
 
     @IsNotEmpty()
-    withdrawEthAmount:BigInt;
+    withdrawEthAmount:number;
 
     @IsNotEmpty()
     ethPriceAtWithdraw:number;

@@ -81,11 +81,11 @@ export class CdsService {
 
             if(!cdsDepositor){
                 cdsDepositor = new CdsDepositorInfo();
-                cdsDepositor.totalDepositedAmint = parseInt(depositedAmint);
+                cdsDepositor.totalDepositedAmint = parseFloat(depositedAmint);
                 cdsDepositor.deposits = [cds]
                 // cdsDepositor.totalLiquidationAmount = parseInt(liquidationAmount);
             }else{
-                cdsDepositor.totalDepositedAmint += parseInt(depositedAmint);
+                cdsDepositor.totalDepositedAmint = parseFloat(cdsDepositor.totalDepositedAmint.toString()) + parseFloat(depositedAmint);
                 cdsDepositor.deposits.push(cds);
                 // cdsDepositor.totalLiquidationAmount += parseInt(liquidationAmount);
             }
@@ -119,14 +119,14 @@ export class CdsService {
             }});
         const cdsDepositor = await this.cdsDepositorRepository.findOne({where:{address:address}});
 
-        found.withdrawTime = (withdrawTime);
+        found.withdrawTime = withdrawTime;
         found.ethPriceAtWithdraw = ethPriceAtWithdraw;
         found.withdrawAmount = withdrawAmount;
         found.withdrawEthAmount = withdrawEthAmount;
         found.fees = fees;
-        cdsDepositor.totalDepositedAmint -= parseInt(found.depositedAmint);
-        cdsDepositor.totalFees += parseInt(fees);
-        cdsDepositor.totalFeesWithdrawn += parseInt(feesWithdrawn);
+        cdsDepositor.totalDepositedAmint = parseFloat(cdsDepositor.totalDepositedAmint.toString()) - parseFloat(found.depositedAmint);
+        cdsDepositor.totalFees = parseFloat(cdsDepositor.totalDepositedAmint.toString()) + parseFloat(fees);
+        cdsDepositor.totalFeesWithdrawn = parseFloat(cdsDepositor.totalDepositedAmint.toString()) + parseFloat(feesWithdrawn);
         found.status = CdsPositionStatus.WITHDREW;
 
         await this.cdsRepository.save(found);

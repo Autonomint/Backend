@@ -149,12 +149,12 @@ export class BorrowsService {
 
             if(!borrower){
                 borrower = new BorrowerInfo();
-                borrower.totalDepositedAmount = parseInt(depositedAmount);
-                borrower.totalAmint = parseInt(noOfAmintMinted);
+                borrower.totalDepositedAmount = parseFloat(depositedAmount);
+                borrower.totalAmint = parseFloat(noOfAmintMinted);
                 borrower.borrows = [borrow];
             }else{
-                borrower.totalDepositedAmount += parseInt(depositedAmount);
-                borrower.totalAmint += parseInt(noOfAmintMinted);
+                borrower.totalDepositedAmount = parseFloat(borrower.totalDepositedAmount.toString()) + parseFloat(depositedAmount);
+                borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) +  parseFloat(noOfAmintMinted);
             }
             borrower.address = address;
             borrower.totalIndex = index;
@@ -190,17 +190,17 @@ export class BorrowsService {
         if(!found.withdrawAmount1){
             found.withdrawTime1 = withdrawTime;
             found.withdrawAmount1 = withdrawAmount;
-            borrower.totalDepositedAmount -= parseInt(found.depositedAmount);
-            borrower.totalAmint -= parseInt(borrowDebt);
-            borrower.totalAbond += parseInt(noOfAbond);
-            found.noOfAbondMinted = BigInt(parseInt(noOfAbond));
+            borrower.totalDepositedAmount =  parseFloat(borrower.totalDepositedAmount.toString()) - parseFloat(found.depositedAmount);
+            borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) - parseFloat(borrowDebt);
+            borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) +  parseFloat(noOfAbond);
+            found.noOfAbondMinted = parseFloat(noOfAbond);
             found.amountYetToWithdraw = amountYetToWithdraw;
             found.status = PositionStatus.WITHDREW1;
         }else{
             found.withdrawTime2 = withdrawTime;  
             found.withdrawAmount2 = withdrawAmount;
-            borrower.totalAbond -= (parseInt(noOfAbond));
-            found.amountYetToWithdraw = BigInt(0);
+            borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) - parseFloat(noOfAbond);
+            found.amountYetToWithdraw = 0;
             found.status = PositionStatus.WITHDREW2;      
         }
 
@@ -258,7 +258,11 @@ export class BorrowsService {
                 }));
             }
         }
-        liquidatedPositions.map((liquidatedPosition) =>{liquidatedPosition.status = PositionStatus.LIQUIDATED})
+        liquidatedPositions.map(async (liquidatedPosition) =>{
+            await borrowingContract.liquidate(liquidatedPosition.address,liquidatedPosition.index,currentEthPrice);
+            liquidatedPosition.status = PositionStatus.LIQUIDATED;
+        });
+        // liquidatedPositions.map((liquidatedPosition) =>{liquidatedPosition.status = PositionStatus.LIQUIDATED})
         await this.criticalPositionsRepository.remove(liquidationPositions);
         await this.borrowRepository.save(liquidatedPositions);
     }

@@ -68,24 +68,24 @@ export class BorrowInfo{
     withdrawTime2:BigInt;
 
     @Column({
-        type:'bigint',
+        type:'decimal',
         nullable:true})
-    withdrawAmount1:BigInt;
+    withdrawAmount1:number;
 
     @Column({
-        type:'bigint',
+        type:'decimal',
         nullable:true})
-    withdrawAmount2:BigInt;
+    withdrawAmount2:number;
 
     @Column({
-        type:'bigint',
+        type:'decimal',
         nullable:true})
-    amountYetToWithdraw:BigInt;
+    amountYetToWithdraw:number;
 
     @Column({
-        type:'bigint',
+        type:'decimal',
         nullable:true})
-    noOfAbondMinted:BigInt;
+    noOfAbondMinted:number;
 
     @Column()
     status: PositionStatus;

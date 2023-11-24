@@ -55,18 +55,16 @@ export class CdsInfo{
     withdrawTime:BigInt;
 
     @Column({
-        type:'bigint',
+        type:'decimal',
         nullable:true})
-    withdrawAmount:BigInt;
-
-    @Column({
-        type:'bigint',
-        nullable:true})
-    withdrawEthAmount:BigInt;
+    withdrawAmount:number;
 
     @Column({
         type:'decimal',
-        nullable: true })
+        nullable:true})
+    withdrawEthAmount:number;
+
+    @Column({ nullable: true })
     fees:string;
 
     @Column()

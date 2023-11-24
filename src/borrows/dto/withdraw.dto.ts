@@ -15,10 +15,10 @@ export class WithdrawDto{
     withdrawTime:BigInt;
 
     @IsNotEmpty()
-    withdrawAmount:BigInt;
+    withdrawAmount:number;
 
     @IsNotEmpty()
-    amountYetToWithdraw:BigInt;
+    amountYetToWithdraw:number;
 
     @IsNotEmpty()
     noOfAbond:string;
