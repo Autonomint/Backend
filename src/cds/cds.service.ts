@@ -119,7 +119,7 @@ export class CdsService {
             }});
         const cdsDepositor = await this.cdsDepositorRepository.findOne({where:{address:address}});
 
-        found.withdrawTime = withdrawTime;
+        found.withdrawTime = (withdrawTime);
         found.ethPriceAtWithdraw = ethPriceAtWithdraw;
         found.withdrawAmount = withdrawAmount;
         found.withdrawEthAmount = withdrawEthAmount;

@@ -34,6 +34,8 @@ export class CdsController {
     }
 
     @Patch('/withdraw')
+    @Header("Access-Control-Allow-Origin" , "*")
+    @Header("Access-Control-Allow-Credentials" , 'true')
     withdraw(@Body() withdrawCdsDto:WithdrawCdsDto):Promise<CdsInfo>{
         return this.cdsService.cdsWithdraw(withdrawCdsDto);
     }

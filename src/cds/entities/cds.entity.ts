@@ -18,10 +18,14 @@ export class CdsInfo{
     @Column({nullable:true})
     depositedAmint:string;
 
-    @Column()
-    depositedTime:string;
+    @Column({
+        type:'bigint',
+        nullable:true})
+    depositedTime:BigInt;
 
-    @Column({type:'decimal'})
+    @Column({
+        type:'decimal',
+        nullable:true})
     ethPriceAtDeposit:number;
 
     @Column({
@@ -39,24 +43,26 @@ export class CdsInfo{
         nullable: true })
     ethPriceAtWithdraw:number;
 
-    @Column()
+    @Column({nullable:true})
     liquidationAmount:string;
 
     @Column({type:'boolean'})
     optedForLiquidation:boolean;
 
-    @Column({ nullable: true })
-    withdrawTime:number;
+    @Column({
+        type:'bigint',
+        nullable:true})
+    withdrawTime:BigInt;
 
     @Column({
-        type:'decimal',
-        nullable: true })
-    withdrawAmount:number;
+        type:'bigint',
+        nullable:true})
+    withdrawAmount:BigInt;
 
     @Column({
-        type:'decimal',
-        nullable: true })
-    withdrawEthAmount:number;
+        type:'bigint',
+        nullable:true})
+    withdrawEthAmount:BigInt;
 
     @Column({
         type:'decimal',

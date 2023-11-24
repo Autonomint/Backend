@@ -14,13 +14,19 @@ export class CdsDepositorInfo{
     @Column()
     totalIndex:number;
 
-    @Column()
+    @Column({
+        type:'decimal',
+        nullable: true })
     totalDepositedAmint:number;
 
-    @Column({nullable:true})
+    @Column({
+        type:'decimal',
+        nullable: true })
     totalFees:number;
 
-    @Column({nullable:true})
+    @Column({
+        type:'decimal',
+        nullable: true })
     totalFeesWithdrawn:number;
 
     @OneToMany(() => CdsInfo, (cdsInfo) => cdsInfo.cdsDepositor,{ eager: true })
