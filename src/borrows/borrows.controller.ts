@@ -46,16 +46,22 @@ export class BorrowsController {
     }
 
     @Post('/criticalposition')
+    @Header("Access-Control-Allow-Origin" , "*")
+    @Header("Access-Control-Allow-Credentials" , 'true')
     addCriticalPositions(){
         return this.borrowsService.createCriticalPositions();
     }
 
     @Delete('/liquidate')
+    @Header("Access-Control-Allow-Origin" , "*")
+    @Header("Access-Control-Allow-Credentials" , 'true')
     liquidate(){
         return this.borrowsService.liquidate();
     }
 
     @Patch('/withdraw')
+    @Header("Access-Control-Allow-Origin" , "*")
+    @Header("Access-Control-Allow-Credentials" , 'true')
     withdraw(@Body() withdrawDto:WithdrawDto):Promise<BorrowInfo>{
         return this.borrowsService.withdraw(withdrawDto);
     }
