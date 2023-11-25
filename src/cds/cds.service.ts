@@ -130,6 +130,13 @@ export class CdsService {
         found.withdrawEthAmount = withdrawEthAmountInEther;
         found.fees = feesInEther;
         cdsDepositor.totalDepositedAmint = parseFloat(cdsDepositor.totalDepositedAmint.toString()) - parseFloat(found.depositedAmint);
+        if(!cdsDepositor.totalFees){
+            cdsDepositor.totalFees = parseFloat(feesInEther);     
+            cdsDepositor.totalFeesWithdrawn = parseFloat(feesWithdrawnInEther);      
+        }else{
+            cdsDepositor.totalFees = parseFloat(cdsDepositor.totalFees.toString()) + parseFloat(feesInEther);
+            cdsDepositor.totalFeesWithdrawn = parseFloat(cdsDepositor.totalFeesWithdrawn.toString()) + parseFloat(feesWithdrawnInEther);  
+        }
         cdsDepositor.totalFees = parseFloat(cdsDepositor.totalFees.toString()) + parseFloat(feesInEther);
         cdsDepositor.totalFeesWithdrawn = parseFloat(cdsDepositor.totalFeesWithdrawn.toString()) + parseFloat(feesWithdrawnInEther);
         found.status = CdsPositionStatus.WITHDREW;
