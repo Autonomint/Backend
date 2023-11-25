@@ -195,7 +195,7 @@ export class BorrowsService {
             found.withdrawTime1 = withdrawTime;
             found.withdrawAmount1 = withdrawAmountInEther;
             borrower.totalDepositedAmount =  parseFloat(borrower.totalDepositedAmount.toString()) - parseFloat(found.depositedAmount);
-            borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) - parseFloat(borrowDebtInEther);
+            borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) - parseFloat(found.noOfAmintMinted);
             borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) +  parseFloat(noOfAbondInEther);
             found.noOfAbondMinted = parseFloat(noOfAbondInEther);
             found.amountYetToWithdraw = amountYetToWithdrawInEther;
