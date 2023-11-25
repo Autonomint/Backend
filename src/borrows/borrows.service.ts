@@ -186,21 +186,25 @@ export class BorrowsService {
                 index:index
             }});
         const borrower = await this.borrowerRepository.findOne({where:{address:address}});
+        const borrowDebtInEther = ethers.utils.formatEther(borrowDebt);
+        const withdrawAmountInEther = ethers.utils.formatEther(withdrawAmount);
+        const amountYetToWithdrawInEther = ethers.utils.formatEther(amountYetToWithdraw);
+        const noOfAbondInEther = ethers.utils.formatEther(noOfAbond);
 
         if(!found.withdrawAmount1){
             found.withdrawTime1 = withdrawTime;
-            found.withdrawAmount1 = withdrawAmount;
+            found.withdrawAmount1 = withdrawAmountInEther;
             borrower.totalDepositedAmount =  parseFloat(borrower.totalDepositedAmount.toString()) - parseFloat(found.depositedAmount);
-            borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) - parseFloat(borrowDebt);
-            borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) +  parseFloat(noOfAbond);
-            found.noOfAbondMinted = parseFloat(noOfAbond);
-            found.amountYetToWithdraw = amountYetToWithdraw;
+            borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) - parseFloat(borrowDebtInEther);
+            borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) +  parseFloat(noOfAbondInEther);
+            found.noOfAbondMinted = parseFloat(noOfAbondInEther);
+            found.amountYetToWithdraw = amountYetToWithdrawInEther;
             found.status = PositionStatus.WITHDREW1;
         }else{
             found.withdrawTime2 = withdrawTime;  
-            found.withdrawAmount2 = withdrawAmount;
-            borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) - parseFloat(noOfAbond);
-            found.amountYetToWithdraw = 0;
+            found.withdrawAmount2 = withdrawAmountInEther;
+            borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) - parseFloat(noOfAbondInEther);
+            found.amountYetToWithdraw = '0';
             found.status = PositionStatus.WITHDREW2;      
         }
 

@@ -53,12 +53,12 @@ export class CdsInfo{
     @Column({
         type:'decimal',
         nullable:true})
-    withdrawAmount:number;
+    withdrawAmount:string;
 
     @Column({
         type:'decimal',
         nullable:true})
-    withdrawEthAmount:number;
+    withdrawEthAmount:string;
 
     @Column({ nullable: true })
     fees:string;

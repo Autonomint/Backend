@@ -60,17 +60,17 @@ export class BorrowInfo{
     @Column({
         type:'decimal',
         nullable:true})
-    withdrawAmount1:number;
+    withdrawAmount1:string;
 
     @Column({
         type:'decimal',
         nullable:true})
-    withdrawAmount2:number;
+    withdrawAmount2:string;
 
     @Column({
         type:'decimal',
         nullable:true})
-    amountYetToWithdraw:number;
+    amountYetToWithdraw:string;
 
     @Column({
         type:'decimal',

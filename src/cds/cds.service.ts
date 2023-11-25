@@ -7,6 +7,7 @@ import { AddCdsDto } from './dto/create-cds.dto';
 import { CdsPositionStatus } from './cds-status.enum';
 import { WithdrawCdsDto } from './dto/withdraw-cds.dto';
 import { GetCdsDeposit } from './dto/get-cds-deposit.dto';
+import { ethers,utils,BigNumber } from 'ethers';
 
 @Injectable()
 export class CdsService {
@@ -117,16 +118,20 @@ export class CdsService {
                 address:address,
                 index:index
             }});
+        const withdrawEthAmountInEther = ethers.utils.formatEther(withdrawEthAmount);
+        const withdrawAmountInEther = ethers.utils.formatEther(withdrawAmount);
+        const feesInEther = ethers.utils.formatEther(fees);
+        const feesWithdrawnInEther = ethers.utils.formatEther(feesWithdrawn);
         const cdsDepositor = await this.cdsDepositorRepository.findOne({where:{address:address}});
 
         found.withdrawTime = withdrawTime;
         found.ethPriceAtWithdraw = ethPriceAtWithdraw;
-        found.withdrawAmount = withdrawAmount;
-        found.withdrawEthAmount = withdrawEthAmount;
-        found.fees = fees;
+        found.withdrawAmount = withdrawAmountInEther;
+        found.withdrawEthAmount = withdrawEthAmountInEther;
+        found.fees = feesInEther;
         cdsDepositor.totalDepositedAmint = parseFloat(cdsDepositor.totalDepositedAmint.toString()) - parseFloat(found.depositedAmint);
-        cdsDepositor.totalFees = parseFloat(cdsDepositor.totalDepositedAmint.toString()) + parseFloat(fees);
-        cdsDepositor.totalFeesWithdrawn = parseFloat(cdsDepositor.totalDepositedAmint.toString()) + parseFloat(feesWithdrawn);
+        cdsDepositor.totalFees = parseFloat(cdsDepositor.totalFees.toString()) + parseFloat(feesInEther);
+        cdsDepositor.totalFeesWithdrawn = parseFloat(cdsDepositor.totalFeesWithdrawn.toString()) + parseFloat(feesWithdrawnInEther);
         found.status = CdsPositionStatus.WITHDREW;
 
         await this.cdsRepository.save(found);
