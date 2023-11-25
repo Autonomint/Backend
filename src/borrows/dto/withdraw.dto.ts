@@ -12,7 +12,7 @@ export class WithdrawDto{
     borrowDebt:string;
 
     @IsNotEmpty()
-    withdrawTime:BigInt;
+    withdrawTime:string;
 
     @IsNotEmpty()
     withdrawAmount:number;

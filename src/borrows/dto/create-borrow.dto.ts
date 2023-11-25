@@ -17,7 +17,7 @@ export class AddBorrowDto{
     normalizedAmount:string;
 
     @IsNotEmpty()
-    depositedTime:BigInt;
+    depositedTime:string;
 
     @IsNotEmpty()
     ethPrice:number;

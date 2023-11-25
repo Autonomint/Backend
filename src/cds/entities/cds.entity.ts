@@ -18,10 +18,8 @@ export class CdsInfo{
     @Column({nullable:true})
     depositedAmint:string;
 
-    @Column({
-        type:'bigint',
-        nullable:true})
-    depositedTime:BigInt;
+    @Column({ nullable:true})
+    depositedTime:string;
 
     @Column({
         type:'decimal',
@@ -49,10 +47,8 @@ export class CdsInfo{
     @Column({type:'boolean'})
     optedForLiquidation:boolean;
 
-    @Column({
-        type:'bigint',
-        nullable:true})
-    withdrawTime:BigInt;
+    @Column({ nullable:true})
+    withdrawTime:string;
 
     @Column({
         type:'decimal',

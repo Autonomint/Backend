@@ -12,7 +12,7 @@ export class WithdrawCdsDto{
     withdrawAmount:number;
 
     @IsNotEmpty()
-    withdrawTime:BigInt;
+    withdrawTime:string;
 
     @IsNotEmpty()
     withdrawEthAmount:number;

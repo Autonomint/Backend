@@ -19,20 +19,14 @@ export class BorrowInfo{
     @Column()
     collateralType:string;
 
-    @Column({
-        type:'decimal',
-        nullable: true })
+    @Column({ nullable: true })
     depositedAmount:string;
 
-    @Column({
-        type:'decimal',
-        nullable: true })
+    @Column({ nullable: true })
     normalizedAmount:string;
 
-    @Column({
-        type:'bigint',
-        nullable:true})
-    depositedTime:BigInt;
+    @Column({ nullable:true})
+    depositedTime:string;
 
     @Column({
         type:'decimal',
@@ -57,15 +51,11 @@ export class BorrowInfo{
         nullable:true})
     strikePrice:number;
 
-    @Column({
-        type:'bigint',
-        nullable:true})
-    withdrawTime1:BigInt;
+    @Column({ nullable:true})
+    withdrawTime1:string;
 
-    @Column({
-        type:'bigint',
-        nullable:true})
-    withdrawTime2:BigInt;
+    @Column({ nullable:true})
+    withdrawTime2:string;
 
     @Column({
         type:'decimal',
