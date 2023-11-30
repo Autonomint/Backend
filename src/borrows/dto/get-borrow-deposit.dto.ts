@@ -7,5 +7,9 @@ export class GetBorrowDeposit{
 
     @IsNumber()
     @Type(() => Number)
+    chainId:number;
+
+    @IsNumber()
+    @Type(() => Number)
     index:number;
 }

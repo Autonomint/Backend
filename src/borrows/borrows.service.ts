@@ -82,10 +82,11 @@ export class BorrowsService {
     }
 
     async getBorrowDeposit(getBorrowDeposit:GetBorrowDeposit):Promise<BorrowInfo>{
-        const{address,index} = getBorrowDeposit;
+        const{address,index,chainId} = getBorrowDeposit;
         const found = await this.borrowRepository.findOne(
             {where:{
                 address:address,
+                chainId:chainId,
                 index:index
             }});
         if(!found){

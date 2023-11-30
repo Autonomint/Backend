@@ -16,13 +16,17 @@ export class CdsController {
         return this.cdsService.getCdsDeposit(getCdsDeposit);
     }
 
-    @Get('/index/:address')
-    getDepositorIndexByAddress(@Param('address') address:string,@Body() chainId:number):Promise<number>{
-            return this.cdsService.getCdsDepositorIndexByAddress(address,chainId);
+    @Get('/index/:chainId/:address')
+    getDepositorIndexByAddress(@Param() params:{address:string;chainId:number}):Promise<number>{
+        const address = params.address;
+        const chainId = params.chainId;
+        return this.cdsService.getCdsDepositorIndexByAddress(address,chainId);
     }
 
-    @Get('/:address')
-    getDepositorByAddress(@Param('address') address:string,@Body() chainId:number):Promise<[CdsDepositorInfo,CdsInfo[]]>{
+    @Get('/:chainId/:address')
+    getDepositorByAddress(@Param() params:{address:string;chainId:number}):Promise<[CdsDepositorInfo,CdsInfo[]]>{
+        const address = params.address;
+        const chainId = params.chainId;
         return this.cdsService.getCdsDepositorByAddress(address,chainId);
     }
 

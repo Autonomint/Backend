@@ -28,13 +28,17 @@ export class BorrowsController {
     //     return this.borrowsService.getDepositsById(id);
     // }
 
-    @Get('/index/:address')
-    getDepositorIndexByAddress(@Param('address') address:string,@Body()chainId:number):Promise<number>{
-            return this.borrowsService.getDepositorIndexByAddress(address,chainId);
+    @Get('/index/:chainId/:address')
+    getDepositorIndexByAddress(@Param() params:{address:string;chainId:number}):Promise<number>{
+        const address = params.address;
+        const chainId = params.chainId;
+        return this.borrowsService.getDepositorIndexByAddress(address,chainId);
     }
 
-    @Get('/:address')
-    getDepositorByAddress(@Param('address') address:string,@Body()chainId:number):Promise<[BorrowerInfo,BorrowInfo[]]>{
+    @Get('/:chainId/:address')
+    getDepositorByAddress(@Param() params:{address:string;chainId:number}):Promise<[BorrowerInfo,BorrowInfo[]]>{
+        const address = params.address;
+        const chainId = params.chainId;
         return this.borrowsService.getDepositorByAddress(address,chainId);
     }
 

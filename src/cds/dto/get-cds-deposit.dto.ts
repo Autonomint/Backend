@@ -7,5 +7,9 @@ export class GetCdsDeposit{
 
     @IsNumber()
     @Type(() => Number)
+    chainId:number;
+
+    @IsNumber()
+    @Type(() => Number)
     index:number;
 }

@@ -20,10 +20,11 @@ export class CdsService {
     ){}
 
     async getCdsDeposit(getCdsDeposit:GetCdsDeposit):Promise<CdsInfo>{
-        const{address,index} = getCdsDeposit;
+        const{address,index,chainId} = getCdsDeposit;
         const found = await this.cdsRepository.findOne(
             {where:{
                 address:address,
+                chainId,
                 index:index
             }});
         if(!found){
