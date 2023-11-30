@@ -35,11 +35,16 @@ export class BorrowsController {
         return this.borrowsService.getDepositorIndexByAddress(address,chainId);
     }
 
+    @Get('/:address')
+    getDepositorByAddress(@Param('address') address:string):Promise<BorrowerInfo>{
+        return this.borrowsService.getDepositorByAddress(address);
+    }
+
     @Get('/:chainId/:address')
-    getDepositorByAddress(@Param() params:{address:string;chainId:number}):Promise<[BorrowerInfo,BorrowInfo[]]>{
+    getDepositsByChainId(@Param() params:{address:string;chainId:number}):Promise<BorrowInfo[]>{
         const address = params.address;
         const chainId = params.chainId;
-        return this.borrowsService.getDepositorByAddress(address,chainId);
+        return this.borrowsService.getDepositsByChainId(address,chainId);
     }
 
     @Post('/borrowAmint')

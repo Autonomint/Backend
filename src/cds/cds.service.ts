@@ -34,13 +34,12 @@ export class CdsService {
         }
     }
 
-    async getCdsDepositorByAddress(address:string,chainId:number):Promise<[CdsDepositorInfo,CdsInfo[]]>{
+    async getCdsDepositorByAddress(address:string):Promise<CdsDepositorInfo>{
         const found = await this.cdsDepositorRepository.findOne({where:{address}});
         if(!found){
             throw new NotFoundException(`Deposit with address "${address}" not found`);
         }else{
-            const deposits = await this.getDepositsByChainId(address,chainId)
-            return [found,deposits];
+            return found;
         }
     }
 

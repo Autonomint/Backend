@@ -96,13 +96,12 @@ export class BorrowsService {
         }
     }
 
-    async getDepositorByAddress(address:string,chainId:number):Promise<[BorrowerInfo,BorrowInfo[]]>{
+    async getDepositorByAddress(address:string):Promise<BorrowerInfo>{
         const found = await this.borrowerRepository.findOne({where:{address:address}});
         if(!found){
             throw new NotFoundException(`Deposit with address "${address}" not found`);
         }else{
-            const deposits = await this.getDepositsByChainId(address,chainId)
-            return [found,deposits];
+            return found;
         }
     }
 

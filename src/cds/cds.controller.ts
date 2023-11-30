@@ -23,11 +23,16 @@ export class CdsController {
         return this.cdsService.getCdsDepositorIndexByAddress(address,chainId);
     }
 
+    @Get('/:address')
+    getDepositorByAddress(@Param() address:string):Promise<CdsDepositorInfo>{
+        return this.cdsService.getCdsDepositorByAddress(address);
+    }
+
     @Get('/:chainId/:address')
-    getDepositorByAddress(@Param() params:{address:string;chainId:number}):Promise<[CdsDepositorInfo,CdsInfo[]]>{
+    getDepositsByChainId(@Param() params:{address:string;chainId:number}):Promise<CdsInfo[]>{
         const address = params.address;
         const chainId = params.chainId;
-        return this.cdsService.getCdsDepositorByAddress(address,chainId);
+        return this.cdsService.getDepositsByChainId(address,chainId);
     }
 
     @Post('/depositAmint')
