@@ -24,7 +24,7 @@ export class CdsController {
     }
 
     @Get('/:address')
-    getDepositorByAddress(@Param() address:string):Promise<CdsDepositorInfo>{
+    getDepositorByAddress(@Param('address') address:string):Promise<CdsDepositorInfo>{
         return this.cdsService.getCdsDepositorByAddress(address);
     }
 
