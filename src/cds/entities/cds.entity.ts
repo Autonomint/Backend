@@ -12,6 +12,9 @@ export class CdsInfo{
     @Column()
     address:string;
 
+    @Column({nullable:true})
+    chainId:number;
+
     @Column()
     index:number;
 

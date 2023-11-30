@@ -29,13 +29,13 @@ export class BorrowsController {
     // }
 
     @Get('/index/:address')
-    getDepositorIndexByAddress(@Param('address') address:string):Promise<number>{
-            return this.borrowsService.getDepositorIndexByAddress(address);
+    getDepositorIndexByAddress(@Param('address') address:string,@Body()chainId:number):Promise<number>{
+            return this.borrowsService.getDepositorIndexByAddress(address,chainId);
     }
 
     @Get('/:address')
-    getDepositorByAddress(@Param('address') address:string):Promise<BorrowerInfo>{
-        return this.borrowsService.getDepositorByAddress(address);
+    getDepositorByAddress(@Param('address') address:string,@Body()chainId:number):Promise<[BorrowerInfo,BorrowInfo[]]>{
+        return this.borrowsService.getDepositorByAddress(address,chainId);
     }
 
     @Post('/borrowAmint')

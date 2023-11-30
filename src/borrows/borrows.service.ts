@@ -13,8 +13,9 @@ import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
 import { CriticalPositions } from './entities/liquidation.entity';
 import {
     borrowAddress,cdsAddress,treasuryAddress,optionsAddress,
-    borrowABI,cdsABI,treasuryABI
+    borrowABI,cdsABI
 } from '../utils/index';
+import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
 require('dotenv').config();
 
 @Injectable()
@@ -94,29 +95,48 @@ export class BorrowsService {
         }
     }
 
-    async getDepositorByAddress(address:string):Promise<BorrowerInfo>{
+    async getDepositorByAddress(address:string,chainId:number):Promise<[BorrowerInfo,BorrowInfo[]]>{
         const found = await this.borrowerRepository.findOne({where:{address:address}});
         if(!found){
             throw new NotFoundException(`Deposit with address "${address}" not found`);
         }else{
-            return found;
+            const deposits = await this.getDepositsByChainId(address,chainId)
+            return [found,deposits];
         }
     }
 
-    async getDepositorIndexByAddress(address:string):Promise<number>{
+    async getDepositorIndexByAddress(address:string,chainId:number):Promise<number>{
         const found = await this.borrowerRepository.findOne({where:{address}});
         if(!found){
             return 0;
         }else{
-            return found.totalIndex;
+            if(chainId == 11155111){
+                return found.totalIndexInEthereum ? found.totalIndexInEthereum : 0;
+            }else if(chainId == 80001){
+                return found.totalIndexInPolygon ? found.totalIndexInPolygon : 0;
+            }
+        }
+    }
+
+    async getDepositsByChainId(address:string,chainId:number):Promise<BorrowInfo[]>{
+        const found = await this.borrowRepository.findBy({
+            address:Equal(address),
+            chainId:Equal(chainId)
+        })
+        if(!found){
+            throw new NotFoundException(`Deposit with address "${address}" & chainID "${chainId}" not found`);
+        }else{
+            return found;
         }
     }
 
     async addBorrow(addBorrowDto:AddBorrowDto):Promise<BorrowInfo>{
         const{
             address,
+            chainId,
             collateralType,
             index,
+            downsideProtectionPercentage,
             depositedAmount,
             normalizedAmount,
             depositedTime,
@@ -125,15 +145,17 @@ export class BorrowsService {
             strikePricePercent
         } = addBorrowDto;
 
-        const currentIndex = await this.getDepositorIndexByAddress(address);
+        const currentIndex = await this.getDepositorIndexByAddress(address,chainId);
         const strikePrice = (ethPrice * (1 + strikePricePercent/100));
         if(currentIndex == (index-1) || currentIndex == 0){
             const liquidationEthPrice = (ethPrice*80)/100;
-            const criticalEthPrice = (ethPrice*83)/100;;
+            const criticalEthPrice = (ethPrice*83)/100;
             const borrow = this.borrowRepository.create({
                 address,
                 index,
+                chainId,
                 collateralType,
+                downsideProtectionPercentage,
                 depositedAmount,
                 normalizedAmount,
                 depositedTime,
@@ -149,17 +171,43 @@ export class BorrowsService {
 
             if(!borrower){
                 borrower = new BorrowerInfo();
-                borrower.totalDepositedAmount = parseFloat(depositedAmount);
-                borrower.totalAmint = parseFloat(noOfAmintMinted);
+                if(chainId == 11155111){
+                    borrower.totalDepositedAmountInEthereum = parseFloat(depositedAmount);
+                    borrower.totalAmintInEthereum = parseFloat(noOfAmintMinted);
+                    borrower.totalAbondInEthereum = 0;
+                    borrower.totalIndexInEthereum = index;
+                }else if(chainId == 80001){
+                    borrower.totalDepositedAmountInPolygon = parseFloat(depositedAmount);
+                    borrower.totalAmintInPolygon = parseFloat(noOfAmintMinted);
+                    borrower.totalAbondInPolygon = 0;
+                    borrower.totalIndexInPolygon = index;
+                }
                 borrower.borrows = [borrow];
             }else{
-                borrower.totalDepositedAmount = parseFloat(borrower.totalDepositedAmount.toString()) + parseFloat(depositedAmount);
-                borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) +  parseFloat(noOfAmintMinted);
+                if(chainId == 11155111){
+                    if(borrower.totalIndexInEthereum){
+                        borrower.totalDepositedAmountInEthereum = parseFloat(borrower.totalDepositedAmountInEthereum.toString()) + parseFloat(depositedAmount);
+                        borrower.totalAmintInEthereum = parseFloat(borrower.totalAmintInEthereum.toString()) +  parseFloat(noOfAmintMinted);
+                    }else{
+                        borrower.totalDepositedAmountInEthereum = parseFloat(depositedAmount);
+                        borrower.totalAmintInEthereum = parseFloat(noOfAmintMinted);
+                        borrower.totalAbondInEthereum = 0;
+                    }
+                    borrower.totalIndexInEthereum = index;
+                }else if(chainId == 80001){
+                    if(borrower.totalIndexInPolygon){
+                        borrower.totalDepositedAmountInPolygon = parseFloat(borrower.totalDepositedAmountInPolygon.toString()) + parseFloat(depositedAmount);
+                        borrower.totalAmintInPolygon = parseFloat(borrower.totalAmintInPolygon.toString()) +  parseFloat(noOfAmintMinted);  
+                    }else{
+                        borrower.totalDepositedAmountInPolygon = parseFloat(depositedAmount);
+                        borrower.totalAmintInPolygon = parseFloat(noOfAmintMinted);
+                        borrower.totalAbondInPolygon = 0;
+                    }
+                    borrower.totalIndexInPolygon = index;
+                }
+                borrower.borrows.push(borrow);
             }
             borrower.address = address;
-            borrower.totalIndex = index;
-            borrower.totalAbond = 0;
-            borrower.borrows.push(borrow);
 
             await this.borrowRepository.save(borrow);
             await this.borrowerRepository.save(borrower);
@@ -172,6 +220,7 @@ export class BorrowsService {
     async withdraw(withdrawDto:WithdrawDto):Promise<BorrowInfo>{
         const{
             address,
+            chainId,
             index,
             withdrawTime,
             borrowDebt,
@@ -183,10 +232,11 @@ export class BorrowsService {
         const found = await this.borrowRepository.findOne(
             {where:{
                 address:address,
+                chainId:chainId,
                 index:index
             }});
         const borrower = await this.borrowerRepository.findOne({where:{address:address}});
-        const borrowDebtInEther = ethers.utils.formatEther(borrowDebt);
+        // const borrowDebtInEther = ethers.utils.formatEther(borrowDebt);
         const withdrawAmountInEther = ethers.utils.formatEther(withdrawAmount);
         const amountYetToWithdrawInEther = ethers.utils.formatEther(amountYetToWithdraw);
         const noOfAbondInEther = ethers.utils.formatEther(noOfAbond);
@@ -194,16 +244,26 @@ export class BorrowsService {
         if(!found.withdrawAmount1){
             found.withdrawTime1 = withdrawTime;
             found.withdrawAmount1 = withdrawAmountInEther;
-            borrower.totalDepositedAmount =  parseFloat(borrower.totalDepositedAmount.toString()) - parseFloat(found.depositedAmount);
-            borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) - parseFloat(found.noOfAmintMinted);
-            borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) +  parseFloat(noOfAbondInEther);
             found.noOfAbondMinted = parseFloat(noOfAbondInEther);
             found.amountYetToWithdraw = amountYetToWithdrawInEther;
             found.status = PositionStatus.WITHDREW1;
+            if(chainId == 11155111){
+                borrower.totalDepositedAmountInEthereum = parseFloat(borrower.totalDepositedAmountInEthereum.toString()) - parseFloat(found.depositedAmount);
+                borrower.totalAmintInEthereum = parseFloat(borrower.totalAmintInEthereum.toString()) - parseFloat(found.noOfAmintMinted);
+                borrower.totalAbondInEthereum = parseFloat(borrower.totalAbondInEthereum.toString()) +  parseFloat(noOfAbondInEther);
+            }else if(chainId == 80001){
+                borrower.totalDepositedAmountInPolygon =  parseFloat(borrower.totalDepositedAmountInPolygon.toString()) - parseFloat(found.depositedAmount);
+                borrower.totalAmintInPolygon = parseFloat(borrower.totalAmintInPolygon.toString()) - parseFloat(found.noOfAmintMinted);
+                borrower.totalAbondInPolygon = parseFloat(borrower.totalAbondInPolygon.toString()) +  parseFloat(noOfAbondInEther);
+            }
         }else{
             found.withdrawTime2 = withdrawTime;  
             found.withdrawAmount2 = withdrawAmountInEther;
-            borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) - parseFloat(noOfAbondInEther);
+            if(chainId == 11155111){
+                borrower.totalAbondInEthereum = parseFloat(borrower.totalAbondInEthereum.toString()) - parseFloat(noOfAbondInEther);
+            }else if(chainId == 80001){
+                borrower.totalAbondInPolygon = parseFloat(borrower.totalAbondInPolygon.toString()) - parseFloat(noOfAbondInEther);
+            }
             found.amountYetToWithdraw = '0';
             found.status = PositionStatus.WITHDREW2;      
         }
@@ -243,7 +303,7 @@ export class BorrowsService {
     }
 
     async liquidate():Promise<CriticalPositions[]>{
-        const provider = await this.getSignerOrProvider(false);
+        const provider = await this.getSignerOrProvider(true);
         const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,provider);
         const currentEthPrice = await borrowingContract.getUSDValue();
         const ethPrice = currentEthPrice.toNumber()/100;
@@ -276,8 +336,8 @@ export class BorrowsService {
     async getSignerOrProvider(needSigner = false){
         const provider =  new ethers.providers.JsonRpcProvider("https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/");
         // if(needSigner){
-            //     const wallet = new ethers.Wallet('',provider);
-            //     return wallet;
+                //     const wallet = new ethers.Wallet('',provider);
+                //     return wallet;
         // }
         return provider;
     };

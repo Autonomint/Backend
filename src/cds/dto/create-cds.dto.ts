@@ -5,6 +5,9 @@ export class AddCdsDto{
     address:string;
 
     @IsNotEmpty()
+    chainId:number;
+
+    @IsNotEmpty()
     index:number;
 
     @IsNotEmpty()

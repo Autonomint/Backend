@@ -15,7 +15,7 @@ export class CriticalPositions{
     @Column()
     index:number;
 
-    @Column()
+    @Column({nullable:true})
     depositedEthAmount:string;
 
     @Column({

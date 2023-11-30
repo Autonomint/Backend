@@ -11,23 +11,41 @@ export class CdsDepositorInfo{
     @Column()
     address:string;
 
-    @Column()
-    totalIndex:number;
+    @Column({nullable:true})
+    totalIndexInEthereum:number;
+
+    @Column({nullable:true})
+    totalIndexInPolygon:number;
 
     @Column({
         type:'decimal',
         nullable: true })
-    totalDepositedAmint:number;
+    totalDepositedAmintInEthereum:number;
 
     @Column({
         type:'decimal',
         nullable: true })
-    totalFees:number;
+    totalDepositedAmintInPolygon:number;
 
     @Column({
         type:'decimal',
         nullable: true })
-    totalFeesWithdrawn:number;
+    totalFeesInEthereum:number;
+
+    @Column({
+        type:'decimal',
+        nullable: true })
+    totalFeesInPolygon:number;
+
+    @Column({
+        type:'decimal',
+        nullable: true })
+    totalFeesWithdrawnInEthereum:number;
+
+    @Column({
+        type:'decimal',
+        nullable: true })
+    totalFeesWithdrawnInPolygon:number;
 
     @OneToMany(() => CdsInfo, (cdsInfo) => cdsInfo.cdsDepositor,{ eager: true })
     deposits:CdsInfo[]

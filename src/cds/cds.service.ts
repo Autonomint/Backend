@@ -2,12 +2,13 @@ import { Injectable,NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CdsInfo } from './entities/cds.entity';
 import { CdsDepositorInfo } from './entities/cdsDepositor.entity';
-import { Repository } from 'typeorm';
+import { Repository,Equal } from 'typeorm';
 import { AddCdsDto } from './dto/create-cds.dto';
 import { CdsPositionStatus } from './cds-status.enum';
 import { WithdrawCdsDto } from './dto/withdraw-cds.dto';
 import { GetCdsDeposit } from './dto/get-cds-deposit.dto';
 import { ethers,utils,BigNumber } from 'ethers';
+import { GetCdsDepositByChainId } from './dto/get-cds-deposit-by-chainid.dto';
 
 @Injectable()
 export class CdsService {
@@ -32,21 +33,38 @@ export class CdsService {
         }
     }
 
-    async getCdsDepositorByAddress(address:string):Promise<CdsDepositorInfo>{
+    async getCdsDepositorByAddress(address:string,chainId:number):Promise<[CdsDepositorInfo,CdsInfo[]]>{
         const found = await this.cdsDepositorRepository.findOne({where:{address}});
         if(!found){
             throw new NotFoundException(`Deposit with address "${address}" not found`);
         }else{
-            return found;
+            const deposits = await this.getDepositsByChainId(address,chainId)
+            return [found,deposits];
         }
     }
 
-    async getCdsDepositorIndexByAddress(address:string):Promise<number>{
+    async getCdsDepositorIndexByAddress(address:string,chainId:number):Promise<number>{
         const found = await this.cdsDepositorRepository.findOne({where:{address}});
         if(!found){
             return 0;
         }else{
-            return found.totalIndex;
+            if(chainId == 11155111){
+                return found.totalIndexInEthereum ? found.totalIndexInEthereum : 0;
+            }else if(chainId == 80001){
+                return found.totalIndexInPolygon ? found.totalIndexInPolygon : 0;
+            }
+        }
+    }
+
+    async getDepositsByChainId(address:string,chainId:number):Promise<CdsInfo[]>{
+        const found = await this.cdsRepository.findBy({
+            address:Equal(address),
+            chainId:Equal(chainId)
+        })
+        if(!found){
+            throw new NotFoundException(`Deposit with address "${address}" & chainID "${chainId}" not found`);
+        }else{
+            return found;
         }
     }
 
@@ -54,6 +72,7 @@ export class CdsService {
         const{
             address,
             index,
+            chainId,
             depositedAmint,
             depositedTime,
             ethPriceAtDeposit,
@@ -63,11 +82,12 @@ export class CdsService {
             optedForLiquidation
         } = addCdsDto;
 
-        const currentIndex = await this.getCdsDepositorIndexByAddress(address);
+        const currentIndex = await this.getCdsDepositorIndexByAddress(address,chainId);
         if(currentIndex == (index-1) || currentIndex == 0){
             const cds = this.cdsRepository.create({
                 address,
                 index,
+                chainId,
                 depositedAmint,
                 depositedTime,
                 ethPriceAtDeposit,
@@ -82,16 +102,35 @@ export class CdsService {
 
             if(!cdsDepositor){
                 cdsDepositor = new CdsDepositorInfo();
-                cdsDepositor.totalDepositedAmint = parseFloat(depositedAmint);
+                if(chainId == 11155111){
+                    cdsDepositor.totalDepositedAmintInEthereum = parseFloat(depositedAmint);
+                    cdsDepositor.totalIndexInEthereum = index;
+                }else if(chainId == 80001){
+                    cdsDepositor.totalDepositedAmintInPolygon = parseFloat(depositedAmint);
+                    cdsDepositor.totalIndexInPolygon = index;
+                }
                 cdsDepositor.deposits = [cds]
                 // cdsDepositor.totalLiquidationAmount = parseInt(liquidationAmount);
             }else{
-                cdsDepositor.totalDepositedAmint = parseFloat(cdsDepositor.totalDepositedAmint.toString()) + parseFloat(depositedAmint);
+                if(chainId == 11155111){
+                    if(cdsDepositor.totalIndexInEthereum > 0){
+                        cdsDepositor.totalDepositedAmintInEthereum = parseFloat(cdsDepositor.totalDepositedAmintInEthereum.toString()) + parseFloat(depositedAmint);
+                    }else{
+                        cdsDepositor.totalDepositedAmintInEthereum = parseFloat(depositedAmint);
+                    }
+                    cdsDepositor.totalIndexInEthereum = index;
+                }else if(chainId == 80001){
+                    if(cdsDepositor.totalIndexInEthereum > 0){
+                        cdsDepositor.totalDepositedAmintInEthereum = parseFloat(cdsDepositor.totalDepositedAmintInEthereum.toString()) + parseFloat(depositedAmint);
+                    }else{
+                        cdsDepositor.totalDepositedAmintInEthereum = parseFloat(depositedAmint);
+                    }
+                    cdsDepositor.totalIndexInEthereum = index;
+                }
                 cdsDepositor.deposits.push(cds);
                 // cdsDepositor.totalLiquidationAmount += parseInt(liquidationAmount);
             }
             cdsDepositor.address = address;
-            cdsDepositor.totalIndex = index;
 
             await this.cdsRepository.save(cds);
             await this.cdsDepositorRepository.save(cdsDepositor);
@@ -105,6 +144,7 @@ export class CdsService {
         const{
             address,
             index,
+            chainId,
             ethPriceAtWithdraw,
             withdrawTime,
             withdrawAmount,
@@ -116,6 +156,7 @@ export class CdsService {
         const found = await this.cdsRepository.findOne(
             {where:{
                 address:address,
+                chainId:chainId,
                 index:index
             }});
         const withdrawEthAmountInEther = ethers.utils.formatEther(withdrawEthAmount);
@@ -129,14 +170,26 @@ export class CdsService {
         found.withdrawAmount = withdrawAmountInEther;
         found.withdrawEthAmount = withdrawEthAmountInEther;
         found.fees = feesInEther;
-        cdsDepositor.totalDepositedAmint = parseFloat(cdsDepositor.totalDepositedAmint.toString()) - parseFloat(found.depositedAmint);
-        if(!cdsDepositor.totalFees){
-            cdsDepositor.totalFees = parseFloat(feesInEther);     
-            cdsDepositor.totalFeesWithdrawn = parseFloat(feesWithdrawnInEther);      
-        }else{
-            cdsDepositor.totalFees = parseFloat(cdsDepositor.totalFees.toString()) + parseFloat(feesInEther);
-            cdsDepositor.totalFeesWithdrawn = parseFloat(cdsDepositor.totalFeesWithdrawn.toString()) + parseFloat(feesWithdrawnInEther);  
+        if(chainId == 11155111){
+            cdsDepositor.totalDepositedAmintInEthereum = parseFloat(cdsDepositor.totalDepositedAmintInEthereum.toString()) - parseFloat(found.depositedAmint);
+            if(!cdsDepositor.totalFeesInEthereum){
+                cdsDepositor.totalFeesInEthereum = parseFloat(feesInEther);     
+                cdsDepositor.totalFeesWithdrawnInEthereum = parseFloat(feesWithdrawnInEther);      
+            }else{
+                cdsDepositor.totalFeesInEthereum = parseFloat(cdsDepositor.totalFeesInEthereum.toString()) + parseFloat(feesInEther);
+                cdsDepositor.totalFeesWithdrawnInEthereum = parseFloat(cdsDepositor.totalFeesWithdrawnInEthereum.toString()) + parseFloat(feesWithdrawnInEther);  
+            } 
+        }else if(chainId == 80001){
+            cdsDepositor.totalDepositedAmintInPolygon = parseFloat(cdsDepositor.totalDepositedAmintInPolygon.toString()) - parseFloat(found.depositedAmint);
+            if(!cdsDepositor.totalFeesInPolygon){
+                cdsDepositor.totalFeesInPolygon = parseFloat(feesInEther);     
+                cdsDepositor.totalFeesWithdrawnInPolygon = parseFloat(feesWithdrawnInEther);      
+            }else{
+                cdsDepositor.totalFeesInPolygon = parseFloat(cdsDepositor.totalFeesInPolygon.toString()) + parseFloat(feesInEther);
+                cdsDepositor.totalFeesWithdrawnInPolygon = parseFloat(cdsDepositor.totalFeesWithdrawnInPolygon.toString()) + parseFloat(feesWithdrawnInEther);  
+            }
         }
+
         found.status = CdsPositionStatus.WITHDREW;
 
         await this.cdsRepository.save(found);

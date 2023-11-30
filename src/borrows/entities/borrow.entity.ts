@@ -13,11 +13,19 @@ export class BorrowInfo{
     @Column()
     address:string;
 
+    @Column({nullable:true})
+    chainId:number;
+
     @Column()
     index:number;
 
     @Column()
     collateralType:string;
+
+    @Column({
+        type:'decimal',
+        nullable:true})
+    downsideProtectionPercentage:number
 
     @Column({ nullable: true })
     depositedAmount:string;
@@ -57,19 +65,13 @@ export class BorrowInfo{
     @Column({ nullable:true})
     withdrawTime2:string;
 
-    @Column({
-        type:'decimal',
-        nullable:true})
+    @Column({nullable:true})
     withdrawAmount1:string;
 
-    @Column({
-        type:'decimal',
-        nullable:true})
+    @Column({ nullable:true})
     withdrawAmount2:string;
 
-    @Column({
-        type:'decimal',
-        nullable:true})
+    @Column({nullable:true})
     amountYetToWithdraw:string;
 
     @Column({

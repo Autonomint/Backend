@@ -6,6 +6,9 @@ export class WithdrawCdsDto{
     address:string;
 
     @IsNotEmpty()
+    chainId:number;
+
+    @IsNotEmpty()
     index:number;
 
     @IsNotEmpty()

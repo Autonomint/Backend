@@ -3,12 +3,18 @@ import {IsNotEmpty} from "class-validator";
 export class AddBorrowDto{
     @IsNotEmpty()
     address:string;
+
+    @IsNotEmpty()
+    chainId:number;
     
     @IsNotEmpty()
     collateralType:string;
 
     @IsNotEmpty()
     index:number;
+
+    @IsNotEmpty()
+    downsideProtectionPercentage:number
 
     @IsNotEmpty()
     depositedAmount:string;
