@@ -27,6 +27,11 @@ export class BorrowInfo{
         nullable:true})
     downsideProtectionPercentage:number
 
+    @Column({
+        type:'decimal',
+        nullable:true})
+    aprAtDeposit:number
+
     @Column({ nullable: true })
     depositedAmount:string;
 

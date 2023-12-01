@@ -11,6 +11,9 @@ export class AddCdsDto{
     index:number;
 
     @IsNotEmpty()
+    aprAtDeposit:number;
+
+    @IsNotEmpty()
     depositedAmint:string;
 
     @IsNotEmpty()
@@ -18,9 +21,6 @@ export class AddCdsDto{
 
     @IsNotEmpty()
     ethPriceAtDeposit:number;
-
-    @IsNotEmpty()
-    apr:number;
 
     @IsNotEmpty()
     lockingPeriod:number;
