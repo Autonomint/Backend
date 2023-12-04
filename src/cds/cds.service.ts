@@ -120,12 +120,12 @@ export class CdsService {
                     }
                     cdsDepositor.totalIndexInEthereum = index;
                 }else if(chainId == 80001){
-                    if(cdsDepositor.totalIndexInEthereum > 0){
+                    if(cdsDepositor.totalIndexInPolygon > 0){
                         cdsDepositor.totalDepositedAmintInPolygon = parseFloat(cdsDepositor.totalDepositedAmintInPolygon.toString()) + parseFloat(depositedAmint);
                     }else{
                         cdsDepositor.totalDepositedAmintInPolygon = parseFloat(depositedAmint);
                     }
-                    cdsDepositor.totalIndexInEthereum = index;
+                    cdsDepositor.totalIndexInPolygon = index;
                 }
                 cdsDepositor.deposits.push(cds);
                 // cdsDepositor.totalLiquidationAmount += parseInt(liquidationAmount);
