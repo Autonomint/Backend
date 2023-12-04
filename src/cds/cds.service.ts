@@ -121,9 +121,9 @@ export class CdsService {
                     cdsDepositor.totalIndexInEthereum = index;
                 }else if(chainId == 80001){
                     if(cdsDepositor.totalIndexInEthereum > 0){
-                        cdsDepositor.totalDepositedAmintInEthereum = parseFloat(cdsDepositor.totalDepositedAmintInEthereum.toString()) + parseFloat(depositedAmint);
+                        cdsDepositor.totalDepositedAmintInPolygon = parseFloat(cdsDepositor.totalDepositedAmintInPolygon.toString()) + parseFloat(depositedAmint);
                     }else{
-                        cdsDepositor.totalDepositedAmintInEthereum = parseFloat(depositedAmint);
+                        cdsDepositor.totalDepositedAmintInPolygon = parseFloat(depositedAmint);
                     }
                     cdsDepositor.totalIndexInEthereum = index;
                 }
