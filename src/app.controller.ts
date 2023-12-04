@@ -34,9 +34,8 @@ export class AppController {
           return this.appService.healthCheck();
       }
 
-      @Get('/health')
-      @ApiOkResponse({ description: 'checks health of app1' })
-      healthCheck1(): Promise<object> {
-          return this.appService.healthCheck();
+      @Get('/testcicd')
+      testcicd(@Res() res: Response) {
+          res.status(200).json({data:'Version 5 testing CI/CD'});
       }
 }
