@@ -33,4 +33,10 @@ export class AppController {
       healthCheck(): Promise<object> {
           return this.appService.healthCheck();
       }
+
+      @Get('/health')
+      @ApiOkResponse({ description: 'checks health of app1' })
+      healthCheck1(): Promise<object> {
+          return this.appService.healthCheck();
+      }
 }
