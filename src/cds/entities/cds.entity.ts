@@ -32,7 +32,7 @@ export class CdsInfo{
     @Column({
         type:'decimal',
         nullable:true})
-    apr:number;
+    aprAtDeposit:number;
 
     @Column({
         type:'decimal',

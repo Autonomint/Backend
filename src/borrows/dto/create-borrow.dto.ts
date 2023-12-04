@@ -17,6 +17,9 @@ export class AddBorrowDto{
     downsideProtectionPercentage:number
 
     @IsNotEmpty()
+    aprAtDeposit:number;
+
+    @IsNotEmpty()
     depositedAmount:string;
 
     @IsNotEmpty()
