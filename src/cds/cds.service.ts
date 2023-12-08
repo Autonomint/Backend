@@ -9,6 +9,8 @@ import { WithdrawCdsDto } from './dto/withdraw-cds.dto';
 import { GetCdsDeposit } from './dto/get-cds-deposit.dto';
 import { ethers,utils,BigNumber } from 'ethers';
 import { GetCdsDepositByChainId } from './dto/get-cds-deposit-by-chainid.dto';
+import { CdsAmountToReturn } from './dto/cdsAmountToReturn.dto';
+import { GlobalService } from 'src/global/global.service';
 
 @Injectable()
 export class CdsService {
@@ -16,8 +18,12 @@ export class CdsService {
         @InjectRepository(CdsInfo)
         private cdsRepository: Repository<CdsInfo>,
         @InjectRepository(CdsDepositorInfo)
-        private cdsDepositorRepository: Repository<CdsDepositorInfo>
+        private cdsDepositorRepository: Repository<CdsDepositorInfo>,
+        private globalService:GlobalService
     ){}
+
+    private lastEthPrice:number;
+    private fallbackEthPrice:number;
 
     async getCdsDeposit(getCdsDeposit:GetCdsDeposit):Promise<CdsInfo>{
         const{address,index,chainId} = getCdsDeposit;
@@ -79,7 +85,8 @@ export class CdsService {
             ethPriceAtDeposit,
             lockingPeriod,
             liquidationAmount,
-            optedForLiquidation
+            optedForLiquidation,
+            depositVal
         } = addCdsDto;
 
         const currentIndex = await this.getCdsDepositorIndexByAddress(address,chainId);
@@ -95,6 +102,7 @@ export class CdsService {
                 lockingPeriod,
                 liquidationAmount,
                 optedForLiquidation,
+                depositVal,
                 status:CdsPositionStatus.DEPOSITED
             });
 
@@ -132,6 +140,19 @@ export class CdsService {
             }
             cdsDepositor.address = address;
 
+            if(chainId == 80001){
+                if(this.globalService.treasuryAmintBalancePolygon == null){
+                    this.globalService.treasuryAmintBalancePolygon = parseFloat(depositedAmint); 
+                }else{
+                    this.globalService.treasuryAmintBalancePolygon = parseFloat(this.globalService.treasuryAmintBalancePolygon.toString()) + parseFloat(depositedAmint); 
+                }
+            }else if(chainId == 11155111){
+                if(this.globalService.treasuryAmintBalanceEthereum == null){
+                    this.globalService.treasuryAmintBalanceEthereum = parseFloat(depositedAmint); 
+                }else{
+                    this.globalService.treasuryAmintBalanceEthereum = parseFloat(this.globalService.treasuryAmintBalanceEthereum.toString()) + parseFloat(depositedAmint); 
+                }
+            }
             await this.cdsRepository.save(cds);
             await this.cdsDepositorRepository.save(cdsDepositor);
             return cds;
@@ -192,9 +213,58 @@ export class CdsService {
 
         found.status = CdsPositionStatus.WITHDREW;
 
+        if(chainId == 80001){
+            this.globalService.treasuryAmintBalancePolygon = parseFloat(this.globalService.treasuryAmintBalancePolygon.toString()) - parseFloat(withdrawAmountInEther);
+            this.globalService.treasuryEthBalancePolygon = parseFloat(this.globalService.treasuryEthBalancePolygon.toString()) - parseFloat(withdrawEthAmountInEther); 
+        }else if(chainId == 11155111){
+            this.globalService.treasuryAmintBalanceEthereum = parseFloat(this.globalService.treasuryAmintBalanceEthereum.toString()) - parseFloat(withdrawAmountInEther);
+            this.globalService.treasuryEthBalanceEthereum = parseFloat(this.globalService.treasuryEthBalanceEthereum.toString()) - parseFloat(withdrawEthAmountInEther); 
+        }
+
         await this.cdsRepository.save(found);
         await this.cdsDepositorRepository.save(cdsDepositor);
 
         return found;
+    }
+
+    async cdsAmountToReturn(cdsAmountToReturnDto : CdsAmountToReturn):Promise<number>{
+        const {address,index,chainId,ethPrice} = cdsAmountToReturnDto;
+        
+        const getCdsDeposit = {address,index,chainId}
+        const found = await this.getCdsDeposit(getCdsDeposit);
+        const withdrawVal = await this.calculateValue(ethPrice,chainId);
+        const depositVal = found.depositVal;
+        if(withdrawVal <= depositVal){
+            const valDiff = depositVal - withdrawVal;
+            const loss = (parseFloat(found.depositedAmint) * valDiff)/1000;
+            return (parseFloat(found.depositedAmint) - loss);
+        }else{
+            const valDiff = withdrawVal - depositVal;
+            const toReturn = (parseFloat(found.depositedAmint) * valDiff)/1000;
+            return (parseFloat(found.depositedAmint) + toReturn);
+        }
+    }
+
+    async calculateValue(ethPrice:number,chainId:number):Promise<number>{
+        const amount = 1000;
+        let treasuryBal:number;
+        let vaultBal:number;
+        if(chainId == 80001){
+            treasuryBal = this.globalService.treasuryAmintBalancePolygon;
+            vaultBal = this.globalService.treasuryEthBalancePolygon;   
+        }else if(chainId == 11155111){
+            treasuryBal = this.globalService.treasuryAmintBalanceEthereum;
+            vaultBal = this.globalService.treasuryEthBalanceEthereum;
+        }
+
+        let priceDiff:number;
+
+        if(ethPrice != this.lastEthPrice){
+            priceDiff = ethPrice - this.lastEthPrice;
+        }else{
+            priceDiff = ethPrice - this.fallbackEthPrice;
+        }
+        const value = (amount * vaultBal * priceDiff)/treasuryBal;
+        return value;
     }
 }

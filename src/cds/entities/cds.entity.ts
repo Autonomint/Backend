@@ -50,6 +50,9 @@ export class CdsInfo{
     @Column({type:'boolean'})
     optedForLiquidation:boolean;
 
+    @Column({nullable:true})
+    depositVal:number;
+
     @Column({ nullable:true})
     withdrawTime:string;
 

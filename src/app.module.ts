@@ -4,6 +4,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CdsModule } from './cds/cds.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { GlobalService } from './global/global.service';
+import { GlobalModule } from './global/global.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -18,8 +21,10 @@ import { AppService } from './app.service';
       autoLoadEntities:true,
       synchronize:true
     }),
-    CdsModule],
+    ScheduleModule.forRoot(),
+    CdsModule,
+    GlobalModule],
   controllers: [AppController],
-  providers: [AppService]
+  providers: [AppService, GlobalService]
 })
 export class AppModule {}

@@ -16,6 +16,8 @@ import {
     borrowABI,cdsABI
 } from '../utils/index';
 import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
+import { GlobalService } from 'src/global/global.service';
+import { Cron,CronExpression } from '@nestjs/schedule';
 require('dotenv').config();
 
 @Injectable()
@@ -28,6 +30,7 @@ export class BorrowsService {
         private borrowerRepository: Repository<BorrowerInfo>,
         @InjectRepository(CriticalPositions)
         private criticalPositionsRepository: Repository<CriticalPositions>,
+        private globalService:GlobalService
     ){}
 
 
@@ -211,6 +214,20 @@ export class BorrowsService {
             }
             borrower.address = address;
 
+            if(chainId == 80001){
+                if(this.globalService.treasuryEthBalancePolygon == null){
+                    this.globalService.treasuryEthBalancePolygon = parseFloat(depositedAmount); 
+                }else{
+                    this.globalService.treasuryEthBalancePolygon = parseFloat(this.globalService.treasuryEthBalancePolygon.toString()) + parseFloat(depositedAmount); 
+                }
+            }else if(chainId == 11155111){
+                if(this.globalService.treasuryEthBalancePolygon == null){
+                    this.globalService.treasuryEthBalancePolygon = parseFloat(depositedAmount); 
+                }else{
+                    this.globalService.treasuryEthBalancePolygon = parseFloat(this.globalService.treasuryEthBalancePolygon.toString()) + parseFloat(depositedAmount); 
+                }
+            }
+
             await this.borrowRepository.save(borrow);
             await this.borrowerRepository.save(borrower);
             return borrow;
@@ -270,12 +287,19 @@ export class BorrowsService {
             found.status = PositionStatus.WITHDREW2;      
         }
 
+        if(chainId == 80001){
+            this.globalService.treasuryEthBalancePolygon = parseFloat(this.globalService.treasuryEthBalancePolygon.toString()) - parseFloat(withdrawAmountInEther); 
+        }else if(chainId == 11155111){
+            this.globalService.treasuryEthBalanceEthereum = parseFloat(this.globalService.treasuryEthBalanceEthereum.toString()) - parseFloat(withdrawAmountInEther); 
+        }
+
         await this.borrowRepository.save(found);
         await this.borrowerRepository.save(borrower);
 
         return found;
     }
 
+    @Cron("0 0 */3 * *")
     async createCriticalPositions():Promise<CriticalPositions[]>{
         const provider = await this.getSignerOrProvider(false);
         const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,provider);
@@ -304,6 +328,7 @@ export class BorrowsService {
         return liquidationPositions;
     }
 
+    @Cron(CronExpression.EVERY_5_MINUTES)
     async liquidate():Promise<CriticalPositions[]>{
         const provider = await this.getSignerOrProvider(true);
         const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,provider);
@@ -328,7 +353,7 @@ export class BorrowsService {
             await borrowingContract.liquidate(liquidatedPosition.address,liquidatedPosition.index,currentEthPrice);
             liquidatedPosition.status = PositionStatus.LIQUIDATED;
         });
-        // liquidatedPositions.map((liquidatedPosition) =>{liquidatedPosition.status = PositionStatus.LIQUIDATED})
+        liquidatedPositions.map((liquidatedPosition) =>{liquidatedPosition.status = PositionStatus.LIQUIDATED})
         await this.criticalPositionsRepository.remove(liquidationPositions);
         await this.borrowRepository.save(liquidatedPositions);
     }
