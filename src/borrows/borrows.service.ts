@@ -16,8 +16,9 @@ import {
     borrowABI,cdsABI
 } from '../utils/index';
 import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
-import { GlobalService } from 'src/global/global.service';
+// import { GlobalService } from 'src/global/global.service';
 import { Cron,CronExpression } from '@nestjs/schedule';
+import { GlobalService } from '../global/global.service';
 require('dotenv').config();
 
 @Injectable()

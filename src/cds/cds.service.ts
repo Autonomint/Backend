@@ -10,7 +10,7 @@ import { GetCdsDeposit } from './dto/get-cds-deposit.dto';
 import { ethers,utils,BigNumber } from 'ethers';
 import { GetCdsDepositByChainId } from './dto/get-cds-deposit-by-chainid.dto';
 import { CdsAmountToReturn } from './dto/cdsAmountToReturn.dto';
-import { GlobalService } from 'src/global/global.service';
+import { GlobalService } from '../global/global.service';
 
 @Injectable()
 export class CdsService {

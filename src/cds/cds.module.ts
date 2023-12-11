@@ -4,15 +4,17 @@ import { CdsService } from './cds.service';
 import { CdsInfo } from './entities/cds.entity';
 import { CdsDepositorInfo } from './entities/cdsDepositor.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { GlobalService } from 'src/global/global.service';
-import { GlobalModule } from 'src/global/global.module';
+import { GlobalService } from '../global/global.service';
+import { GlobalModule } from '../global/global.module';
 import { GlobalController } from 'src/global/global.controller';
+import { GlobalVariables } from '../global/entities/global.entity';
 
 @Module({
   imports:[
     GlobalModule,
-    TypeOrmModule.forFeature([CdsInfo,CdsDepositorInfo])],
+    TypeOrmModule.forFeature([CdsInfo, CdsDepositorInfo, GlobalVariables]),
+  ],
   controllers: [CdsController],
-  providers: [CdsService,GlobalService]
+  providers: [CdsService, GlobalService],
 })
 export class CdsModule {}
