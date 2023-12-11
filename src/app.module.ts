@@ -25,6 +25,6 @@ import { ScheduleModule } from '@nestjs/schedule';
     CdsModule,
     GlobalModule],
   controllers: [AppController],
-  providers: [AppService, GlobalService]
+  providers: [AppService]
 })
 export class AppModule {}
