@@ -215,16 +215,16 @@ export class BorrowsService {
             borrower.address = address;
 
             if(chainId == 80001){
-                if(this.globalService.treasuryEthBalancePolygon == null){
-                    this.globalService.treasuryEthBalancePolygon = parseFloat(depositedAmount); 
+                if(this.globalService.getTreasuryEthBalancePolygon == null){
+                    this.globalService.setTreasuryEthBalancePolygon(parseFloat(depositedAmount)); 
                 }else{
-                    this.globalService.treasuryEthBalancePolygon = parseFloat(this.globalService.treasuryEthBalancePolygon.toString()) + parseFloat(depositedAmount); 
+                    this.globalService.setTreasuryEthBalancePolygon(parseFloat(this.globalService.getTreasuryEthBalancePolygon.toString()) + parseFloat(depositedAmount)); 
                 }
             }else if(chainId == 11155111){
-                if(this.globalService.treasuryEthBalancePolygon == null){
-                    this.globalService.treasuryEthBalancePolygon = parseFloat(depositedAmount); 
+                if(this.globalService.getTreasuryEthBalancePolygon == null){
+                    this.globalService.setTreasuryEthBalancePolygon(parseFloat(depositedAmount)); 
                 }else{
-                    this.globalService.treasuryEthBalancePolygon = parseFloat(this.globalService.treasuryEthBalancePolygon.toString()) + parseFloat(depositedAmount); 
+                    this.globalService.setTreasuryEthBalancePolygon(parseFloat(this.globalService.getTreasuryEthBalancePolygon.toString()) + parseFloat(depositedAmount)); 
                 }
             }
 
@@ -288,9 +288,9 @@ export class BorrowsService {
         }
 
         if(chainId == 80001){
-            this.globalService.treasuryEthBalancePolygon = parseFloat(this.globalService.treasuryEthBalancePolygon.toString()) - parseFloat(withdrawAmountInEther); 
+            this.globalService.setTreasuryEthBalancePolygon(parseFloat(this.globalService.getTreasuryEthBalancePolygon.toString()) - parseFloat(withdrawAmountInEther)); 
         }else if(chainId == 11155111){
-            this.globalService.treasuryEthBalanceEthereum = parseFloat(this.globalService.treasuryEthBalanceEthereum.toString()) - parseFloat(withdrawAmountInEther); 
+            this.globalService.setTreasuryEthBalanceEthereum(parseFloat(this.globalService.getTreasuryEthBalanceEthereum.toString()) - parseFloat(withdrawAmountInEther)); 
         }
 
         await this.borrowRepository.save(found);

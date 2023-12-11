@@ -141,16 +141,16 @@ export class CdsService {
             cdsDepositor.address = address;
 
             if(chainId == 80001){
-                if(this.globalService.treasuryAmintBalancePolygon == null){
-                    this.globalService.treasuryAmintBalancePolygon = parseFloat(depositedAmint); 
+                if(this.globalService.getTreasuryAmintBalancePolygon == null){
+                    this.globalService.setTreasuryAmintBalancePolygon(parseFloat(depositedAmint)); 
                 }else{
-                    this.globalService.treasuryAmintBalancePolygon = parseFloat(this.globalService.treasuryAmintBalancePolygon.toString()) + parseFloat(depositedAmint); 
+                    this.globalService.setTreasuryAmintBalancePolygon(parseFloat(this.globalService.getTreasuryAmintBalancePolygon.toString()) + parseFloat(depositedAmint)); 
                 }
             }else if(chainId == 11155111){
-                if(this.globalService.treasuryAmintBalanceEthereum == null){
-                    this.globalService.treasuryAmintBalanceEthereum = parseFloat(depositedAmint); 
+                if(this.globalService.getTreasuryAmintBalanceEthereum == null){
+                    this.globalService.setTreasuryAmintBalanceEthereum(parseFloat(depositedAmint)); 
                 }else{
-                    this.globalService.treasuryAmintBalanceEthereum = parseFloat(this.globalService.treasuryAmintBalanceEthereum.toString()) + parseFloat(depositedAmint); 
+                    this.globalService.setTreasuryAmintBalanceEthereum(parseFloat(this.globalService.getTreasuryAmintBalanceEthereum.toString()) + parseFloat(depositedAmint)); 
                 }
             }
             await this.cdsRepository.save(cds);
@@ -214,11 +214,11 @@ export class CdsService {
         found.status = CdsPositionStatus.WITHDREW;
 
         if(chainId == 80001){
-            this.globalService.treasuryAmintBalancePolygon = parseFloat(this.globalService.treasuryAmintBalancePolygon.toString()) - parseFloat(withdrawAmountInEther);
-            this.globalService.treasuryEthBalancePolygon = parseFloat(this.globalService.treasuryEthBalancePolygon.toString()) - parseFloat(withdrawEthAmountInEther); 
+            this.globalService.setTreasuryAmintBalancePolygon(parseFloat(this.globalService.getTreasuryAmintBalancePolygon.toString()) - parseFloat(withdrawAmountInEther));
+            this.globalService.setTreasuryEthBalancePolygon(parseFloat(this.globalService.getTreasuryEthBalancePolygon.toString()) - parseFloat(withdrawEthAmountInEther)); 
         }else if(chainId == 11155111){
-            this.globalService.treasuryAmintBalanceEthereum = parseFloat(this.globalService.treasuryAmintBalanceEthereum.toString()) - parseFloat(withdrawAmountInEther);
-            this.globalService.treasuryEthBalanceEthereum = parseFloat(this.globalService.treasuryEthBalanceEthereum.toString()) - parseFloat(withdrawEthAmountInEther); 
+            this.globalService.setTreasuryAmintBalanceEthereum(parseFloat(this.globalService.getTreasuryAmintBalanceEthereum.toString()) - parseFloat(withdrawAmountInEther));
+            this.globalService.setTreasuryEthBalanceEthereum(parseFloat(this.globalService.getTreasuryEthBalanceEthereum.toString()) - parseFloat(withdrawEthAmountInEther)); 
         }
 
         await this.cdsRepository.save(found);
@@ -247,14 +247,14 @@ export class CdsService {
 
     async calculateValue(ethPrice:number,chainId:number):Promise<number>{
         const amount = 1000;
-        let treasuryBal:number;
-        let vaultBal:number;
+        let treasuryBal:any;
+        let vaultBal:any;
         if(chainId == 80001){
-            treasuryBal = this.globalService.treasuryAmintBalancePolygon;
-            vaultBal = this.globalService.treasuryEthBalancePolygon;   
+            treasuryBal = this.globalService.getTreasuryAmintBalancePolygon;
+            vaultBal = this.globalService.getTreasuryEthBalancePolygon;   
         }else if(chainId == 11155111){
-            treasuryBal = this.globalService.treasuryAmintBalanceEthereum;
-            vaultBal = this.globalService.treasuryEthBalanceEthereum;
+            treasuryBal = this.globalService.getTreasuryAmintBalanceEthereum;
+            vaultBal = this.globalService.getTreasuryEthBalanceEthereum;
         }
 
         let priceDiff:number;
