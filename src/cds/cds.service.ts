@@ -90,6 +90,7 @@ export class CdsService {
         } = addCdsDto;
 
         const currentIndex = await this.getCdsDepositorIndexByAddress(address,chainId);
+        const initialLiquidationAmount = liquidationAmount;
         if(currentIndex == (index-1) || currentIndex == 0){
             const cds = this.cdsRepository.create({
                 address,
@@ -100,6 +101,7 @@ export class CdsService {
                 depositedTime,
                 ethPriceAtDeposit,
                 lockingPeriod,
+                initialLiquidationAmount,
                 liquidationAmount,
                 optedForLiquidation,
                 depositVal,
@@ -118,7 +120,6 @@ export class CdsService {
                     cdsDepositor.totalIndexInPolygon = index;
                 }
                 cdsDepositor.deposits = [cds]
-                // cdsDepositor.totalLiquidationAmount = parseInt(liquidationAmount);
             }else{
                 if(chainId == 11155111){
                     if(cdsDepositor.totalIndexInEthereum > 0){

@@ -45,7 +45,13 @@ export class CdsInfo{
     ethPriceAtWithdraw:number;
 
     @Column({nullable:true})
+    initialLiquidationAmount:string;
+
+    @Column({nullable:true})
     liquidationAmount:string;
+
+    @Column({nullable:true})
+    liquidationIndex:number;
 
     @Column({type:'boolean'})
     optedForLiquidation:boolean;

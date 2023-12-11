@@ -260,7 +260,7 @@ export class BorrowsService {
         const amountYetToWithdrawInEther = ethers.utils.formatEther(amountYetToWithdraw);
         const noOfAbondInEther = ethers.utils.formatEther(noOfAbond);
 
-        if(!found.withdrawAmount1){
+        if(!found.withdrawAmount1 && found.status != PositionStatus.LIQUIDATED){
             found.withdrawTime1 = withdrawTime;
             found.withdrawAmount1 = withdrawAmountInEther;
             found.noOfAbondMinted = parseFloat(noOfAbondInEther);

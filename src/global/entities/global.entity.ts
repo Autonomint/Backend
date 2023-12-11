@@ -25,4 +25,24 @@ export class GlobalVariables{
         type:'decimal',
         nullable:true})
     treasuryEthBalancePolygon: number;
+
+    @Column({
+        type:'decimal',
+        nullable:true})
+    totalAvailableLiquidationAmountInEthereum: number;
+
+    @Column({
+        type:'decimal',
+        nullable:true})
+    totalAvailableLiquidationAmountInPolygon: number;
+
+    @Column({
+        type:'decimal',
+        nullable:true})
+    liquidationIndexInEthereum: number;
+
+    @Column({
+        type:'decimal',
+        nullable:true})
+    liquidationIndexInPolygon: number;
 }
