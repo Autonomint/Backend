@@ -47,8 +47,10 @@ export class CdsInfo{
     @Column({nullable:true})
     initialLiquidationAmount:string;
 
-    @Column({nullable:true})
-    liquidationAmount:string;
+    @Column({
+        type:'decimal',
+        nullable: true })
+    liquidationAmount:number;
 
     @Column({nullable:true})
     liquidationIndex:number;
@@ -56,7 +58,9 @@ export class CdsInfo{
     @Column({type:'boolean'})
     optedForLiquidation:boolean;
 
-    @Column({nullable:true})
+    @Column({
+        type:'decimal',
+        nullable: true })
     depositVal:number;
 
     @Column({ nullable:true})

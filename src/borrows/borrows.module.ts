@@ -10,10 +10,11 @@ import { GlobalService } from 'src/global/global.service';
 import { GlobalModule } from '../global/global.module';
 import { GlobalController } from 'src/global/global.controller';
 import { GlobalVariables } from '../global/entities/global.entity';
+import { LiquidationInfo } from './entities/liquidatedInfo.entity';
 
 @Module({
   imports:[
-    TypeOrmModule.forFeature([BorrowInfo,BorrowerInfo,CriticalPositions, GlobalVariables]),
+    TypeOrmModule.forFeature([BorrowInfo,BorrowerInfo,CriticalPositions,GlobalVariables,LiquidationInfo]),
     GlobalModule,
   ],
   controllers: [BorrowsController],

@@ -6,7 +6,6 @@ import { GetBorrowFilterDto } from './dto/get-borrow-filter.dto';
 import { BorrowInfo } from './entities/borrow.entity';
 import { Repository,Equal,Not,MoreThanOrEqual } from 'typeorm';
 import { ethers,utils,BigNumber } from 'ethers';
-import  Web3Modal  from 'web3modal'
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
@@ -19,6 +18,7 @@ import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.d
 // import { GlobalService } from 'src/global/global.service';
 import { Cron,CronExpression } from '@nestjs/schedule';
 import { GlobalService } from '../global/global.service';
+import { LiquidationInfo } from './entities/liquidatedInfo.entity';
 require('dotenv').config();
 
 @Injectable()
@@ -31,6 +31,8 @@ export class BorrowsService {
         private borrowerRepository: Repository<BorrowerInfo>,
         @InjectRepository(CriticalPositions)
         private criticalPositionsRepository: Repository<CriticalPositions>,
+        @InjectRepository(LiquidationInfo)
+        private liquidationInfoRepository: Repository<LiquidationInfo>,
         private globalService:GlobalService
     ){}
 
@@ -353,6 +355,19 @@ export class BorrowsService {
         liquidatedPositions.map(async (liquidatedPosition) =>{
             await borrowingContract.liquidate(liquidatedPosition.address,liquidatedPosition.index,currentEthPrice);
             liquidatedPosition.status = PositionStatus.LIQUIDATED;
+            const chainID = liquidatedPosition.chainId;      
+            borrowingContract.on('Liquidated',async (index,liquidationAmount,profits,ethAmount,availableLiquidationAmount) => {
+                const liquidationInfo = this.liquidationInfoRepository.create({
+                    chainId:chainID,
+                    index,
+                    liquidationAmount,
+                    profits,
+                    ethAmount,
+                    availableLiquidationAmount,
+                })
+                await this.liquidationInfoRepository.save(liquidationInfo);
+                await this.globalService.setLiquidationIndexInEthereum(index);
+            })
         });
         liquidatedPositions.map((liquidatedPosition) =>{liquidatedPosition.status = PositionStatus.LIQUIDATED})
         await this.criticalPositionsRepository.remove(liquidationPositions);
@@ -364,8 +379,8 @@ export class BorrowsService {
     async getSignerOrProvider(needSigner = false){
         const provider =  new ethers.providers.JsonRpcProvider("https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/");
         // if(needSigner){
-                //     const wallet = new ethers.Wallet('',provider);
-                //     return wallet;
+                    //     const wallet = new ethers.Wallet('',provider);
+                    //     return wallet;
         // }
         return provider;
     };

@@ -1,10 +1,13 @@
 import { Column,PrimaryGeneratedColumn,Entity } from 'typeorm';
 
 @Entity()
-export class CriticalPositions{
+export class LiquidationInfo{
 
     @PrimaryGeneratedColumn('uuid')
     id:string;
+
+    @Column()
+    chainId:number;
 
     @Column()
     index:number;
@@ -28,4 +31,5 @@ export class CriticalPositions{
         type:'decimal',
         nullable: true })
     availableLiquidationAmount:number;
+
 }

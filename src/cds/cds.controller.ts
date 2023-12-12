@@ -6,6 +6,7 @@ import { CdsDepositorInfo } from './entities/cdsDepositor.entity';
 import { AddCdsDto } from './dto/create-cds.dto';
 import { WithdrawCdsDto } from './dto/withdraw-cds.dto';
 import { GetCdsDeposit } from './dto/get-cds-deposit.dto';
+import { CdsAmountToReturn } from './dto/cdsAmountToReturn.dto';
 
 @Controller('cds')
 export class CdsController {
@@ -33,6 +34,11 @@ export class CdsController {
         const address = params.address;
         const chainId = params.chainId;
         return this.cdsService.getDepositsByChainId(address,chainId);
+    }
+
+    @Get('/withdraw/calculateWithdrawAmount')
+    getWithdrawAmount(@Body() cdsAmountToReturn:CdsAmountToReturn):Promise<number[]>{
+        return this.cdsService.calculateWithdrawAmount(cdsAmountToReturn);
     }
 
     @Post('/depositAmint')

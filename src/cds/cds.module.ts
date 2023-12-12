@@ -8,11 +8,12 @@ import { GlobalService } from '../global/global.service';
 import { GlobalModule } from '../global/global.module';
 import { GlobalController } from 'src/global/global.controller';
 import { GlobalVariables } from '../global/entities/global.entity';
+import { LiquidationInfo } from '../borrows/entities/liquidatedInfo.entity';
 
 @Module({
   imports:[
     GlobalModule,
-    TypeOrmModule.forFeature([CdsInfo, CdsDepositorInfo, GlobalVariables]),
+    TypeOrmModule.forFeature([CdsInfo, CdsDepositorInfo, GlobalVariables,LiquidationInfo]),
   ],
   controllers: [CdsController],
   providers: [CdsService, GlobalService],

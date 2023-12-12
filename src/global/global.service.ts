@@ -13,17 +13,36 @@ export class GlobalService {
     async setTreasuryAmintBalanceEthereum(amintBalance:number){
         this.globalVariables.treasuryAmintBalanceEthereum = amintBalance;
     }
+
     async setTreasuryAmintBalancePolygon(amintBalance:number){
         this.globalVariables.treasuryAmintBalancePolygon = amintBalance;       
     }
+
     async setTreasuryEthBalanceEthereum(ethBalance:number){
         this.globalVariables.treasuryEthBalanceEthereum = ethBalance;
 
     }
+
     async setTreasuryEthBalancePolygon(ethBalance:number){
         this.globalVariables.treasuryEthBalancePolygon = ethBalance;
     }
 
+    async setTotalAvailableLiquidationAmountInEthereum(liquidationAmount:number){
+        this.globalVariables.totalAvailableLiquidationAmountInEthereum = liquidationAmount;
+    }
+
+    async setTotalAvailableLiquidationAmountInPolygon(liquidationAmount:number){
+        this.globalVariables.totalAvailableLiquidationAmountInPolygon = liquidationAmount;
+    }
+
+    async setLiquidationIndexInEthereum(liquidationIndex:number){
+        this.globalVariables.liquidationIndexInEthereum = liquidationIndex;
+    }
+
+    async setLiquidationIndexInPolygon(liquidationIndex:number){
+        this.globalVariables.liquidationIndexInPolygon = liquidationIndex;
+    }
+    
     async getTreasuryAmintBalanceEthereum():Promise<any>{
         return this.globalVariables.treasuryAmintBalanceEthereum;
     }
@@ -37,5 +56,23 @@ export class GlobalService {
     async getTreasuryEthBalancePolygon():Promise<any>{
         return this.globalVariables.treasuryEthBalancePolygon;
     }
+
+    async getTotalAvailableLiquidationAmountInEthereum():Promise<any>{
+        return this.globalVariables.totalAvailableLiquidationAmountInEthereum;
+    }
+
+    async getTotalAvailableLiquidationAmountInPolygon():Promise<any>{
+        return this.globalVariables.totalAvailableLiquidationAmountInPolygon;
+    }
+
+    async getLiquidationIndexInEthereum():Promise<any>{
+        return this.globalVariables.liquidationIndexInEthereum;
+    }
+
+    async getLiquidationIndexInPolygon():Promise<any>{
+        return this.globalVariables.liquidationIndexInPolygon;
+    }
+
+
 
 }
