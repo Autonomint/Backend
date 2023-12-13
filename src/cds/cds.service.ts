@@ -144,18 +144,10 @@ export class CdsService {
             }
             cdsDepositor.address = address;
 
-            if(chainId == 80001){
-                if(this.globalService.getTreasuryAmintBalancePolygon() == null){
-                    this.globalService.setTreasuryAmintBalancePolygon(parseFloat(depositedAmint)); 
-                }else{
-                    this.globalService.setTreasuryAmintBalancePolygon(parseFloat(this.globalService.getTreasuryAmintBalancePolygon().toString()) + parseFloat(depositedAmint)); 
-                }
-            }else if(chainId == 11155111){
-                if(this.globalService.getTreasuryAmintBalanceEthereum() == null){
-                    this.globalService.setTreasuryAmintBalanceEthereum(parseFloat(depositedAmint)); 
-                }else{
-                    this.globalService.setTreasuryAmintBalanceEthereum(parseFloat(this.globalService.getTreasuryAmintBalanceEthereum().toString()) + parseFloat(depositedAmint)); 
-                }
+            if(this.globalService.getTreasuryAmintBalance(chainId) == null){
+                this.globalService.setTreasuryAmintBalance(chainId,parseFloat(depositedAmint)); 
+            }else{
+                this.globalService.setTreasuryAmintBalance(chainId,parseFloat(this.globalService.getTreasuryAmintBalance(chainId).toString()) + parseFloat(depositedAmint)); 
             }
             await this.cdsRepository.save(cds);
             await this.cdsDepositorRepository.save(cdsDepositor);
@@ -217,13 +209,8 @@ export class CdsService {
 
         found.status = CdsPositionStatus.WITHDREW;
 
-        if(chainId == 80001){
-            this.globalService.setTreasuryAmintBalancePolygon(parseFloat(this.globalService.getTreasuryAmintBalancePolygon().toString()) - parseFloat(withdrawAmountInEther));
-            this.globalService.setTreasuryEthBalancePolygon(parseFloat(this.globalService.getTreasuryEthBalancePolygon().toString()) - parseFloat(withdrawEthAmountInEther)); 
-        }else if(chainId == 11155111){
-            this.globalService.setTreasuryAmintBalanceEthereum(parseFloat(this.globalService.getTreasuryAmintBalanceEthereum().toString()) - parseFloat(withdrawAmountInEther));
-            this.globalService.setTreasuryEthBalanceEthereum(parseFloat(this.globalService.getTreasuryEthBalanceEthereum().toString()) - parseFloat(withdrawEthAmountInEther)); 
-        }
+        this.globalService.setTreasuryAmintBalance(chainId,parseFloat(this.globalService.getTreasuryAmintBalance(chainId).toString()) - parseFloat(withdrawAmountInEther));
+        this.globalService.setTreasuryEthBalance(chainId,parseFloat(this.globalService.getTreasuryEthBalance(chainId).toString()) - parseFloat(withdrawEthAmountInEther)); 
 
         await this.cdsRepository.save(found);
         await this.cdsDepositorRepository.save(cdsDepositor);
@@ -252,15 +239,8 @@ export class CdsService {
 
     async calculateValue(ethPrice:number,chainId:number):Promise<number>{
         const amount = 1000;
-        let treasuryBal:any;
-        let vaultBal:any;
-        if(chainId == 80001){
-            treasuryBal = this.globalService.getTreasuryAmintBalancePolygon();
-            vaultBal = this.globalService.getTreasuryEthBalancePolygon();   
-        }else if(chainId == 11155111){
-            treasuryBal = this.globalService.getTreasuryAmintBalanceEthereum();
-            vaultBal = this.globalService.getTreasuryEthBalanceEthereum();
-        }
+        const treasuryBal = await this.globalService.getTreasuryAmintBalance(chainId);
+        const vaultBal = await this.globalService.getTreasuryEthBalance(chainId);
 
         let priceDiff:number;
 
@@ -277,15 +257,9 @@ export class CdsService {
         const{address,chainId,index} = getCdsDepositDto;
         const found = await this.getCdsDeposit(getCdsDepositDto);
         const liquidationIndexAtDeposit = found.liquidationIndex;
-        let currentLiquidations:any;
-        if(chainId == 11155111){
-            currentLiquidations = this.globalService.getLiquidationIndexInEthereum()
-        }else if(chainId == 80001){
-            currentLiquidations = this.globalService.getLiquidationIndexInPolygon()
-        }
-
+        const currentLiquidations = await this.globalService.getLiquidationIndex(chainId)
         let ethAmount:number;
-        for(let i = liquidationIndexAtDeposit;i<=currentLiquidations;i++){
+        for(let i = liquidationIndexAtDeposit;i <= currentLiquidations;i++){
            const liquidationAmount = found.liquidationAmount;
            if(liquidationAmount > 0){
                 const liquidatedPosition = await this.liquidationInfoRepository.findOne(
@@ -304,7 +278,6 @@ export class CdsService {
     }
 
     async calculateWithdrawAmount(cdsAmountToReturnDto : CdsAmountToReturn):Promise<number[]>{
-        console.log(123)
         const {address,index,chainId,ethPrice} = cdsAmountToReturnDto;
         let getCdsDepositDto = new GetCdsDeposit(); 
         getCdsDepositDto = {address,index,chainId}

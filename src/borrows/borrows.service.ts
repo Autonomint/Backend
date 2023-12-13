@@ -217,18 +217,10 @@ export class BorrowsService {
             }
             borrower.address = address;
 
-            if(chainId == 80001){
-                if(this.globalService.getTreasuryEthBalancePolygon == null){
-                    this.globalService.setTreasuryEthBalancePolygon(parseFloat(depositedAmount)); 
-                }else{
-                    this.globalService.setTreasuryEthBalancePolygon(parseFloat(this.globalService.getTreasuryEthBalancePolygon.toString()) + parseFloat(depositedAmount)); 
-                }
-            }else if(chainId == 11155111){
-                if(this.globalService.getTreasuryEthBalancePolygon == null){
-                    this.globalService.setTreasuryEthBalancePolygon(parseFloat(depositedAmount)); 
-                }else{
-                    this.globalService.setTreasuryEthBalancePolygon(parseFloat(this.globalService.getTreasuryEthBalancePolygon.toString()) + parseFloat(depositedAmount)); 
-                }
+            if(this.globalService.getTreasuryEthBalance(chainId) == null){
+                this.globalService.setTreasuryEthBalance(chainId,parseFloat(depositedAmount)); 
+            }else{
+                this.globalService.setTreasuryEthBalance(chainId,parseFloat(this.globalService.getTreasuryEthBalance(chainId).toString()) + parseFloat(depositedAmount)); 
             }
 
             await this.borrowRepository.save(borrow);
@@ -290,11 +282,8 @@ export class BorrowsService {
             found.status = PositionStatus.WITHDREW2;      
         }
 
-        if(chainId == 80001){
-            this.globalService.setTreasuryEthBalancePolygon(parseFloat(this.globalService.getTreasuryEthBalancePolygon.toString()) - parseFloat(withdrawAmountInEther)); 
-        }else if(chainId == 11155111){
-            this.globalService.setTreasuryEthBalanceEthereum(parseFloat(this.globalService.getTreasuryEthBalanceEthereum.toString()) - parseFloat(withdrawAmountInEther)); 
-        }
+        this.globalService.setTreasuryEthBalance(chainId,parseFloat(this.globalService.getTreasuryEthBalance(chainId).toString()) - parseFloat(withdrawAmountInEther)); 
+
 
         await this.borrowRepository.save(found);
         await this.borrowerRepository.save(borrower);
@@ -355,10 +344,10 @@ export class BorrowsService {
         liquidatedPositions.map(async (liquidatedPosition) =>{
             await borrowingContract.liquidate(liquidatedPosition.address,liquidatedPosition.index,currentEthPrice);
             liquidatedPosition.status = PositionStatus.LIQUIDATED;
-            const chainID = liquidatedPosition.chainId;      
+            const chainId = liquidatedPosition.chainId;      
             borrowingContract.on('Liquidated',async (index,liquidationAmount,profits,ethAmount,availableLiquidationAmount) => {
                 const liquidationInfo = this.liquidationInfoRepository.create({
-                    chainId:chainID,
+                    chainId:chainId,
                     index,
                     liquidationAmount,
                     profits,
@@ -366,7 +355,7 @@ export class BorrowsService {
                     availableLiquidationAmount,
                 })
                 await this.liquidationInfoRepository.save(liquidationInfo);
-                await this.globalService.setLiquidationIndexInEthereum(index);
+                await this.globalService.setLiquidationIndex(chainId,index);
             })
         });
         liquidatedPositions.map((liquidatedPosition) =>{liquidatedPosition.status = PositionStatus.LIQUIDATED})
@@ -379,8 +368,8 @@ export class BorrowsService {
     async getSignerOrProvider(needSigner = false){
         const provider =  new ethers.providers.JsonRpcProvider("https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/");
         // if(needSigner){
-                    //     const wallet = new ethers.Wallet('',provider);
-                    //     return wallet;
+                        //     const wallet = new ethers.Wallet('',provider);
+                        //     return wallet;
         // }
         return provider;
     };

@@ -10,69 +10,70 @@ export class GlobalService {
         private globalVariables:GlobalVariables
     ){}
 
-    async setTreasuryAmintBalanceEthereum(amintBalance:number){
-        this.globalVariables.treasuryAmintBalanceEthereum = amintBalance;
+    async setTreasuryAmintBalance(chainId:number,amintBalance:number){
+        if(chainId == 1115511){
+            this.globalVariables.treasuryAmintBalanceEthereum = amintBalance;
+        }else if(chainId == 80001){
+            this.globalVariables.treasuryAmintBalancePolygon = amintBalance;
+        }
     }
 
-    async setTreasuryAmintBalancePolygon(amintBalance:number){
-        this.globalVariables.treasuryAmintBalancePolygon = amintBalance;       
+    async setTreasuryEthBalance(chainId:number,ethBalance:number){
+        if(chainId == 1115511){
+            this.globalVariables.treasuryEthBalanceEthereum = ethBalance;
+        }else if(chainId == 80001){
+            this.globalVariables.treasuryEthBalancePolygon = ethBalance;
+        }
     }
 
-    async setTreasuryEthBalanceEthereum(ethBalance:number){
-        this.globalVariables.treasuryEthBalanceEthereum = ethBalance;
-
+    async setTotalAvailableLiquidationAmount(chainId:number,liquidationAmount:number){
+        if(chainId == 1115511){
+            this.globalVariables.totalAvailableLiquidationAmountInEthereum = liquidationAmount;
+        }else if(chainId == 80001){
+            this.globalVariables.totalAvailableLiquidationAmountInPolygon = liquidationAmount;
+        }
     }
 
-    async setTreasuryEthBalancePolygon(ethBalance:number){
-        this.globalVariables.treasuryEthBalancePolygon = ethBalance;
-    }
-
-    async setTotalAvailableLiquidationAmountInEthereum(liquidationAmount:number){
-        this.globalVariables.totalAvailableLiquidationAmountInEthereum = liquidationAmount;
-    }
-
-    async setTotalAvailableLiquidationAmountInPolygon(liquidationAmount:number){
-        this.globalVariables.totalAvailableLiquidationAmountInPolygon = liquidationAmount;
-    }
-
-    async setLiquidationIndexInEthereum(liquidationIndex:number){
-        this.globalVariables.liquidationIndexInEthereum = liquidationIndex;
-    }
-
-    async setLiquidationIndexInPolygon(liquidationIndex:number){
-        this.globalVariables.liquidationIndexInPolygon = liquidationIndex;
-    }
-    
-    async getTreasuryAmintBalanceEthereum():Promise<any>{
-        return this.globalVariables.treasuryAmintBalanceEthereum;
-    }
-    async getTreasuryAmintBalancePolygon():Promise<any>{
-        return this.globalVariables.treasuryAmintBalancePolygon;       
-    }
-    async getTreasuryEthBalanceEthereum():Promise<any>{
-        return this.globalVariables.treasuryEthBalanceEthereum;
-
-    }
-    async getTreasuryEthBalancePolygon():Promise<any>{
-        return this.globalVariables.treasuryEthBalancePolygon;
-    }
-
-    async getTotalAvailableLiquidationAmountInEthereum():Promise<any>{
-        return this.globalVariables.totalAvailableLiquidationAmountInEthereum;
-    }
-
-    async getTotalAvailableLiquidationAmountInPolygon():Promise<any>{
-        return this.globalVariables.totalAvailableLiquidationAmountInPolygon;
-    }
-
-    async getLiquidationIndexInEthereum():Promise<any>{
-        return this.globalVariables.liquidationIndexInEthereum;
-    }
-
-    async getLiquidationIndexInPolygon():Promise<any>{
-        return this.globalVariables.liquidationIndexInPolygon;
+    async setLiquidationIndex(chainId:number,liquidationIndex:number){
+        if(chainId == 1115511){
+            this.globalVariables.liquidationIndexInEthereum = liquidationIndex;
+        }else if(chainId == 80001){
+            this.globalVariables.liquidationIndexInPolygon = liquidationIndex;
+        }
     }
 
 
+
+    async getTreasuryAmintBalance(chainId:number):Promise<any>{
+        if(chainId == 1115511){
+            return this.globalVariables.treasuryAmintBalanceEthereum;
+        }else if(chainId == 80001){
+            return this.globalVariables.treasuryAmintBalancePolygon;
+        }
+    }
+
+    async getTreasuryEthBalance(chainId:number):Promise<any>{
+        if(chainId == 1115511){
+            return this.globalVariables.treasuryEthBalanceEthereum;
+        }else if(chainId == 80001){
+            return this.globalVariables.treasuryEthBalancePolygon;
+        }
+    }
+
+    async getTotalAvailableLiquidationAmount(chainId:number):Promise<any>{
+        if(chainId == 1115511){
+            return this.globalVariables.totalAvailableLiquidationAmountInEthereum;
+        }else if(chainId == 80001){
+            return this.globalVariables.totalAvailableLiquidationAmountInPolygon;
+        }
+    }
+
+    async getLiquidationIndex(chainId:number):Promise<any>{
+        if(chainId == 1115511){
+            return this.globalVariables.liquidationIndexInEthereum;
+        }else if(chainId == 80001){
+            return this.globalVariables.liquidationIndexInPolygon;
+        }
+    }
 
 }
