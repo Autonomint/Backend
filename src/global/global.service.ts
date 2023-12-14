@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { GlobalVariables } from './entities/global.entity';
 
 @Injectable()
@@ -7,73 +8,97 @@ export class GlobalService {
 
     constructor(
         @InjectRepository(GlobalVariables)
-        private globalVariables:GlobalVariables
+        private globalRepository: Repository<GlobalVariables>
     ){}
 
     async setTreasuryAmintBalance(chainId:number,amintBalance:number){
-        if(chainId == 1115511){
-            this.globalVariables.treasuryAmintBalanceEthereum = amintBalance;
-        }else if(chainId == 80001){
-            this.globalVariables.treasuryAmintBalancePolygon = amintBalance;
+        let found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            found = this.globalRepository.create({
+                    chainId,
+                    treasuryAmintBalance:amintBalance
+            })
+        }else{
+            found.treasuryAmintBalance = amintBalance;
         }
+        await this.globalRepository.save(found);
     }
 
     async setTreasuryEthBalance(chainId:number,ethBalance:number){
-        if(chainId == 1115511){
-            this.globalVariables.treasuryEthBalanceEthereum = ethBalance;
-        }else if(chainId == 80001){
-            this.globalVariables.treasuryEthBalancePolygon = ethBalance;
+        let found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            found = this.globalRepository.create({
+                    chainId,
+                    treasuryEthBalance:ethBalance
+            })
+        }else{
+            found.treasuryEthBalance = ethBalance;
         }
+        await this.globalRepository.save(found);
     }
 
     async setTotalAvailableLiquidationAmount(chainId:number,liquidationAmount:number){
-        if(chainId == 1115511){
-            this.globalVariables.totalAvailableLiquidationAmountInEthereum = liquidationAmount;
-        }else if(chainId == 80001){
-            this.globalVariables.totalAvailableLiquidationAmountInPolygon = liquidationAmount;
+        let found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            found = this.globalRepository.create({
+                    chainId,
+                    totalAvailableLiquidationAmount:liquidationAmount
+            })
+        }else{
+            found.totalAvailableLiquidationAmount = liquidationAmount;
         }
+
+        await this.globalRepository.save(found);
     }
 
     async setLiquidationIndex(chainId:number,liquidationIndex:number){
-        if(chainId == 1115511){
-            this.globalVariables.liquidationIndexInEthereum = liquidationIndex;
-        }else if(chainId == 80001){
-            this.globalVariables.liquidationIndexInPolygon = liquidationIndex;
+        let found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            found = this.globalRepository.create({
+                    chainId,
+                    liquidationIndex:liquidationIndex
+            })
+        }else{
+            found.liquidationIndex = liquidationIndex;
         }
+        await this.globalRepository.save(found);
     }
 
 
 
-    async getTreasuryAmintBalance(chainId:number):Promise<any>{
-        if(chainId == 1115511){
-            return this.globalVariables.treasuryAmintBalanceEthereum;
-        }else if(chainId == 80001){
-            return this.globalVariables.treasuryAmintBalancePolygon;
+    async getTreasuryAmintBalance(chainId:number):Promise<number>{
+        const found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            return 0;
+        }else{
+            if(!found.treasuryAmintBalance){
+                return 0;
+            }else{
+                return found.treasuryAmintBalance;
+            }
         }
     }
 
-    async getTreasuryEthBalance(chainId:number):Promise<any>{
-        if(chainId == 1115511){
-            return this.globalVariables.treasuryEthBalanceEthereum;
-        }else if(chainId == 80001){
-            return this.globalVariables.treasuryEthBalancePolygon;
+    async getTreasuryEthBalance(chainId:number):Promise<number>{
+        const found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            return 0;
+        }else{
+            if(!found.treasuryEthBalance){
+                return 0;
+            }else{
+                return found.treasuryEthBalance;
+            }
         }
     }
 
-    async getTotalAvailableLiquidationAmount(chainId:number):Promise<any>{
-        if(chainId == 1115511){
-            return this.globalVariables.totalAvailableLiquidationAmountInEthereum;
-        }else if(chainId == 80001){
-            return this.globalVariables.totalAvailableLiquidationAmountInPolygon;
-        }
+    async getTotalAvailableLiquidationAmount(chainId:number):Promise<number>{
+        const found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        return found.totalAvailableLiquidationAmount;
     }
 
-    async getLiquidationIndex(chainId:number):Promise<any>{
-        if(chainId == 1115511){
-            return this.globalVariables.liquidationIndexInEthereum;
-        }else if(chainId == 80001){
-            return this.globalVariables.liquidationIndexInPolygon;
-        }
+    async getLiquidationIndex(chainId:number):Promise<number>{
+        const found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        return found.liquidationIndex;
     }
-
 }

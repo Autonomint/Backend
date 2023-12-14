@@ -1,11 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
 import { PositionStatus } from './borrow-status.enum';
 import { AddBorrowDto } from './dto/create-borrow.dto';
 import { GetBorrowFilterDto } from './dto/get-borrow-filter.dto';
 import { BorrowInfo } from './entities/borrow.entity';
 import { Repository,Equal,Not,MoreThanOrEqual } from 'typeorm';
-import { ethers,utils,BigNumber } from 'ethers';
+import { ethers } from 'ethers';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
@@ -15,7 +15,6 @@ import {
     borrowABI,cdsABI
 } from '../utils/index';
 import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
-// import { GlobalService } from 'src/global/global.service';
 import { Cron,CronExpression } from '@nestjs/schedule';
 import { GlobalService } from '../global/global.service';
 import { LiquidationInfo } from './entities/liquidatedInfo.entity';
@@ -33,6 +32,7 @@ export class BorrowsService {
         private criticalPositionsRepository: Repository<CriticalPositions>,
         @InjectRepository(LiquidationInfo)
         private liquidationInfoRepository: Repository<LiquidationInfo>,
+        @Inject(GlobalService)
         private globalService:GlobalService
     ){}
 
@@ -217,10 +217,12 @@ export class BorrowsService {
             }
             borrower.address = address;
 
-            if(this.globalService.getTreasuryEthBalance(chainId) == null){
+            const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
+
+            if(ethBalance == 0){
                 this.globalService.setTreasuryEthBalance(chainId,parseFloat(depositedAmount)); 
             }else{
-                this.globalService.setTreasuryEthBalance(chainId,parseFloat(this.globalService.getTreasuryEthBalance(chainId).toString()) + parseFloat(depositedAmount)); 
+                this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) + parseFloat(depositedAmount)); 
             }
 
             await this.borrowRepository.save(borrow);
@@ -282,7 +284,9 @@ export class BorrowsService {
             found.status = PositionStatus.WITHDREW2;      
         }
 
-        this.globalService.setTreasuryEthBalance(chainId,parseFloat(this.globalService.getTreasuryEthBalance(chainId).toString()) - parseFloat(withdrawAmountInEther)); 
+        const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
+
+        this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawAmountInEther)); 
 
 
         await this.borrowRepository.save(found);
@@ -356,6 +360,9 @@ export class BorrowsService {
                 })
                 await this.liquidationInfoRepository.save(liquidationInfo);
                 await this.globalService.setLiquidationIndex(chainId,index);
+                const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
+                await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(liquidationAmount))
+                await this.globalService.setTotalAvailableLiquidationAmount(chainId,availableLiquidationAmount);
             })
         });
         liquidatedPositions.map((liquidatedPosition) =>{liquidatedPosition.status = PositionStatus.LIQUIDATED})

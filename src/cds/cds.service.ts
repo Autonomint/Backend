@@ -1,4 +1,4 @@
-import { Injectable,NotFoundException } from '@nestjs/common';
+import { Inject, Injectable,NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CdsInfo } from './entities/cds.entity';
 import { CdsDepositorInfo } from './entities/cdsDepositor.entity';
@@ -7,7 +7,7 @@ import { AddCdsDto } from './dto/create-cds.dto';
 import { CdsPositionStatus } from './cds-status.enum';
 import { WithdrawCdsDto } from './dto/withdraw-cds.dto';
 import { GetCdsDeposit } from './dto/get-cds-deposit.dto';
-import { ethers,utils,BigNumber } from 'ethers';
+import { ethers } from 'ethers';
 import { GetCdsDepositByChainId } from './dto/get-cds-deposit-by-chainid.dto';
 import { CdsAmountToReturn } from './dto/cdsAmountToReturn.dto';
 import { GlobalService } from '../global/global.service';
@@ -144,10 +144,12 @@ export class CdsService {
             }
             cdsDepositor.address = address;
 
-            if(this.globalService.getTreasuryAmintBalance(chainId) == null){
+            const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
+
+            if(amintBalance == 0){
                 this.globalService.setTreasuryAmintBalance(chainId,parseFloat(depositedAmint)); 
             }else{
-                this.globalService.setTreasuryAmintBalance(chainId,parseFloat(this.globalService.getTreasuryAmintBalance(chainId).toString()) + parseFloat(depositedAmint)); 
+                this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) + parseFloat(depositedAmint)); 
             }
             await this.cdsRepository.save(cds);
             await this.cdsDepositorRepository.save(cdsDepositor);
@@ -209,8 +211,11 @@ export class CdsService {
 
         found.status = CdsPositionStatus.WITHDREW;
 
-        this.globalService.setTreasuryAmintBalance(chainId,parseFloat(this.globalService.getTreasuryAmintBalance(chainId).toString()) - parseFloat(withdrawAmountInEther));
-        this.globalService.setTreasuryEthBalance(chainId,parseFloat(this.globalService.getTreasuryEthBalance(chainId).toString()) - parseFloat(withdrawEthAmountInEther)); 
+        const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
+        const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
+
+        this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(withdrawAmountInEther));
+        this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawEthAmountInEther)); 
 
         await this.cdsRepository.save(found);
         await this.cdsDepositorRepository.save(cdsDepositor);
@@ -257,7 +262,10 @@ export class CdsService {
         const{address,chainId,index} = getCdsDepositDto;
         const found = await this.getCdsDeposit(getCdsDepositDto);
         const liquidationIndexAtDeposit = found.liquidationIndex;
-        const currentLiquidations = await this.globalService.getLiquidationIndex(chainId)
+        let currentLiquidations = await this.globalService.getLiquidationIndex(chainId);
+        if(!currentLiquidations){
+            currentLiquidations = 0;
+        }
         let ethAmount:number;
         for(let i = liquidationIndexAtDeposit;i <= currentLiquidations;i++){
            const liquidationAmount = found.liquidationAmount;

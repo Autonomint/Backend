@@ -9,40 +9,25 @@ export class GlobalVariables{
     @Column({
         type:'decimal',
         nullable:true})
-    treasuryAmintBalanceEthereum: number;
+    chainId:number;
 
     @Column({
         type:'decimal',
         nullable:true})
-    treasuryAmintBalancePolygon: number;
+    treasuryAmintBalance: number;
 
     @Column({
         type:'decimal',
         nullable:true})
-    treasuryEthBalanceEthereum: number;
+    treasuryEthBalance: number;
 
     @Column({
         type:'decimal',
         nullable:true})
-    treasuryEthBalancePolygon: number;
+    totalAvailableLiquidationAmount: number;
 
     @Column({
         type:'decimal',
         nullable:true})
-    totalAvailableLiquidationAmountInEthereum: number;
-
-    @Column({
-        type:'decimal',
-        nullable:true})
-    totalAvailableLiquidationAmountInPolygon: number;
-
-    @Column({
-        type:'decimal',
-        nullable:true})
-    liquidationIndexInEthereum: number;
-
-    @Column({
-        type:'decimal',
-        nullable:true})
-    liquidationIndexInPolygon: number;
+    liquidationIndex: number;
 }

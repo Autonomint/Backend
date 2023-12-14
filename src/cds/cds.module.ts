@@ -6,7 +6,7 @@ import { CdsDepositorInfo } from './entities/cdsDepositor.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GlobalService } from '../global/global.service';
 import { GlobalModule } from '../global/global.module';
-import { GlobalController } from 'src/global/global.controller';
+import { GlobalController } from '../global/global.controller';
 import { GlobalVariables } from '../global/entities/global.entity';
 import { LiquidationInfo } from '../borrows/entities/liquidatedInfo.entity';
 
@@ -15,7 +15,7 @@ import { LiquidationInfo } from '../borrows/entities/liquidatedInfo.entity';
     GlobalModule,
     TypeOrmModule.forFeature([CdsInfo, CdsDepositorInfo, GlobalVariables,LiquidationInfo]),
   ],
-  controllers: [CdsController],
+  controllers: [CdsController,GlobalController],
   providers: [CdsService, GlobalService],
 })
 export class CdsModule {}

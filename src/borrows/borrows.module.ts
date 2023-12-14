@@ -8,7 +8,7 @@ import { BorrowerInfo } from './entities/borrower.entity';
 import { CriticalPositions } from './entities/liquidation.entity';
 import { GlobalService } from 'src/global/global.service';
 import { GlobalModule } from '../global/global.module';
-import { GlobalController } from 'src/global/global.controller';
+import { GlobalController } from '../global/global.controller';
 import { GlobalVariables } from '../global/entities/global.entity';
 import { LiquidationInfo } from './entities/liquidatedInfo.entity';
 
@@ -17,7 +17,7 @@ import { LiquidationInfo } from './entities/liquidatedInfo.entity';
     TypeOrmModule.forFeature([BorrowInfo,BorrowerInfo,CriticalPositions,GlobalVariables,LiquidationInfo]),
     GlobalModule,
   ],
-  controllers: [BorrowsController],
+  controllers: [BorrowsController,GlobalController],
   providers: [BorrowsService]
 })
 export class BorrowsModule {}

@@ -6,22 +6,22 @@ export class GlobalController {
     constructor(private globalService:GlobalService){}
 
     @Get('/amintBalance/:chainId')
-    getAmintBalance(@Param('chainId') chainId:number){
+    getAmintBalance(@Param('chainId') chainId:number):Promise<number>{
         return this.globalService.getTreasuryAmintBalance(chainId);
     }
 
     @Get('/ethBalance/:chainId')
-    getEthBalance(@Param('chainId') chainId:number){
+    getEthBalance(@Param('chainId') chainId:number):Promise<number>{
         return this.globalService.getTreasuryEthBalance(chainId);
     }
 
     @Get('/liquidationIndex/:chainId')
-    getLiquidationIndex(@Param('chainId') chainId:number){
+    getLiquidationIndex(@Param('chainId') chainId:number):Promise<number>{
         return this.globalService.getLiquidationIndex(chainId);
     }
 
     @Get('/availableLiquidationAmount/:chainId')
-    getAvailableLiquidationAmount(@Param('chainId') chainId:number){
+    getAvailableLiquidationAmount(@Param('chainId') chainId:number):Promise<number>{
         return this.globalService.getTotalAvailableLiquidationAmount(chainId);
     }
 
