@@ -30,4 +30,15 @@ export class GlobalVariables{
         type:'decimal',
         nullable:true})
     liquidationIndex: number;
+
+    @Column({
+        type:'decimal',
+        nullable:true})
+    lastEthPrice: number;
+
+    @Column({
+        type:'decimal',
+        nullable:true})
+    fallbackEthPrice: number;
+
 }

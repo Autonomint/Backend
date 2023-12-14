@@ -25,9 +25,6 @@ export class CdsService {
         private globalService:GlobalService
     ){}
 
-    private lastEthPrice:number;
-    private fallbackEthPrice:number;
-
     async getCdsDeposit(getCdsDeposit:GetCdsDeposit):Promise<CdsInfo>{
         const{address,index,chainId} = getCdsDeposit;
         const found = await this.cdsRepository.findOne(
@@ -151,6 +148,7 @@ export class CdsService {
             }else{
                 this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) + parseFloat(depositedAmint)); 
             }
+            await this.globalService.setEthPrice(chainId,ethPriceAtDeposit);
             await this.cdsRepository.save(cds);
             await this.cdsDepositorRepository.save(cdsDepositor);
             return cds;
@@ -214,8 +212,9 @@ export class CdsService {
         const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
 
-        this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(withdrawAmountInEther));
-        this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawEthAmountInEther)); 
+        await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(withdrawAmountInEther));
+        await this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawEthAmountInEther)); 
+        await this.globalService.setEthPrice(chainId,ethPriceAtWithdraw);
 
         await this.cdsRepository.save(found);
         await this.cdsDepositorRepository.save(cdsDepositor);
@@ -249,10 +248,12 @@ export class CdsService {
 
         let priceDiff:number;
 
-        if(ethPrice != this.lastEthPrice){
-            priceDiff = ethPrice - this.lastEthPrice;
+        const ethPrices = await this.globalService.getEthPrices(chainId);
+
+        if(ethPrice != ethPrices[1]){
+            priceDiff = ethPrice - ethPrices[1];
         }else{
-            priceDiff = ethPrice - this.fallbackEthPrice;
+            priceDiff = ethPrice - ethPrices[0];
         }
         const value = (amount * vaultBal * priceDiff)/treasuryBal;
         return value;
@@ -267,22 +268,27 @@ export class CdsService {
             currentLiquidations = 0;
         }
         let ethAmount:number;
-        for(let i = liquidationIndexAtDeposit;i <= currentLiquidations;i++){
-           const liquidationAmount = found.liquidationAmount;
-           if(liquidationAmount > 0){
-                const liquidatedPosition = await this.liquidationInfoRepository.findOne(
-                    {
-                        where:{
-                            chainId:chainId,
-                            index:i}})
-                const share = (liquidationAmount/liquidatedPosition.availableLiquidationAmount)
-                let profit = liquidatedPosition.profits * share;
-                found.liquidationAmount += profit;
-                found.liquidationAmount -= (found.liquidationAmount * share)
-                ethAmount += liquidatedPosition.ethAmount * share;    
-            }
+        if((currentLiquidations - liquidationIndexAtDeposit) != 0){
+            for(let i = liquidationIndexAtDeposit;i <= currentLiquidations;i++){
+                const liquidationAmount = found.liquidationAmount;
+                if(liquidationAmount > 0){
+                     const liquidatedPosition = await this.liquidationInfoRepository.findOne(
+                         {
+                             where:{
+                                 chainId:chainId,
+                                 index:i}})
+                     const share = (liquidationAmount/liquidatedPosition.availableLiquidationAmount)
+                     let profit = liquidatedPosition.profits * share;
+                     found.liquidationAmount += profit;
+                     found.liquidationAmount -= (found.liquidationAmount * share)
+                     ethAmount += liquidatedPosition.ethAmount * share;    
+                 }
+             }
+             return[ethAmount,found.liquidationAmount];
+        }else{
+            throw new NotFoundException(`No Liquidations happened between deposit and withdraw`);
         }
-        return[ethAmount,found.liquidationAmount];
+
     }
 
     async calculateWithdrawAmount(cdsAmountToReturnDto : CdsAmountToReturn):Promise<number[]>{

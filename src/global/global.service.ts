@@ -64,7 +64,20 @@ export class GlobalService {
         await this.globalRepository.save(found);
     }
 
-
+    async setEthPrice(chainId:number,ethPrice:number){
+        let found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            found = this.globalRepository.create({
+                    chainId,
+                    lastEthPrice:ethPrice,
+                    fallbackEthPrice:0
+            })
+        }else{
+            found.lastEthPrice = ethPrice;
+            found.fallbackEthPrice = found.lastEthPrice;
+        }
+        await this.globalRepository.save(found);
+    }
 
     async getTreasuryAmintBalance(chainId:number):Promise<number>{
         const found = await this.globalRepository.findOne({where:{chainId:chainId}});
@@ -100,5 +113,10 @@ export class GlobalService {
     async getLiquidationIndex(chainId:number):Promise<number>{
         const found = await this.globalRepository.findOne({where:{chainId:chainId}});
         return found.liquidationIndex;
+    }
+
+    async getEthPrices(chainId:number):Promise<number[]>{
+        const found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        return [found.fallbackEthPrice,found.lastEthPrice];
     }
 }
