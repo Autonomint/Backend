@@ -330,10 +330,10 @@ export class BorrowsService {
         const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,provider);
         const currentEthPrice = await borrowingContract.getUSDValue();
         const ethPrice = currentEthPrice.toNumber()/100;
-        const liquidationPositions = await this.criticalPositionsRepository.findBy({
+                const liquidationPositions = await this.criticalPositionsRepository.findBy({
             ethPriceAtLiquidation:MoreThanOrEqual(ethPrice)
         });
-        if(liquidationPositions){
+        if(liquidationPositions.length != 0){
         let liquidatedPositions:BorrowInfo[];
         for(let i=0;i<liquidationPositions.length;i++){
             if(!liquidatedPositions){
@@ -375,8 +375,8 @@ export class BorrowsService {
     async getSignerOrProvider(needSigner = false){
         const provider =  new ethers.providers.JsonRpcProvider("https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/");
         // if(needSigner){
-                        //     const wallet = new ethers.Wallet('',provider);
-                        //     return wallet;
+            //     const wallet = new ethers.Wallet('',provider);
+            //     return wallet;
         // }
         return provider;
     };
