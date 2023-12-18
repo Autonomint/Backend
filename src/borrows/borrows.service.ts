@@ -11,8 +11,12 @@ import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
 import { CriticalPositions } from './entities/liquidation.entity';
 import {
-    borrowAddress,cdsAddress,treasuryAddress,optionsAddress,
-    borrowABI,cdsABI
+    borrowAddressSepolia,borrowABISepolia,
+    cdsAddressSepolia,cdsABISepolia,
+    treasuryAddressSepolia,treasuryABISepolia,
+    borrowAddressMumbai,borrowABIMumbai,
+    cdsAddressMumbai,cdsABIMumbai,
+    treasuryAddressMumbai,treasuryABIMumbai
 } from '../utils/index';
 import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
 import { Cron,CronExpression } from '@nestjs/schedule';
@@ -299,8 +303,8 @@ export class BorrowsService {
 
     @Cron("0 0 */3 * *")
     async createCriticalPositions():Promise<CriticalPositions[]>{
-        const provider = await this.getSignerOrProvider(false);
-        const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,provider);
+        const provider = await this.getSignerOrProvider(80001,false);
+        const borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,provider);
         const currentEthPrice = await borrowingContract.getUSDValue();
         const ethPrice = (currentEthPrice.toNumber())/100;
         const positions = await this.borrowRepository.findBy({
@@ -328,9 +332,12 @@ export class BorrowsService {
 
     @Cron(CronExpression.EVERY_5_MINUTES)
     async liquidate():Promise<CriticalPositions[]>{
-        const signer = await this.getSignerOrProvider(true);
-        const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,signer);
-        const currentEthPrice = await borrowingContract.getUSDValue();
+        const signerMumbai = await this.getSignerOrProvider(80001,true);
+        const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
+        const signerSepolia = await this.getSignerOrProvider(80001,true);
+        const borrowingContractSepolia = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerSepolia);
+        let borrowingContract;
+        const currentEthPrice = await borrowingContractMumbai.getUSDValue();
         const ethPrice = currentEthPrice.toNumber()/100;
                 const liquidationPositions = await this.criticalPositionsRepository.findBy({
             ethPriceAtLiquidation:MoreThanOrEqual(ethPrice)
@@ -348,6 +355,11 @@ export class BorrowsService {
             }
         }
         liquidatedPositions.map(async (liquidatedPosition) =>{
+            if(liquidatedPosition.chainId == 80001){
+                borrowingContract = borrowingContractMumbai;
+            }else if(liquidatedPosition.chainId == 11155111){
+                borrowingContract = borrowingContractSepolia
+            }
             await borrowingContract.liquidate(liquidatedPosition.address,liquidatedPosition.index,currentEthPrice);
             liquidatedPosition.status = PositionStatus.LIQUIDATED;
             const chainId = liquidatedPosition.chainId;      
@@ -373,8 +385,14 @@ export class BorrowsService {
         return liquidationPositions;
     }
 
-    async getSignerOrProvider(needSigner = false){
-        const provider =  new ethers.providers.JsonRpcProvider("https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/");
+    async getSignerOrProvider(chainId:number,needSigner = false){
+        let rpcUrl:string;
+        if(chainId == 11155111){
+            rpcUrl = "https://sepolia.infura.io/v3/e9cf275f1ddc4b81aa62c5aa0b11ac0f"
+        }else if(chainId == 80001){
+            rpcUrl = "https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/"
+        }
+        const provider =  new ethers.providers.JsonRpcProvider(rpcUrl);
         // if(needSigner){
             //     const wallet = new ethers.Wallet('',provider);
             //     return wallet;
