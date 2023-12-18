@@ -64,6 +64,9 @@ export class BorrowInfo{
         nullable:true})
     strikePrice:number;
 
+    @Column({nullable:true})
+    totalDebtAmount:string;
+
     @Column({ nullable:true})
     withdrawTime1:string;
 

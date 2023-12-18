@@ -286,7 +286,7 @@ export class CdsService {
              }
              return[ethAmount,found.liquidationAmount];
         }else{
-            throw new NotFoundException(`No Liquidations happened between deposit and withdraw`);
+            return [null,null];
         }
 
     }
@@ -301,8 +301,12 @@ export class CdsService {
         let returnAmounts:number[];
         if(found.optedForLiquidation == true){
             const liquidationGains = await this.calculateLiquidationGains(getCdsDepositDto);
-            const depositedAmintWithoutLiquidationAmount = parseFloat(found.depositedAmint) - parseFloat(found.initialLiquidationAmount);
-            returnAmounts = [(depositedAmintWithoutLiquidationAmount + priceChangeGainOrLoss + liquidationGains[1] - 2*(parseFloat(found.depositedAmint))),liquidationGains[0]]
+            if(!liquidationGains){
+                const depositedAmintWithoutLiquidationAmount = parseFloat(found.depositedAmint) - parseFloat(found.initialLiquidationAmount);
+                returnAmounts = [(depositedAmintWithoutLiquidationAmount + priceChangeGainOrLoss + liquidationGains[1] - 2*(parseFloat(found.depositedAmint))),liquidationGains[0]];
+            }else{
+                returnAmounts = [priceChangeGainOrLoss];
+            }
         }else{
             returnAmounts = [priceChangeGainOrLoss];
         }

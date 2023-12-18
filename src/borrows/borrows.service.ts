@@ -149,7 +149,8 @@ export class BorrowsService {
             depositedTime,
             ethPrice,
             noOfAmintMinted,
-            strikePricePercent
+            strikePricePercent,
+            totalDebtAmount
         } = addBorrowDto;
 
         const currentIndex = await this.getDepositorIndexByAddress(address,chainId);
@@ -172,6 +173,7 @@ export class BorrowsService {
                 criticalEthPrice,
                 noOfAmintMinted,
                 strikePrice,
+                totalDebtAmount,
                 status:PositionStatus.DEPOSITED
             });
 
@@ -326,8 +328,8 @@ export class BorrowsService {
 
     @Cron(CronExpression.EVERY_5_MINUTES)
     async liquidate():Promise<CriticalPositions[]>{
-        const provider = await this.getSignerOrProvider(true);
-        const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,provider);
+        const signer = await this.getSignerOrProvider(true);
+        const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,signer);
         const currentEthPrice = await borrowingContract.getUSDValue();
         const ethPrice = currentEthPrice.toNumber()/100;
                 const liquidationPositions = await this.criticalPositionsRepository.findBy({
@@ -349,7 +351,7 @@ export class BorrowsService {
             await borrowingContract.liquidate(liquidatedPosition.address,liquidatedPosition.index,currentEthPrice);
             liquidatedPosition.status = PositionStatus.LIQUIDATED;
             const chainId = liquidatedPosition.chainId;      
-            borrowingContract.on('Liquidated',async (index,liquidationAmount,profits,ethAmount,availableLiquidationAmount) => {
+            borrowingContract.on('Liquidate',async (index,liquidationAmount,profits,ethAmount,availableLiquidationAmount) => {
                 const liquidationInfo = this.liquidationInfoRepository.create({
                     chainId:chainId,
                     index,
@@ -365,7 +367,6 @@ export class BorrowsService {
                 await this.globalService.setTotalAvailableLiquidationAmount(chainId,availableLiquidationAmount);
             })
         });
-        liquidatedPositions.map((liquidatedPosition) =>{liquidatedPosition.status = PositionStatus.LIQUIDATED})
         await this.criticalPositionsRepository.remove(liquidationPositions);
         await this.borrowRepository.save(liquidatedPositions);
     }
