@@ -32,7 +32,7 @@ export class CdsController {
 
    
 
-    @Get('/withdraw/calculateWithdrawAmount')
+    @Post('/withdraw/calculateWithdrawAmount')
     getWithdrawAmount(@Body() cdsAmountToReturn:CdsAmountToReturn):Promise<number[]>{
         return this.cdsService.calculateWithdrawAmount(cdsAmountToReturn);
     }
