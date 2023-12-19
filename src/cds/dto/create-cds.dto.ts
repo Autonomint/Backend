@@ -8,6 +8,9 @@ export class AddCdsDto{
     chainId:number;
 
     @IsNotEmpty()
+    collateralType:string;
+
+    @IsNotEmpty()
     index:number;
 
     @IsNotEmpty()
@@ -15,6 +18,9 @@ export class AddCdsDto{
 
     @IsNotEmpty()
     depositedAmint:string;
+
+    @IsNotEmpty()
+    depositedUsdt:string;
 
     @IsNotEmpty()
     depositedTime:string;

@@ -77,10 +77,12 @@ export class CdsService {
     async addCds(addCdsDto:AddCdsDto):Promise<CdsInfo>{
         const{
             address,
+            collateralType,
             index,
             chainId,
             aprAtDeposit,
             depositedAmint,
+            depositedUsdt,
             depositedTime,
             ethPriceAtDeposit,
             lockingPeriod,
@@ -94,10 +96,12 @@ export class CdsService {
         if(currentIndex == (index-1) || currentIndex == 0){
             const cds = this.cdsRepository.create({
                 address,
+                collateralType,
                 index,
                 chainId,
                 aprAtDeposit,
                 depositedAmint,
+                depositedUsdt,
                 depositedTime,
                 ethPriceAtDeposit,
                 lockingPeriod,

@@ -13,6 +13,9 @@ export class CdsInfo{
     address:string;
 
     @Column({nullable:true})
+    collateralType:string;
+
+    @Column({nullable:true})
     chainId:number;
 
     @Column()
@@ -20,6 +23,9 @@ export class CdsInfo{
 
     @Column({nullable:true})
     depositedAmint:string;
+
+    @Column({nullable:true})
+    depositedUsdt:string;
 
     @Column({ nullable:true})
     depositedTime:string;
