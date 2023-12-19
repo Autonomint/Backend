@@ -25,4 +25,7 @@ export class WithdrawDto{
 
     @IsNotEmpty()
     noOfAbond:string;
+
+    @IsNotEmpty()
+    totalDebtAmount:string;
 }
