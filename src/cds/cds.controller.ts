@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Body, Controller, Get, Param,Header, Patch, Post, Query} from '@nestjs/common';
 import { CdsService } from './cds.service';
 import { GetCdsFilterDto } from './dto/get-cds-filter.dto';
@@ -6,6 +7,7 @@ import { CdsDepositorInfo } from './entities/cdsDepositor.entity';
 import { AddCdsDto } from './dto/create-cds.dto';
 import { WithdrawCdsDto } from './dto/withdraw-cds.dto';
 import { GetCdsDeposit } from './dto/get-cds-deposit.dto';
+import { CdsAmountToReturn } from './dto/cdsAmountToReturn.dto';
 
 @Controller('cds')
 export class CdsController {
@@ -28,11 +30,11 @@ export class CdsController {
         return this.cdsService.getCdsDepositorByAddress(address);
     }
 
-    @Get('/:chainId/:address')
-    getDepositsByChainId(@Param() params:{address:string;chainId:number}):Promise<CdsInfo[]>{
-        const address = params.address;
-        const chainId = params.chainId;
-        return this.cdsService.getDepositsByChainId(address,chainId);
+   
+
+    @Post('/withdraw/calculateWithdrawAmount')
+    getWithdrawAmount(@Body() cdsAmountToReturn:CdsAmountToReturn):Promise<number[]>{
+        return this.cdsService.calculateWithdrawAmount(cdsAmountToReturn);
     }
 
     @Post('/depositAmint')
@@ -47,5 +49,12 @@ export class CdsController {
     @Header("Access-Control-Allow-Credentials" , 'true')
     withdraw(@Body() withdrawCdsDto:WithdrawCdsDto):Promise<CdsInfo>{
         return this.cdsService.cdsWithdraw(withdrawCdsDto);
+    }
+
+    @Get('/:chainId/:address')
+    getDepositsByChainId(@Param() params:{address:string;chainId:number}):Promise<CdsInfo[]>{
+        const address = params.address;
+        const chainId = params.chainId;
+        return this.cdsService.getDepositsByChainId(address,chainId);
     }
 }

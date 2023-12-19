@@ -29,5 +29,8 @@ export class AddCdsDto{
     optedForLiquidation:boolean;
 
     @IsNotEmpty()
-    liquidationAmount:string;
+    liquidationAmount:number;
+
+    @IsNotEmpty()
+    depositVal:number;
 }

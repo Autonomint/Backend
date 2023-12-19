@@ -1,4 +1,4 @@
-import { Injectable,NotFoundException } from '@nestjs/common';
+import { Inject, Injectable,NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CdsInfo } from './entities/cds.entity';
 import { CdsDepositorInfo } from './entities/cdsDepositor.entity';
@@ -7,8 +7,11 @@ import { AddCdsDto } from './dto/create-cds.dto';
 import { CdsPositionStatus } from './cds-status.enum';
 import { WithdrawCdsDto } from './dto/withdraw-cds.dto';
 import { GetCdsDeposit } from './dto/get-cds-deposit.dto';
-import { ethers,utils,BigNumber } from 'ethers';
+import { ethers } from 'ethers';
 import { GetCdsDepositByChainId } from './dto/get-cds-deposit-by-chainid.dto';
+import { CdsAmountToReturn } from './dto/cdsAmountToReturn.dto';
+import { GlobalService } from '../global/global.service';
+import { LiquidationInfo } from '../borrows/entities/liquidatedInfo.entity';
 
 @Injectable()
 export class CdsService {
@@ -16,7 +19,10 @@ export class CdsService {
         @InjectRepository(CdsInfo)
         private cdsRepository: Repository<CdsInfo>,
         @InjectRepository(CdsDepositorInfo)
-        private cdsDepositorRepository: Repository<CdsDepositorInfo>
+        private cdsDepositorRepository: Repository<CdsDepositorInfo>,
+        @InjectRepository(LiquidationInfo)
+        private liquidationInfoRepository: Repository<LiquidationInfo>,
+        private globalService:GlobalService
     ){}
 
     async getCdsDeposit(getCdsDeposit:GetCdsDeposit):Promise<CdsInfo>{
@@ -79,10 +85,12 @@ export class CdsService {
             ethPriceAtDeposit,
             lockingPeriod,
             liquidationAmount,
-            optedForLiquidation
+            optedForLiquidation,
+            depositVal
         } = addCdsDto;
 
         const currentIndex = await this.getCdsDepositorIndexByAddress(address,chainId);
+        const initialLiquidationAmount = liquidationAmount.toString();
         if(currentIndex == (index-1) || currentIndex == 0){
             const cds = this.cdsRepository.create({
                 address,
@@ -93,8 +101,10 @@ export class CdsService {
                 depositedTime,
                 ethPriceAtDeposit,
                 lockingPeriod,
+                initialLiquidationAmount,
                 liquidationAmount,
                 optedForLiquidation,
+                depositVal,
                 status:CdsPositionStatus.DEPOSITED
             });
 
@@ -110,7 +120,6 @@ export class CdsService {
                     cdsDepositor.totalIndexInPolygon = index;
                 }
                 cdsDepositor.deposits = [cds]
-                // cdsDepositor.totalLiquidationAmount = parseInt(liquidationAmount);
             }else{
                 if(chainId == 11155111){
                     if(cdsDepositor.totalIndexInEthereum > 0){
@@ -132,6 +141,14 @@ export class CdsService {
             }
             cdsDepositor.address = address;
 
+            const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
+
+            if(amintBalance == 0){
+                this.globalService.setTreasuryAmintBalance(chainId,parseFloat(depositedAmint)); 
+            }else{
+                this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) + parseFloat(depositedAmint)); 
+            }
+            await this.globalService.setEthPrice(chainId,ethPriceAtDeposit);
             await this.cdsRepository.save(cds);
             await this.cdsDepositorRepository.save(cdsDepositor);
             return cds;
@@ -192,9 +209,107 @@ export class CdsService {
 
         found.status = CdsPositionStatus.WITHDREW;
 
+        const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
+        const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
+
+        await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(withdrawAmountInEther));
+        await this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawEthAmountInEther)); 
+        await this.globalService.setEthPrice(chainId,ethPriceAtWithdraw);
+
         await this.cdsRepository.save(found);
         await this.cdsDepositorRepository.save(cdsDepositor);
 
         return found;
+    }
+
+    async cdsAmountToReturn(cdsAmountToReturnDto : CdsAmountToReturn):Promise<number>{
+        const {address,index,chainId,ethPrice} = cdsAmountToReturnDto;
+        
+        let getCdsDepositDto = new GetCdsDeposit();
+        getCdsDepositDto = {address,index,chainId}
+        const found = await this.getCdsDeposit(getCdsDepositDto);
+        const withdrawVal = await this.calculateValue(ethPrice,chainId);
+        const depositVal = found.depositVal;
+        if(withdrawVal <= depositVal){
+            const valDiff = depositVal - withdrawVal;
+            const loss = (parseFloat(found.depositedAmint) * valDiff)/1000;
+            return (parseFloat(found.depositedAmint) - loss);
+        }else{
+            const valDiff = withdrawVal - depositVal;
+            const toReturn = (parseFloat(found.depositedAmint) * valDiff)/1000;
+            return (parseFloat(found.depositedAmint) + toReturn);
+        }
+    }
+
+    async calculateValue(ethPrice:number,chainId:number):Promise<number>{
+        const amount = 1000;
+        const treasuryBal = await this.globalService.getTreasuryAmintBalance(chainId);
+        const vaultBal = await this.globalService.getTreasuryEthBalance(chainId);
+
+        let priceDiff:number;
+
+        const ethPrices = await this.globalService.getEthPrices(chainId);
+
+        if(ethPrice != ethPrices[1]){
+            priceDiff = ethPrice - ethPrices[1];
+        }else{
+            priceDiff = ethPrice - ethPrices[0];
+        }
+        const value = (amount * vaultBal * priceDiff)/treasuryBal;
+        return value;
+    }
+
+    async calculateLiquidationGains(getCdsDepositDto:GetCdsDeposit):Promise<[number,number]>{
+        const{address,chainId,index} = getCdsDepositDto;
+        const found = await this.getCdsDeposit(getCdsDepositDto);
+        const liquidationIndexAtDeposit = found.liquidationIndex;
+        let currentLiquidations = await this.globalService.getLiquidationIndex(chainId);
+        if(!currentLiquidations){
+            currentLiquidations = 0;
+        }
+        let ethAmount:number;
+        if((currentLiquidations - liquidationIndexAtDeposit) != 0){
+            for(let i = liquidationIndexAtDeposit;i <= currentLiquidations;i++){
+                const liquidationAmount = found.liquidationAmount;
+                if(liquidationAmount > 0){
+                     const liquidatedPosition = await this.liquidationInfoRepository.findOne(
+                         {
+                             where:{
+                                 chainId:chainId,
+                                 index:i}})
+                     const share = (liquidationAmount/liquidatedPosition.availableLiquidationAmount)
+                     let profit = liquidatedPosition.profits * share;
+                     found.liquidationAmount += profit;
+                     found.liquidationAmount -= (found.liquidationAmount * share)
+                     ethAmount += liquidatedPosition.ethAmount * share;    
+                 }
+             }
+             return[ethAmount,found.liquidationAmount];
+        }else{
+            return [null,null];
+        }
+
+    }
+
+    async calculateWithdrawAmount(cdsAmountToReturnDto : CdsAmountToReturn):Promise<number[]>{
+        const {address,index,chainId,ethPrice} = cdsAmountToReturnDto;
+        let getCdsDepositDto = new GetCdsDeposit(); 
+        getCdsDepositDto = {address,index,chainId}
+
+        const found = await this.getCdsDeposit(getCdsDepositDto);
+        const priceChangeGainOrLoss = await this.cdsAmountToReturn(cdsAmountToReturnDto);
+        let returnAmounts:number[];
+        if(found.optedForLiquidation == true){
+            const liquidationGains = await this.calculateLiquidationGains(getCdsDepositDto);
+            if(!liquidationGains){
+                const depositedAmintWithoutLiquidationAmount = parseFloat(found.depositedAmint) - parseFloat(found.initialLiquidationAmount);
+                returnAmounts = [(depositedAmintWithoutLiquidationAmount + priceChangeGainOrLoss + liquidationGains[1] - 2*(parseFloat(found.depositedAmint))),liquidationGains[0]];
+            }else{
+                returnAmounts = [priceChangeGainOrLoss];
+            }
+        }else{
+            returnAmounts = [priceChangeGainOrLoss];
+        }
+        return returnAmounts;
     }
 }

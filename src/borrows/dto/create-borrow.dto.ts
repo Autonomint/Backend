@@ -36,4 +36,7 @@ export class AddBorrowDto{
 
     @IsNotEmpty()
     strikePricePercent:number;
+
+    @IsNotEmpty()
+    totalDebtAmount:string;
 }

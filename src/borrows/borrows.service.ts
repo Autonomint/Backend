@@ -1,21 +1,27 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
 import { PositionStatus } from './borrow-status.enum';
 import { AddBorrowDto } from './dto/create-borrow.dto';
 import { GetBorrowFilterDto } from './dto/get-borrow-filter.dto';
 import { BorrowInfo } from './entities/borrow.entity';
 import { Repository,Equal,Not,MoreThanOrEqual } from 'typeorm';
-import { ethers,utils,BigNumber } from 'ethers';
-import  Web3Modal  from 'web3modal'
+import { ethers } from 'ethers';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
 import { CriticalPositions } from './entities/liquidation.entity';
 import {
-    borrowAddress,cdsAddress,treasuryAddress,optionsAddress,
-    borrowABI,cdsABI
+    borrowAddressSepolia,borrowABISepolia,
+    cdsAddressSepolia,cdsABISepolia,
+    treasuryAddressSepolia,treasuryABISepolia,
+    borrowAddressMumbai,borrowABIMumbai,
+    cdsAddressMumbai,cdsABIMumbai,
+    treasuryAddressMumbai,treasuryABIMumbai
 } from '../utils/index';
 import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
+import { Cron,CronExpression } from '@nestjs/schedule';
+import { GlobalService } from '../global/global.service';
+import { LiquidationInfo } from './entities/liquidatedInfo.entity';
 require('dotenv').config();
 
 @Injectable()
@@ -28,6 +34,10 @@ export class BorrowsService {
         private borrowerRepository: Repository<BorrowerInfo>,
         @InjectRepository(CriticalPositions)
         private criticalPositionsRepository: Repository<CriticalPositions>,
+        @InjectRepository(LiquidationInfo)
+        private liquidationInfoRepository: Repository<LiquidationInfo>,
+        @Inject(GlobalService)
+        private globalService:GlobalService
     ){}
 
 
@@ -143,7 +153,8 @@ export class BorrowsService {
             depositedTime,
             ethPrice,
             noOfAmintMinted,
-            strikePricePercent
+            strikePricePercent,
+            totalDebtAmount
         } = addBorrowDto;
 
         const currentIndex = await this.getDepositorIndexByAddress(address,chainId);
@@ -166,6 +177,7 @@ export class BorrowsService {
                 criticalEthPrice,
                 noOfAmintMinted,
                 strikePrice,
+                totalDebtAmount,
                 status:PositionStatus.DEPOSITED
             });
 
@@ -211,6 +223,14 @@ export class BorrowsService {
             }
             borrower.address = address;
 
+            const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
+
+            if(ethBalance == 0){
+                this.globalService.setTreasuryEthBalance(chainId,parseFloat(depositedAmount)); 
+            }else{
+                this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) + parseFloat(depositedAmount)); 
+            }
+
             await this.borrowRepository.save(borrow);
             await this.borrowerRepository.save(borrower);
             return borrow;
@@ -243,7 +263,7 @@ export class BorrowsService {
         const amountYetToWithdrawInEther = ethers.utils.formatEther(amountYetToWithdraw);
         const noOfAbondInEther = ethers.utils.formatEther(noOfAbond);
 
-        if(!found.withdrawAmount1){
+        if(!found.withdrawAmount1 && found.status != PositionStatus.LIQUIDATED){
             found.withdrawTime1 = withdrawTime;
             found.withdrawAmount1 = withdrawAmountInEther;
             found.noOfAbondMinted = parseFloat(noOfAbondInEther);
@@ -270,15 +290,21 @@ export class BorrowsService {
             found.status = PositionStatus.WITHDREW2;      
         }
 
+        const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
+
+        this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawAmountInEther)); 
+
+
         await this.borrowRepository.save(found);
         await this.borrowerRepository.save(borrower);
 
         return found;
     }
 
+    @Cron("0 0 */3 * *")
     async createCriticalPositions():Promise<CriticalPositions[]>{
-        const provider = await this.getSignerOrProvider(false);
-        const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,provider);
+        const provider = await this.getSignerOrProvider(80001,false);
+        const borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,provider);
         const currentEthPrice = await borrowingContract.getUSDValue();
         const ethPrice = (currentEthPrice.toNumber())/100;
         const positions = await this.borrowRepository.findBy({
@@ -304,15 +330,19 @@ export class BorrowsService {
         return liquidationPositions;
     }
 
+    @Cron(CronExpression.EVERY_5_MINUTES)
     async liquidate():Promise<CriticalPositions[]>{
-        const provider = await this.getSignerOrProvider(true);
-        const borrowingContract = new ethers.Contract(borrowAddress,borrowABI,provider);
-        const currentEthPrice = await borrowingContract.getUSDValue();
+        const signerMumbai = await this.getSignerOrProvider(80001,true);
+        const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
+        const signerSepolia = await this.getSignerOrProvider(11155111,true);
+        const borrowingContractSepolia = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signerSepolia);
+        let borrowingContract;
+        const currentEthPrice = await borrowingContractMumbai.getUSDValue();
         const ethPrice = currentEthPrice.toNumber()/100;
         const liquidationPositions = await this.criticalPositionsRepository.findBy({
             ethPriceAtLiquidation:MoreThanOrEqual(ethPrice)
         });
-        if(liquidationPositions){
+        if(liquidationPositions.length != 0){
         let liquidatedPositions:BorrowInfo[];
         for(let i=0;i<liquidationPositions.length;i++){
             if(!liquidatedPositions){
@@ -325,22 +355,51 @@ export class BorrowsService {
             }
         }
         liquidatedPositions.map(async (liquidatedPosition) =>{
+            if(liquidatedPosition.chainId == 80001){
+                borrowingContract = borrowingContractMumbai;
+            }else if(liquidatedPosition.chainId == 11155111){
+                borrowingContract = borrowingContractSepolia
+            }
             await borrowingContract.liquidate(liquidatedPosition.address,liquidatedPosition.index,currentEthPrice);
             liquidatedPosition.status = PositionStatus.LIQUIDATED;
+            const chainId = liquidatedPosition.chainId;      
+            borrowingContract.on('Liquidate',async (index,liquidationAmount,profits,ethAmount,availableLiquidationAmount) => {
+                const liquidationInfo = this.liquidationInfoRepository.create({
+                    chainId:chainId,
+                    index,
+                    liquidationAmount,
+                    profits,
+                    ethAmount,
+                    availableLiquidationAmount,
+                })
+                await this.liquidationInfoRepository.save(liquidationInfo);
+                await this.globalService.setLiquidationIndex(chainId,index);
+                const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
+                await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(liquidationAmount))
+                await this.globalService.setTotalAvailableLiquidationAmount(chainId,availableLiquidationAmount);
+            })
         });
-        // liquidatedPositions.map((liquidatedPosition) =>{liquidatedPosition.status = PositionStatus.LIQUIDATED})
         await this.criticalPositionsRepository.remove(liquidationPositions);
         await this.borrowRepository.save(liquidatedPositions);
     }
         return liquidationPositions;
     }
 
-    async getSignerOrProvider(needSigner = false){
-        const provider =  new ethers.providers.JsonRpcProvider("https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/");
-        // if(needSigner){
-                //     const wallet = new ethers.Wallet('',provider);
-                //     return wallet;
-        // }
+    async getSignerOrProvider(chainId:number,needSigner = false){
+        let rpcUrl:string;
+        let pKey:string;
+        if(chainId == 11155111){
+            rpcUrl = "https://sepolia.infura.io/v3/e9cf275f1ddc4b81aa62c5aa0b11ac0f"
+            pKey = 'ec619e44ab8377982c53722fbb1a39549c8e927f440f769e5c74313fb7e7eb3f'
+        }else if(chainId == 80001){
+            rpcUrl = "https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/"
+            pKey = '3cdf792b14656fcdcc415ba2fde3c7fbadacdcc887778f36e8ce98db34021e15';
+        }
+        const provider =  new ethers.providers.JsonRpcProvider(rpcUrl);
+        if(needSigner){
+                const wallet = new ethers.Wallet(pKey,provider);
+                return wallet;
+        }
         return provider;
     };
 

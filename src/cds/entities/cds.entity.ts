@@ -45,10 +45,23 @@ export class CdsInfo{
     ethPriceAtWithdraw:number;
 
     @Column({nullable:true})
-    liquidationAmount:string;
+    initialLiquidationAmount:string;
+
+    @Column({
+        type:'decimal',
+        nullable: true })
+    liquidationAmount:number;
+
+    @Column({nullable:true})
+    liquidationIndex:number;
 
     @Column({type:'boolean'})
     optedForLiquidation:boolean;
+
+    @Column({
+        type:'decimal',
+        nullable: true })
+    depositVal:number;
 
     @Column({ nullable:true})
     withdrawTime:string;
