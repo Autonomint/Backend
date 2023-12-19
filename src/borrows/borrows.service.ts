@@ -154,7 +154,6 @@ export class BorrowsService {
             ethPrice,
             noOfAmintMinted,
             strikePricePercent,
-            totalDebtAmount
         } = addBorrowDto;
 
         const currentIndex = await this.getDepositorIndexByAddress(address,chainId);
@@ -177,7 +176,6 @@ export class BorrowsService {
                 criticalEthPrice,
                 noOfAmintMinted,
                 strikePrice,
-                totalDebtAmount,
                 status:PositionStatus.DEPOSITED
             });
 
@@ -248,7 +246,8 @@ export class BorrowsService {
             borrowDebt,
             withdrawAmount,
             amountYetToWithdraw,
-            noOfAbond
+            noOfAbond,
+            totalDebtAmount
         } = withdrawDto;
 
         const found = await this.borrowRepository.findOne(
@@ -268,6 +267,7 @@ export class BorrowsService {
             found.withdrawAmount1 = withdrawAmountInEther;
             found.noOfAbondMinted = parseFloat(noOfAbondInEther);
             found.amountYetToWithdraw = amountYetToWithdrawInEther;
+            found.totalDebtAmount = totalDebtAmount;
             found.status = PositionStatus.WITHDREW1;
             if(chainId == 11155111){
                 borrower.totalDepositedAmountInEthereum = parseFloat(borrower.totalDepositedAmountInEthereum.toString()) - parseFloat(found.depositedAmount);
