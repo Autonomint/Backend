@@ -145,7 +145,7 @@ export class CdsService {
             await this.cdsDepositorRepository.save(cdsDepositor);
             return cds;
         }else{
-            return ;
+            throw new NotFoundException('Incorrect index');
         }
     }
 

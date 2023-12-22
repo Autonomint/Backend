@@ -211,7 +211,7 @@ export class BorrowsService {
             await this.borrowerRepository.save(borrower);
             return borrow;
         }else{
-            return ;
+            throw new NotFoundException('Incorrect index') ;
         }
     }
 
