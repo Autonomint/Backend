@@ -106,8 +106,9 @@ export class BorrowsService {
         }
     }
 
-    async getDepositorByAddress(address:string):Promise<BorrowerInfo>{
-        const found = await this.borrowerRepository.findOne({where:{address:address}});
+    async getDepositorByAddress(address:string,chainId:number):Promise<BorrowerInfo>{
+        const found = await this.borrowerRepository.findOne({where:{
+            chainId,address}});
         if(!found){
             throw new NotFoundException(`Deposit with address "${address}" not found`);
         }else{
@@ -116,17 +117,15 @@ export class BorrowsService {
     }
 
     async getDepositorIndexByAddress(address:string,chainId:number):Promise<number>{
-        const found = await this.borrowerRepository.findOne({where:{address}});
+        const found = await this.borrowerRepository.findOne({where:{
+            chainId:chainId,
+            address:address}});
         if(!found){
             return 0;
         }else{
-            if(chainId == 11155111){
-                return found.totalIndexInEthereum ? found.totalIndexInEthereum : 0;
-            }else if(chainId == 80001){
-                return found.totalIndexInPolygon ? found.totalIndexInPolygon : 0;
+            return found.totalIndex;
             }
         }
-    }
 
     async getDepositsByChainId(address:string,chainId:number):Promise<BorrowInfo[]>{
         const found = await this.borrowRepository.findBy({
@@ -179,44 +178,23 @@ export class BorrowsService {
                 status:PositionStatus.DEPOSITED
             });
 
-            let borrower = await this.borrowerRepository.findOne({where:{address}});
+            let borrower = await this.borrowerRepository.findOne({where:{
+                chainId:chainId,
+                address:address}});
 
             if(!borrower){
                 borrower = new BorrowerInfo();
-                if(chainId == 11155111){
-                    borrower.totalDepositedAmountInEthereum = parseFloat(depositedAmount);
-                    borrower.totalAmintInEthereum = parseFloat(noOfAmintMinted);
-                    borrower.totalAbondInEthereum = 0;
-                    borrower.totalIndexInEthereum = index;
-                }else if(chainId == 80001){
-                    borrower.totalDepositedAmountInPolygon = parseFloat(depositedAmount);
-                    borrower.totalAmintInPolygon = parseFloat(noOfAmintMinted);
-                    borrower.totalAbondInPolygon = 0;
-                    borrower.totalIndexInPolygon = index;
-                }
+                borrower.chainId = chainId;
+                borrower.totalDepositedAmount = parseFloat(depositedAmount);
+                borrower.totalAmint = parseFloat(noOfAmintMinted);
+                borrower.totalAbond = 0;
+                borrower.totalIndex = index;
                 borrower.borrows = [borrow];
             }else{
-                if(chainId == 11155111){
-                    if(borrower.totalIndexInEthereum){
-                        borrower.totalDepositedAmountInEthereum = parseFloat(borrower.totalDepositedAmountInEthereum.toString()) + parseFloat(depositedAmount);
-                        borrower.totalAmintInEthereum = parseFloat(borrower.totalAmintInEthereum.toString()) +  parseFloat(noOfAmintMinted);
-                    }else{
-                        borrower.totalDepositedAmountInEthereum = parseFloat(depositedAmount);
-                        borrower.totalAmintInEthereum = parseFloat(noOfAmintMinted);
-                        borrower.totalAbondInEthereum = 0;
-                    }
-                    borrower.totalIndexInEthereum = index;
-                }else if(chainId == 80001){
-                    if(borrower.totalIndexInPolygon){
-                        borrower.totalDepositedAmountInPolygon = parseFloat(borrower.totalDepositedAmountInPolygon.toString()) + parseFloat(depositedAmount);
-                        borrower.totalAmintInPolygon = parseFloat(borrower.totalAmintInPolygon.toString()) +  parseFloat(noOfAmintMinted);  
-                    }else{
-                        borrower.totalDepositedAmountInPolygon = parseFloat(depositedAmount);
-                        borrower.totalAmintInPolygon = parseFloat(noOfAmintMinted);
-                        borrower.totalAbondInPolygon = 0;
-                    }
-                    borrower.totalIndexInPolygon = index;
-                }
+                borrower.totalDepositedAmount = parseFloat(borrower.totalDepositedAmount.toString()) + parseFloat(depositedAmount);
+                borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) +  parseFloat(noOfAmintMinted);
+                borrower.totalAbond = 0;
+                borrower.totalIndex = index;
                 borrower.borrows.push(borrow);
             }
             borrower.address = address;
@@ -269,31 +247,21 @@ export class BorrowsService {
             found.amountYetToWithdraw = amountYetToWithdrawInEther;
             found.totalDebtAmount = totalDebtAmount;
             found.status = PositionStatus.WITHDREW1;
-            if(chainId == 11155111){
-                borrower.totalDepositedAmountInEthereum = parseFloat(borrower.totalDepositedAmountInEthereum.toString()) - parseFloat(found.depositedAmount);
-                borrower.totalAmintInEthereum = parseFloat(borrower.totalAmintInEthereum.toString()) - parseFloat(found.noOfAmintMinted);
-                borrower.totalAbondInEthereum = parseFloat(borrower.totalAbondInEthereum.toString()) +  parseFloat(noOfAbondInEther);
-            }else if(chainId == 80001){
-                borrower.totalDepositedAmountInPolygon =  parseFloat(borrower.totalDepositedAmountInPolygon.toString()) - parseFloat(found.depositedAmount);
-                borrower.totalAmintInPolygon = parseFloat(borrower.totalAmintInPolygon.toString()) - parseFloat(found.noOfAmintMinted);
-                borrower.totalAbondInPolygon = parseFloat(borrower.totalAbondInPolygon.toString()) +  parseFloat(noOfAbondInEther);
-            }
+            borrower.totalDepositedAmount = parseFloat(borrower.totalDepositedAmount.toString()) - parseFloat(found.depositedAmount);
+            borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) - parseFloat(found.noOfAmintMinted);
+            borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) +  parseFloat(noOfAbondInEther);
+
         }else{
             found.withdrawTime2 = withdrawTime;  
             found.withdrawAmount2 = withdrawAmountInEther;
-            if(chainId == 11155111){
-                borrower.totalAbondInEthereum = parseFloat(borrower.totalAbondInEthereum.toString()) - parseFloat(noOfAbondInEther);
-            }else if(chainId == 80001){
-                borrower.totalAbondInPolygon = parseFloat(borrower.totalAbondInPolygon.toString()) - parseFloat(noOfAbondInEther);
-            }
+            borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) - parseFloat(noOfAbondInEther);
             found.amountYetToWithdraw = '0';
             found.status = PositionStatus.WITHDREW2;      
         }
 
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
 
-        this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawAmountInEther)); 
-
+        this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawAmountInEther));
 
         await this.borrowRepository.save(found);
         await this.borrowerRepository.save(borrower);

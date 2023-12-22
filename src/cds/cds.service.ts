@@ -40,8 +40,9 @@ export class CdsService {
         }
     }
 
-    async getCdsDepositorByAddress(address:string):Promise<CdsDepositorInfo>{
-        const found = await this.cdsDepositorRepository.findOne({where:{address}});
+    async getCdsDepositorByAddress(address:string,chainId:number):Promise<CdsDepositorInfo>{
+        const found = await this.cdsDepositorRepository.findOne({where:{
+            chainId,address}});
         if(!found){
             throw new NotFoundException(`Deposit with address "${address}" not found`);
         }else{
@@ -54,11 +55,7 @@ export class CdsService {
         if(!found){
             return 0;
         }else{
-            if(chainId == 11155111){
-                return found.totalIndexInEthereum ? found.totalIndexInEthereum : 0;
-            }else if(chainId == 80001){
-                return found.totalIndexInPolygon ? found.totalIndexInPolygon : 0;
-            }
+            return found.totalIndex;
         }
     }
 
@@ -93,6 +90,7 @@ export class CdsService {
 
         const currentIndex = await this.getCdsDepositorIndexByAddress(address,chainId);
         const initialLiquidationAmount = liquidationAmount.toString();
+        const totalDepositedAmount = depositedAmint + depositedUsdt;
         if(currentIndex == (index-1) || currentIndex == 0){
             const cds = this.cdsRepository.create({
                 address,
@@ -102,6 +100,7 @@ export class CdsService {
                 aprAtDeposit,
                 depositedAmint,
                 depositedUsdt,
+                totalDepositedAmount,
                 depositedTime,
                 ethPriceAtDeposit,
                 lockingPeriod,
@@ -112,37 +111,26 @@ export class CdsService {
                 status:CdsPositionStatus.DEPOSITED
             });
 
-            let cdsDepositor = await this.cdsDepositorRepository.findOne({where:{address}});
+            let cdsDepositor = await this.cdsDepositorRepository.findOne({where:{
+                chainId:chainId,
+                address:address}});
 
             if(!cdsDepositor){
                 cdsDepositor = new CdsDepositorInfo();
-                if(chainId == 11155111){
-                    cdsDepositor.totalDepositedAmintInEthereum = parseFloat(depositedAmint);
-                    cdsDepositor.totalIndexInEthereum = index;
-                }else if(chainId == 80001){
-                    cdsDepositor.totalDepositedAmintInPolygon = parseFloat(depositedAmint);
-                    cdsDepositor.totalIndexInPolygon = index;
-                }
+                cdsDepositor.chainId = chainId;
+                cdsDepositor.totalDepositedAmint = parseFloat(depositedAmint);
+                cdsDepositor.totalDepositedUsdt = parseFloat(depositedUsdt);
+                cdsDepositor.totalDepositedAmount = parseFloat(totalDepositedAmount);
                 cdsDepositor.deposits = [cds]
             }else{
-                if(chainId == 11155111){
-                    if(cdsDepositor.totalIndexInEthereum > 0){
-                        cdsDepositor.totalDepositedAmintInEthereum = parseFloat(cdsDepositor.totalDepositedAmintInEthereum.toString()) + parseFloat(depositedAmint);
-                    }else{
-                        cdsDepositor.totalDepositedAmintInEthereum = parseFloat(depositedAmint);
-                    }
-                    cdsDepositor.totalIndexInEthereum = index;
-                }else if(chainId == 80001){
-                    if(cdsDepositor.totalIndexInPolygon > 0){
-                        cdsDepositor.totalDepositedAmintInPolygon = parseFloat(cdsDepositor.totalDepositedAmintInPolygon.toString()) + parseFloat(depositedAmint);
-                    }else{
-                        cdsDepositor.totalDepositedAmintInPolygon = parseFloat(depositedAmint);
-                    }
-                    cdsDepositor.totalIndexInPolygon = index;
-                }
+                cdsDepositor.totalDepositedAmint = parseFloat(cdsDepositor.totalDepositedAmint.toString()) + parseFloat(depositedAmint);
+                cdsDepositor.totalDepositedUsdt = parseFloat(cdsDepositor.totalDepositedUsdt.toString()) + parseFloat(depositedUsdt);
+                cdsDepositor.totalDepositedAmount = parseFloat(cdsDepositor.totalDepositedAmount.toString()) + parseFloat(totalDepositedAmount);
                 cdsDepositor.deposits.push(cds);
                 // cdsDepositor.totalLiquidationAmount += parseInt(liquidationAmount);
             }
+            
+            cdsDepositor.totalIndex = index;
             cdsDepositor.address = address;
 
             const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
@@ -184,32 +172,25 @@ export class CdsService {
         const withdrawAmountInEther = ethers.utils.formatEther(withdrawAmount);
         const feesInEther = ethers.utils.formatEther(fees);
         const feesWithdrawnInEther = ethers.utils.formatEther(feesWithdrawn);
-        const cdsDepositor = await this.cdsDepositorRepository.findOne({where:{address:address}});
+        const cdsDepositor = await this.cdsDepositorRepository.findOne({where:{
+            chainId:chainId,
+            address:address}});
 
         found.withdrawTime = withdrawTime;
         found.ethPriceAtWithdraw = ethPriceAtWithdraw;
         found.withdrawAmount = withdrawAmountInEther;
         found.withdrawEthAmount = withdrawEthAmountInEther;
         found.fees = feesInEther;
-        if(chainId == 11155111){
-            cdsDepositor.totalDepositedAmintInEthereum = parseFloat(cdsDepositor.totalDepositedAmintInEthereum.toString()) - parseFloat(found.depositedAmint);
-            if(!cdsDepositor.totalFeesInEthereum){
-                cdsDepositor.totalFeesInEthereum = parseFloat(feesInEther);     
-                cdsDepositor.totalFeesWithdrawnInEthereum = parseFloat(feesWithdrawnInEther);      
-            }else{
-                cdsDepositor.totalFeesInEthereum = parseFloat(cdsDepositor.totalFeesInEthereum.toString()) + parseFloat(feesInEther);
-                cdsDepositor.totalFeesWithdrawnInEthereum = parseFloat(cdsDepositor.totalFeesWithdrawnInEthereum.toString()) + parseFloat(feesWithdrawnInEther);  
-            } 
-        }else if(chainId == 80001){
-            cdsDepositor.totalDepositedAmintInPolygon = parseFloat(cdsDepositor.totalDepositedAmintInPolygon.toString()) - parseFloat(found.depositedAmint);
-            if(!cdsDepositor.totalFeesInPolygon){
-                cdsDepositor.totalFeesInPolygon = parseFloat(feesInEther);     
-                cdsDepositor.totalFeesWithdrawnInPolygon = parseFloat(feesWithdrawnInEther);      
-            }else{
-                cdsDepositor.totalFeesInPolygon = parseFloat(cdsDepositor.totalFeesInPolygon.toString()) + parseFloat(feesInEther);
-                cdsDepositor.totalFeesWithdrawnInPolygon = parseFloat(cdsDepositor.totalFeesWithdrawnInPolygon.toString()) + parseFloat(feesWithdrawnInEther);  
-            }
+        if(!cdsDepositor.totalFees){
+            cdsDepositor.totalFees= parseFloat(feesInEther);     
+            cdsDepositor.totalFeesWithdrawn = parseFloat(feesWithdrawnInEther);      
+        }else{
+            cdsDepositor.totalFees = parseFloat(cdsDepositor.totalFees.toString()) + parseFloat(feesInEther);
+            cdsDepositor.totalFeesWithdrawn = parseFloat(cdsDepositor.totalFeesWithdrawn.toString()) + parseFloat(feesWithdrawnInEther);  
         }
+        cdsDepositor.totalDepositedAmint = parseFloat(cdsDepositor.totalDepositedAmint.toString()) - parseFloat(found.depositedAmint);
+        cdsDepositor.totalDepositedUsdt = parseFloat(cdsDepositor.totalDepositedUsdt.toString()) - parseFloat(found.depositedUsdt);
+        cdsDepositor.totalDepositedAmount = parseFloat(cdsDepositor.totalDepositedAmount.toString()) - parseFloat(found.totalDepositedAmount);
 
         found.status = CdsPositionStatus.WITHDREW;
 

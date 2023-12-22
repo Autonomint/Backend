@@ -27,6 +27,9 @@ export class CdsInfo{
     @Column({nullable:true})
     depositedUsdt:string;
 
+    @Column({nullable:true})
+    totalDepositedAmount:string;
+
     @Column({ nullable:true})
     depositedTime:string;
 
