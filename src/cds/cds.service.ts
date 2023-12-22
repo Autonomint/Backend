@@ -51,7 +51,7 @@ export class CdsService {
     }
 
     async getCdsDepositorIndexByAddress(address:string,chainId:number):Promise<number>{
-        const found = await this.cdsDepositorRepository.findOne({where:{address}});
+        const found = await this.cdsDepositorRepository.findOne({where:{chainId,address}});
         if(!found){
             return 0;
         }else{
