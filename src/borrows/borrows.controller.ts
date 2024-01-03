@@ -49,6 +49,13 @@ export class BorrowsController {
         return this.borrowsService.getDepositsByChainId(address,chainId);
     }
 
+    @Get('/optionFees/:chainId/:amount')
+    getEthVolatility(@Param() params:{chainId:number;amount:string}):Promise<[number,number]>{
+        const chainId = params.chainId;
+        const amount = params.amount;
+        return this.borrowsService.getEthVolatility(chainId,amount);
+    }
+
     @Post('/borrowAmint')
     @Header("Access-Control-Allow-Origin" , "*")
     @Header("Access-Control-Allow-Credentials" , 'true')

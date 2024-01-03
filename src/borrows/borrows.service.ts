@@ -10,13 +10,17 @@ import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
 import { CriticalPositions } from './entities/liquidation.entity';
+import { bybit } from 'ccxt';
+
 import {
     borrowAddressSepolia,borrowABISepolia,
     cdsAddressSepolia,cdsABISepolia,
     treasuryAddressSepolia,treasuryABISepolia,
+    optionsAddressSepolia,optionsABISepolia,
     borrowAddressMumbai,borrowABIMumbai,
     cdsAddressMumbai,cdsABIMumbai,
-    treasuryAddressMumbai,treasuryABIMumbai
+    treasuryAddressMumbai,treasuryABIMumbai,
+    optionsAddressMumbai,optionsABIMumbai
 } from '../utils/index';
 import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
 import { Cron,CronExpression } from '@nestjs/schedule';
@@ -37,9 +41,12 @@ export class BorrowsService {
         @InjectRepository(LiquidationInfo)
         private liquidationInfoRepository: Repository<LiquidationInfo>,
         @Inject(GlobalService)
-        private globalService:GlobalService
+        private globalService:GlobalService,
     ){}
-
+    private exchange = new bybit({
+        apiKey: 'BNi0E7lvKWezOwjV0N',
+        secret: 'ER4G9Vm1z01Xzr31HbzofYLlU9m7ISue1ixo',
+    });
 
     getDeposits(getBorrowFilterDto:GetBorrowFilterDto):Promise<BorrowInfo[]>{
         const {
@@ -370,5 +377,20 @@ export class BorrowsService {
         }
         return provider;
     };
+
+    async getEthVolatility(chainId:number,amount:string):Promise<[number,number]>{
+        const abc = await this.exchange.fetchVolatilityHistory('ETH',{period:30});
+        const volatility = abc.map(item => item.info[0].value)[0];
+        const signer = await this.getSignerOrProvider(chainId,true);
+        const optionsContractSepolia = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signer);
+        const optionsContractMumbai = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signer);
+        let optionFees;
+        if(chainId == 80001){
+            optionFees = await optionsContractMumbai.calculateOptionPrice(volatility,parseInt(amount));
+        }else if(chainId == 11155111){
+            optionFees = await optionsContractSepolia.calculateOptionPrice(volatility,parseInt(amount));
+        }
+        return[(volatility * 1e8),optionFees];
+    }
 
 }
