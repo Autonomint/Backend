@@ -26,6 +26,7 @@ import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.d
 import { Cron,CronExpression } from '@nestjs/schedule';
 import { GlobalService } from '../global/global.service';
 import { LiquidationInfo } from './entities/liquidatedInfo.entity';
+import { StrikePricePercent } from './borrow-strike-price.enum';
 require('dotenv').config();
 
 @Injectable()
@@ -186,11 +187,13 @@ export class BorrowsService {
             depositedTime,
             ethPrice,
             noOfAmintMinted,
+            strikePrice,
+            optionFees,
             strikePricePercent,
         } = addBorrowDto;
 
         const currentIndex = await this.getDepositorIndexByAddress(address,chainId);
-        const strikePrice = (ethPrice * (1 + strikePricePercent/100));
+        const strikePriceCalculated = (ethPrice * (1 + strikePrice/100));
         if(currentIndex == (index-1) || currentIndex == 0){
             const liquidationEthPrice = (ethPrice*80)/100;
             const criticalEthPrice = (ethPrice*83)/100;
@@ -208,7 +211,9 @@ export class BorrowsService {
                 liquidationEthPrice,
                 criticalEthPrice,
                 noOfAmintMinted,
-                strikePrice,
+                strikePrice:strikePriceCalculated,
+                optionFees,
+                strikePricePercent:StrikePricePercent[strikePricePercent],
                 status:PositionStatus.DEPOSITED
             });
 
@@ -437,6 +442,42 @@ export class BorrowsService {
             optionFees = await optionsContractSepolia.calculateOptionPrice(volatility,parseInt(amount),strikePricePercent);
         }
         return[(volatility * 1e8),optionFees];
+    }
+
+    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+    async calculatePeriodicFee(){
+        const signerMumbai = await this.getSignerOrProvider(80001,true);
+        const optionsContractMumbai = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signerMumbai);
+        const signerSepolia = await this.getSignerOrProvider(11155111,true);
+        const optionsContractSepolia = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signerSepolia);
+        const abc = await this.exchange.fetchVolatilityHistory('ETH',{period:30});
+        const volatility = abc.map(item => item.info[0].value)[0];
+        let optionsFeesMumbai;
+        let optionsFeesSepolia;
+        for(let i=0;i<5;i++){
+            optionsFeesMumbai.push(await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
+            optionsFeesSepolia.push(await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
+        }
+
+        for(let i=0;i<5;i++){
+            let activePositionsSepolia = [await this.borrowRepository.findOne({where:
+                {
+                    chainId:Equal(11155111),
+                    status:Equal(PositionStatus.DEPOSITED),
+                    strikePricePercent:Equal(StrikePricePercent[i])}})];
+            activePositionsSepolia.map(async (activePosition) =>{
+                activePosition.totalFeesDeducted += ((optionsFeesSepolia * parseFloat(activePosition.depositedAmount))/30).toString();
+            })
+
+            let activePositionsMumbai = [await this.borrowRepository.findOne({where:
+                {
+                    chainId:Equal(80001),
+                    status:Equal(PositionStatus.DEPOSITED),
+                    strikePricePercent:Equal(StrikePricePercent[i])}})];
+            activePositionsMumbai.map(async (activePosition) =>{
+                activePosition.totalFeesDeducted += ((optionsFeesMumbai * parseFloat(activePosition.depositedAmount))/30).toString();
+            })
+        }
     }
 
 }

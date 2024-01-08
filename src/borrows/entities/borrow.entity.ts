@@ -2,6 +2,7 @@ import { Entity,Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm'
 import { PositionStatus } from '../borrow-status.enum';
 import { BorrowerInfo } from './borrower.entity';
 import { Type } from 'class-transformer';
+import { StrikePricePercent } from '../borrow-strike-price.enum';
 
 
 @Entity()
@@ -63,6 +64,15 @@ export class BorrowInfo{
         type:'decimal',
         nullable:true})
     strikePrice:number;
+
+    @Column({nullable:true})
+    strikePricePercent:StrikePricePercent;
+
+    @Column({nullable:true})
+    optionFees:string;
+
+    @Column({nullable:true})
+    totalFeesDeducted:string;
 
     @Column({nullable:true})
     totalDebtAmount:string;

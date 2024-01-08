@@ -1,4 +1,5 @@
 import {IsNotEmpty} from "class-validator";
+import { StrikePricePercent } from "../borrow-strike-price.enum";
 
 export class AddBorrowDto{
     @IsNotEmpty()
@@ -35,5 +36,11 @@ export class AddBorrowDto{
     noOfAmintMinted:string;
 
     @IsNotEmpty()
+    strikePrice:number;
+
+    @IsNotEmpty()
     strikePricePercent:number;
+
+    @IsNotEmpty()
+    optionFees:string;
 }
