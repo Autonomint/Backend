@@ -97,7 +97,11 @@ export class BorrowsService {
             return found;
         }
     }
-
+     /**
+      * 
+      * @param getBorrowDeposit dto to get borrower's deposit based on index and chain id
+      * @returns BorrowInfo
+      */
     async getBorrowDeposit(getBorrowDeposit:GetBorrowDeposit):Promise<BorrowInfo>{
         const{address,index,chainId} = getBorrowDeposit;
         const found = await this.borrowRepository.findOne(
@@ -113,6 +117,12 @@ export class BorrowsService {
         }
     }
 
+    /**
+     * 
+     * @param address address of the depositor
+     * @param chainId chainID
+     * @returns Entire borrowerInfo for that chainId
+     */
     async getDepositorByAddress(address:string,chainId:number):Promise<BorrowerInfo>{
         const found = await this.borrowerRepository.findOne({where:{
             chainId,address}});
@@ -123,6 +133,12 @@ export class BorrowsService {
         }
     }
 
+    /**
+     * 
+     * @param address address of the depositor
+     * @param chainId chainId
+     * @returns totalIndex of the depositor,a number
+     */
     async getDepositorIndexByAddress(address:string,chainId:number):Promise<number>{
         const found = await this.borrowerRepository.findOne({where:{
             chainId:chainId,
@@ -133,7 +149,13 @@ export class BorrowsService {
             return found.totalIndex;
             }
         }
-
+    
+        /**
+         * 
+         * @param address address od the depositor
+         * @param chainId chainId
+         * @returns Total deposits array
+         */
     async getDepositsByChainId(address:string,chainId:number):Promise<BorrowInfo[]>{
         const found = await this.borrowRepository.findBy({
             address:Equal(address),
@@ -146,6 +168,11 @@ export class BorrowsService {
         }
     }
 
+    /**
+     * 
+     * @param addBorrowDto To add deposits
+     * @returns The added deposit info
+     */
     async addBorrow(addBorrowDto:AddBorrowDto):Promise<BorrowInfo>{
         const{
             address,
@@ -222,6 +249,11 @@ export class BorrowsService {
         }
     }
 
+    /**
+     * 
+     * @param withdrawDto to withdraw the position
+     * @returns The details of withdrew position
+     */
     async withdraw(withdrawDto:WithdrawDto):Promise<BorrowInfo>{
         const{
             address,
@@ -276,6 +308,10 @@ export class BorrowsService {
         return found;
     }
 
+    /**
+     * For every 3 days it creates the array of postions if they are in going to be loquidate stage
+     * @returns Critical Positions array
+     */
     @Cron("0 0 */3 * *")
     async createCriticalPositions():Promise<CriticalPositions[]>{
         const provider = await this.getSignerOrProvider(80001,false);
@@ -305,6 +341,10 @@ export class BorrowsService {
         return liquidationPositions;
     }
 
+    /**
+     * Liquidate the positions if the position is in liquidation stages,check for every 5 minutes
+     * @returns liquidated positions
+     */
     @Cron(CronExpression.EVERY_5_MINUTES)
     async liquidate():Promise<CriticalPositions[]>{
         const signerMumbai = await this.getSignerOrProvider(80001,true);
@@ -378,7 +418,13 @@ export class BorrowsService {
         return provider;
     };
 
-    async getEthVolatility(chainId:number,amount:string):Promise<[number,number]>{
+    /**
+     * 
+     * @param chainId chainId
+     * @param amount amount going to deposit
+     * @returns ethVolatility and option price
+     */
+    async getEthVolatility(chainId:number,amount:string,strikePricePercent:number):Promise<[number,number]>{
         const abc = await this.exchange.fetchVolatilityHistory('ETH',{period:30});
         const volatility = abc.map(item => item.info[0].value)[0];
         const signer = await this.getSignerOrProvider(chainId,true);
@@ -386,9 +432,9 @@ export class BorrowsService {
         const optionsContractMumbai = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signer);
         let optionFees;
         if(chainId == 80001){
-            optionFees = await optionsContractMumbai.calculateOptionPrice(volatility,parseInt(amount));
+            optionFees = await optionsContractMumbai.calculateOptionPrice(volatility,parseInt(amount),strikePricePercent);
         }else if(chainId == 11155111){
-            optionFees = await optionsContractSepolia.calculateOptionPrice(volatility,parseInt(amount));
+            optionFees = await optionsContractSepolia.calculateOptionPrice(volatility,parseInt(amount),strikePricePercent);
         }
         return[(volatility * 1e8),optionFees];
     }

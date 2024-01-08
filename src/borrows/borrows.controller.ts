@@ -49,11 +49,12 @@ export class BorrowsController {
         return this.borrowsService.getDepositsByChainId(address,chainId);
     }
 
-    @Get('/optionFees/:chainId/:amount')
-    getEthVolatility(@Param() params:{chainId:number;amount:string}):Promise<[number,number]>{
+    @Get('/optionFees/:chainId/:amount/:percent')
+    getEthVolatility(@Param() params:{chainId:number;amount:string;percent:number}):Promise<[number,number]>{
         const chainId = params.chainId;
         const amount = params.amount;
-        return this.borrowsService.getEthVolatility(chainId,amount);
+        const strikePricePercent = params.percent
+        return this.borrowsService.getEthVolatility(chainId,amount,strikePricePercent);
     }
 
     @Post('/borrowAmint')

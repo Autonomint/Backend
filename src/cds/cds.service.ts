@@ -24,7 +24,11 @@ export class CdsService {
         private liquidationInfoRepository: Repository<LiquidationInfo>,
         private globalService:GlobalService
     ){}
-
+     /**
+      * 
+      * @param getCdsDeposit dto to get borrower's deposit based on index and chain id
+      * @returns BorrowInfo
+      */
     async getCdsDeposit(getCdsDeposit:GetCdsDeposit):Promise<CdsInfo>{
         const{address,index,chainId} = getCdsDeposit;
         const found = await this.cdsRepository.findOne(
@@ -39,7 +43,12 @@ export class CdsService {
             return found;
         }
     }
-
+    /**
+     * 
+     * @param address address of the depositor
+     * @param chainId chainID
+     * @returns Entire CdsDepositorInfo for that chainId
+     */
     async getCdsDepositorByAddress(address:string,chainId:number):Promise<CdsDepositorInfo>{
         const found = await this.cdsDepositorRepository.findOne({where:{
             chainId,address}});
@@ -49,7 +58,12 @@ export class CdsService {
             return found;
         }
     }
-
+    /**
+     * 
+     * @param address address of the depositor
+     * @param chainId chainId
+     * @returns totalIndex of the depositor,a number
+     */
     async getCdsDepositorIndexByAddress(address:string,chainId:number):Promise<number>{
         const found = await this.cdsDepositorRepository.findOne({where:{chainId,address}});
         if(!found){
@@ -58,7 +72,12 @@ export class CdsService {
             return found.totalIndex;
         }
     }
-
+        /**
+         * 
+         * @param address address od the depositor
+         * @param chainId chainId
+         * @returns Total deposits array
+         */
     async getDepositsByChainId(address:string,chainId:number):Promise<CdsInfo[]>{
         const found = await this.cdsRepository.findBy({
             address:Equal(address),
@@ -71,6 +90,11 @@ export class CdsService {
         }
     }
 
+    /**
+     * add a position in cds
+     * @param addCdsDto 
+     * @returns 
+     */
     async addCds(addCdsDto:AddCdsDto):Promise<CdsInfo>{
         const{
             address,
@@ -149,6 +173,11 @@ export class CdsService {
         }
     }
 
+    /**
+     * withdraw the cds position
+     * @param cdsWithdrawDto 
+     * @returns 
+     */
     async cdsWithdraw(cdsWithdrawDto:WithdrawCdsDto):Promise<CdsInfo>{
         const{
             address,
@@ -244,6 +273,11 @@ export class CdsService {
         return value;
     }
 
+    /**
+     * calculate liquidation gains,gained by user
+     * @param getCdsDepositDto 
+     * @returns 
+     */
     async calculateLiquidationGains(getCdsDepositDto:GetCdsDeposit):Promise<[number,number]>{
         const{address,chainId,index} = getCdsDepositDto;
         const found = await this.getCdsDeposit(getCdsDepositDto);
@@ -276,6 +310,11 @@ export class CdsService {
 
     }
 
+    /**
+     * returns the withdraw amount 
+     * @param cdsAmountToReturnDto 
+     * @returns 
+     */
     async calculateWithdrawAmount(cdsAmountToReturnDto : CdsAmountToReturn):Promise<number[]>{
         const {address,index,chainId,ethPrice} = cdsAmountToReturnDto;
         let getCdsDepositDto = new GetCdsDeposit(); 
