@@ -6,6 +6,7 @@ export class CriticalPositions{
     @PrimaryGeneratedColumn('uuid')
     id:string;
 
+    //Deposit Id
     @Column()
     positionId:string;
 
@@ -18,6 +19,7 @@ export class CriticalPositions{
     @Column({nullable:true})
     depositedEthAmount:string;
 
+    //83% of deposit eth price
     @Column({
         type:'decimal',
         nullable: true })
@@ -28,6 +30,7 @@ export class CriticalPositions{
         nullable: true })
     ethPriceAtDeposit:number;
 
+    // 80% of eth price
     @Column({
         type:'decimal',
         nullable: true })

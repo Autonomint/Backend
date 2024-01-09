@@ -32,11 +32,13 @@ export class CdsDepositorInfo{
         nullable: true })
     totalDepositedAmount:number;
 
+    // Total fees accured by the user from all deposits
     @Column({
         type:'decimal',
         nullable: true })
     totalFees:number;
 
+    // Total fees withdrawn by the user from all deposits
     @Column({
         type:'decimal',
         nullable: true })

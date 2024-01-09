@@ -65,12 +65,14 @@ export class BorrowInfo{
         nullable:true})
     strikePrice:number;
 
+    //Strike price that the depositor chose Eg:5%,10%,15%
     @Column({nullable:true})
     strikePricePercent:StrikePricePercent;
 
     @Column({nullable:true})
     optionFees:string;
 
+    //Option fees deducted till now
     @Column({nullable:true})
     totalFeesDeducted:string;
 
@@ -89,6 +91,7 @@ export class BorrowInfo{
     @Column({ nullable:true})
     withdrawAmount2:string;
 
+    //Amount yet to withdraw for 2nd time
     @Column({nullable:true})
     amountYetToWithdraw:string;
 
@@ -97,6 +100,7 @@ export class BorrowInfo{
         nullable:true})
     noOfAbondMinted:number;
 
+    // Status of the deposit
     @Column()
     status: PositionStatus;
 

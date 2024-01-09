@@ -32,7 +32,6 @@ export class BorrowerInfo{
         nullable:true})
     totalAbond:number;
 
-
     @OneToMany(() => BorrowInfo, (borrowInfo) => borrowInfo.borrower,{ eager: true })
     borrows:BorrowInfo[]
 }

@@ -20,6 +20,12 @@ export class ExternalProtocolsService {
         private globalService:GlobalService
     ){}
 
+    /**
+     * returns the total index 
+     * @param protocolName name of the external protocol
+     * @param chainId chain
+     * @returns total index ,a number
+     */
     async getTotalIndex(protocolName:string,chainId:number):Promise<number>{
         const found = await this.totalExternalProtocolDepositDataRepository.findOne({
             where:{
@@ -32,7 +38,7 @@ export class ExternalProtocolsService {
         }
     }
 
-    
+    // To get the particular deposit by index
     async getExternalProtocolDeposit(getExternalProtocolDepositDto:GetExternalProtocolDepositDto):Promise<ExternalProtocolDepositData>{
         const{protocolName,index,chainId} = getExternalProtocolDepositDto;
         const found = await this.externalProtocolDepositDataRepository.findOne(
@@ -48,6 +54,7 @@ export class ExternalProtocolsService {
         }
     }
 
+    // To get all the deposits in the chain
     async getDepositsByChainId(protocolName:string,chainId:number):Promise<ExternalProtocolDepositData[]>{
         const found = await this.externalProtocolDepositDataRepository.findBy({
             protocolName:Equal(protocolName),
@@ -73,6 +80,7 @@ export class ExternalProtocolsService {
         }
     }
 
+    // Add deposit to external protocol
     async addDeposit(addDepositDto:AddDepositDto):Promise<ExternalProtocolDepositData>{
         const{
             protocolName,
@@ -114,7 +122,10 @@ export class ExternalProtocolsService {
                 totalDeposit.deposits.push(deposit);
             }
 
+            // Get eth balance in treasury
             const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
+
+            // Update the eth balance in treasury
             await this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(depositedAmountInEth)); 
 
             await this.externalProtocolDepositDataRepository.save(deposit);
@@ -125,6 +136,7 @@ export class ExternalProtocolsService {
         }
     }
 
+    // Withdraw the eth from external protocol
     async externalProtocolWithdraw(withdrawDto:WithdrawExternalProtocolDto):Promise<ExternalProtocolDepositData>{
         const{
             protocolName,
@@ -157,7 +169,9 @@ export class ExternalProtocolsService {
             totalDeposit.totalWithdrewAmount = parseFloat(totalDeposit.totalWithdrewAmount.toString()) + parseFloat(withdrawAmountInEth);
         }
         totalDeposit.totalCreditedTokens = parseFloat(totalDeposit.totalCreditedTokens.toString()) - parseFloat(found.creditedTokens);
+        // Get the eth balance in treasury
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
+        // Update the eth balance in treasury
         await this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) + parseFloat(withdrawAmount)); 
 
         await this.externalProtocolDepositDataRepository.save(found);

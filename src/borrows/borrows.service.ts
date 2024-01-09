@@ -195,7 +195,9 @@ export class BorrowsService {
         const currentIndex = await this.getDepositorIndexByAddress(address,chainId);
         const strikePriceCalculated = (ethPrice * (1 + strikePrice/100));
         if(currentIndex == (index-1) || currentIndex == 0){
+            // Calculating liquidation eth price as 80% of current eth price
             const liquidationEthPrice = (ethPrice*80)/100;
+            // Calculating critical eth price as 83% of current eth price
             const criticalEthPrice = (ethPrice*83)/100;
             const borrow = this.borrowRepository.create({
                 address,
@@ -238,8 +240,10 @@ export class BorrowsService {
             }
             borrower.address = address;
 
+            // Getting eth balance in treasury
             const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
 
+            // Updating eth balance in treasury
             if(ethBalance == 0){
                 this.globalService.setTreasuryEthBalance(chainId,parseFloat(depositedAmount)); 
             }else{
@@ -280,6 +284,7 @@ export class BorrowsService {
             }});
         const borrower = await this.borrowerRepository.findOne({where:{address:address}});
         // const borrowDebtInEther = ethers.utils.formatEther(borrowDebt);
+        // Formatting the values in wei to Ether
         const withdrawAmountInEther = ethers.utils.formatEther(withdrawAmount);
         const amountYetToWithdrawInEther = ethers.utils.formatEther(amountYetToWithdraw);
         const noOfAbondInEther = ethers.utils.formatEther(noOfAbond);
@@ -305,6 +310,7 @@ export class BorrowsService {
 
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
 
+        // Updating eth balance in treasury
         this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawAmountInEther));
 
         await this.borrowRepository.save(found);
@@ -323,10 +329,13 @@ export class BorrowsService {
         const borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,provider);
         const currentEthPrice = await borrowingContract.getUSDValue();
         const ethPrice = (currentEthPrice.toNumber())/100;
+
+        //Filtering the positions based on current eth price
         const positions = await this.borrowRepository.findBy({
              criticalEthPrice:MoreThanOrEqual(ethPrice)
         });
 
+        // Creating critical position by deposit data
         const criticalPositions = positions.map((position) =>{
             const criticalPosition = new CriticalPositions();
             criticalPosition.positionId = position.id
@@ -339,7 +348,9 @@ export class BorrowsService {
             return criticalPosition;
         })
 
+        // Getting all the entities in critical postions
         const existingEntities = await this.criticalPositionsRepository.find();
+        // Check whether the positions are already not stored 
         const liquidationPositions = criticalPositions.filter(criticalPosition => !existingEntities.some(existingEntity => existingEntity.positionId === criticalPosition.positionId));
 
         await this.criticalPositionsRepository.save(liquidationPositions);
@@ -374,6 +385,7 @@ export class BorrowsService {
                 }));
             }
         }
+        // Liquidate the positions by calling liquidation function in borrowing contract
         liquidatedPositions.map(async (liquidatedPosition) =>{
             if(liquidatedPosition.chainId == 80001){
                 borrowingContract = borrowingContractMumbai;
@@ -393,8 +405,10 @@ export class BorrowsService {
                     availableLiquidationAmount,
                 })
                 await this.liquidationInfoRepository.save(liquidationInfo);
+                //Update the liquidationIndex i.e no of liquidations done so far
                 await this.globalService.setLiquidationIndex(chainId,index);
                 const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
+                // Update the amint and liquidation amount balance in treasury
                 await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(liquidationAmount))
                 await this.globalService.setTotalAvailableLiquidationAmount(chainId,availableLiquidationAmount);
             })

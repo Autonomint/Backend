@@ -25,9 +25,9 @@ export class CdsService {
         private globalService:GlobalService
     ){}
      /**
-      * 
+      * Return cds deposit info
       * @param getCdsDeposit dto to get borrower's deposit based on index and chain id
-      * @returns BorrowInfo
+      * @returns CdsInfo
       */
     async getCdsDeposit(getCdsDeposit:GetCdsDeposit):Promise<CdsInfo>{
         const{address,index,chainId} = getCdsDeposit;
@@ -44,7 +44,7 @@ export class CdsService {
         }
     }
     /**
-     * 
+     * Return cds depositor's total info
      * @param address address of the depositor
      * @param chainId chainID
      * @returns Entire CdsDepositorInfo for that chainId
@@ -59,7 +59,7 @@ export class CdsService {
         }
     }
     /**
-     * 
+     * Return totalIndex of cds depositor
      * @param address address of the depositor
      * @param chainId chainId
      * @returns totalIndex of the depositor,a number
@@ -73,7 +73,7 @@ export class CdsService {
         }
     }
         /**
-         * 
+         * Return cds deposits of the user in that particular chain
          * @param address address od the depositor
          * @param chainId chainId
          * @returns Total deposits array
@@ -157,13 +157,16 @@ export class CdsService {
             cdsDepositor.totalIndex = index;
             cdsDepositor.address = address;
 
+            //get the amint balance in treasury
             const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
 
+            // Update the amint balance in treasury
             if(amintBalance == 0){
                 this.globalService.setTreasuryAmintBalance(chainId,parseFloat(depositedAmint)); 
             }else{
                 this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) + parseFloat(depositedAmint)); 
             }
+            //Update eth price
             await this.globalService.setEthPrice(chainId,ethPriceAtDeposit);
             await this.cdsRepository.save(cds);
             await this.cdsDepositorRepository.save(cdsDepositor);
@@ -226,6 +229,7 @@ export class CdsService {
         const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
 
+        //Update the amint and eth balance in treasury
         await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(withdrawAmountInEther));
         await this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawEthAmountInEther)); 
         await this.globalService.setEthPrice(chainId,ethPriceAtWithdraw);
@@ -241,7 +245,10 @@ export class CdsService {
         
         let getCdsDepositDto = new GetCdsDeposit();
         getCdsDepositDto = {address,index,chainId}
+        // Get the particular deposit
         const found = await this.getCdsDeposit(getCdsDepositDto);
+
+        //Calculate the withdraw value
         const withdrawVal = await this.calculateValue(ethPrice,chainId);
         const depositVal = found.depositVal;
         if(withdrawVal <= depositVal){
@@ -280,6 +287,7 @@ export class CdsService {
      */
     async calculateLiquidationGains(getCdsDepositDto:GetCdsDeposit):Promise<[number,number]>{
         const{address,chainId,index} = getCdsDepositDto;
+        //Get the particular deposit
         const found = await this.getCdsDeposit(getCdsDepositDto);
         const liquidationIndexAtDeposit = found.liquidationIndex;
         let currentLiquidations = await this.globalService.getLiquidationIndex(chainId);
@@ -287,23 +295,25 @@ export class CdsService {
             currentLiquidations = 0;
         }
         let ethAmount:number;
+        // Loop through the liquidations that happened between deposit and withdraw
         if((currentLiquidations - liquidationIndexAtDeposit) != 0){
             for(let i = liquidationIndexAtDeposit;i <= currentLiquidations;i++){
                 const liquidationAmount = found.liquidationAmount;
                 if(liquidationAmount > 0){
-                     const liquidatedPosition = await this.liquidationInfoRepository.findOne(
-                         {
-                             where:{
-                                 chainId:chainId,
-                                 index:i}})
-                     const share = (liquidationAmount/liquidatedPosition.availableLiquidationAmount)
-                     let profit = liquidatedPosition.profits * share;
-                     found.liquidationAmount += profit;
-                     found.liquidationAmount -= (found.liquidationAmount * share)
-                     ethAmount += liquidatedPosition.ethAmount * share;    
-                 }
-             }
-             return[ethAmount,found.liquidationAmount];
+                    const liquidatedPosition = await this.liquidationInfoRepository.findOne(
+                        {
+                            where:{
+                                chainId:chainId,
+                                index:i}})
+                    // Calculate the depositor's proportion in that liquidation
+                    const share = (liquidationAmount/liquidatedPosition.availableLiquidationAmount)
+                    let profit = liquidatedPosition.profits * share;
+                    found.liquidationAmount += profit;
+                    found.liquidationAmount -= (found.liquidationAmount * share)
+                    ethAmount += liquidatedPosition.ethAmount * share;    
+                }
+            }
+            return[ethAmount,found.liquidationAmount];
         }else{
             return [null,null];
         }
@@ -323,6 +333,7 @@ export class CdsService {
         const found = await this.getCdsDeposit(getCdsDepositDto);
         const priceChangeGainOrLoss = await this.cdsAmountToReturn(cdsAmountToReturnDto);
         let returnAmounts:number[];
+        // If user opted for liquidation calculate liquidation gains
         if(found.optedForLiquidation == true){
             const liquidationGains = await this.calculateLiquidationGains(getCdsDepositDto);
             if(!liquidationGains){

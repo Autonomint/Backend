@@ -10,11 +10,13 @@ import { TotalExternalProtocolDepositData } from './entities/total-external-prot
 export class ExternalProtocolsController {
     constructor (private externalProtocolsService:ExternalProtocolsService){}
 
+    // Get the external protocol deposit by index
     @Get('/deposit')
     getExternalProtocolDeposit(@Body() getExternalProtocolDepositDto:GetExternalProtocolDepositDto):Promise<ExternalProtocolDepositData>{
         return this.externalProtocolsService.getExternalProtocolDeposit(getExternalProtocolDepositDto);
     }
 
+    // Get all the deposits in the particular chain
     @Get('totalDeposits/:chainId/:protocolName')
     getTotalDepositsByChainId(@Param() params:{protocolName:string;chainId:number}):Promise<TotalExternalProtocolDepositData>{
         const protocolName = params.protocolName;
@@ -22,7 +24,7 @@ export class ExternalProtocolsController {
         return this.externalProtocolsService.getTotalDepositsByChainId(protocolName,chainId);
     }
 
-
+    // Add deposit to external protocol
     @Post('/depositEthInProtocol')
     @Header("Access-Control-Allow-Origin" , "*")
     @Header("Access-Control-Allow-Credentials" , 'true')
@@ -30,6 +32,7 @@ export class ExternalProtocolsController {
         return this.externalProtocolsService.addDeposit(addDepositDto);
     }
 
+    // Withdraw the position from external protocol
     @Patch('/withdrawEthFromProtocol')
     @Header("Access-Control-Allow-Origin" , "*")
     @Header("Access-Control-Allow-Credentials" , 'true')

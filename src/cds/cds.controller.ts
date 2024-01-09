@@ -13,11 +13,13 @@ import { CdsAmountToReturn } from './dto/cdsAmountToReturn.dto';
 export class CdsController {
     constructor(private cdsService:CdsService){}
 
+    //To get the deposits by id
     @Get('/deposit')
     getDepositsById(@Body() getCdsDeposit:GetCdsDeposit):Promise<CdsInfo>{
         return this.cdsService.getCdsDeposit(getCdsDeposit);
     }
 
+    // To get the totalIndex of the depositor by address
     @Get('/index/:chainId/:address')
     getDepositorIndexByAddress(@Param() params:{address:string;chainId:number}):Promise<number>{
         const address = params.address;
@@ -25,6 +27,7 @@ export class CdsController {
         return this.cdsService.getCdsDepositorIndexByAddress(address,chainId);
     }
 
+    // To get the depositor's total deposits details
     @Get('/totalDeposits/:chainId/:address')
     getDepositorByAddress(@Param() params:{address:string;chainId:number}):Promise<CdsDepositorInfo>{
         const address = params.address;
@@ -33,12 +36,13 @@ export class CdsController {
     }
 
    
-
+    // To get the withdraw amount of the cds depositor
     @Post('/withdraw/calculateWithdrawAmount')
     getWithdrawAmount(@Body() cdsAmountToReturn:CdsAmountToReturn):Promise<number[]>{
         return this.cdsService.calculateWithdrawAmount(cdsAmountToReturn);
     }
 
+    // To add the deposit in borrowing
     @Post('/depositAmint')
     @Header("Access-Control-Allow-Origin" , "*")
     @Header("Access-Control-Allow-Credentials" , 'true')
@@ -46,6 +50,7 @@ export class CdsController {
         return this.cdsService.addCds(addCdsDto);
     }
 
+    // To withdraw the positions
     @Patch('/withdraw')
     @Header("Access-Control-Allow-Origin" , "*")
     @Header("Access-Control-Allow-Credentials" , 'true')
@@ -53,6 +58,7 @@ export class CdsController {
         return this.cdsService.cdsWithdraw(withdrawCdsDto);
     }
 
+    // To get the deposits in that particular chain Eg:Ethereum,Polygon
     @Get('/:chainId/:address')
     getDepositsByChainId(@Param() params:{address:string;chainId:number}):Promise<CdsInfo[]>{
         const address = params.address;
