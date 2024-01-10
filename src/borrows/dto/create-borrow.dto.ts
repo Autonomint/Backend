@@ -39,7 +39,7 @@ export class AddBorrowDto{
     strikePrice:number;
 
     @IsNotEmpty()
-    strikePricePercent:number;
+    strikePricePercent:string;
 
     @IsNotEmpty()
     optionFees:string;

@@ -90,4 +90,11 @@ export class BorrowsController {
     withdraw(@Body() withdrawDto:WithdrawDto):Promise<BorrowInfo>{
         return this.borrowsService.withdraw(withdrawDto);
     }
+
+    // @Patch('/calculatePeriodicFee')
+    // @Header("Access-Control-Allow-Origin" , "*")
+    // @Header("Access-Control-Allow-Credentials" , 'true')
+    // calculatePeriodicFee(){
+    //     return this.borrowsService.calculatePeriodicFee();
+    // }
 }

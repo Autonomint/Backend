@@ -215,6 +215,7 @@ export class BorrowsService {
                 noOfAmintMinted,
                 strikePrice:strikePriceCalculated,
                 optionFees,
+                totalFeesDeducted:(parseFloat(optionFees)/30).toString(),
                 strikePricePercent:StrikePricePercent[strikePricePercent],
                 status:PositionStatus.DEPOSITED
             });
@@ -458,6 +459,9 @@ export class BorrowsService {
         return[(volatility * 1e8),optionFees];
     }
 
+    /**
+     * Everyday it gets the option fees for a ETH,and deduct the option fees for the user based on the deposited amount
+     */
     @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
     async calculatePeriodicFee(){
         const signerMumbai = await this.getSignerOrProvider(80001,true);
@@ -468,30 +472,50 @@ export class BorrowsService {
         const volatility = abc.map(item => item.info[0].value)[0];
         let optionsFeesMumbai;
         let optionsFeesSepolia;
+        //Get the option fees for all strike prices
         for(let i=0;i<5;i++){
+            if(!optionsFeesMumbai){
+                optionsFeesMumbai = [await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i)]
+            }else if(!optionsFeesSepolia){
+                optionsFeesSepolia = [await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i)]
+            }else {
+                optionsFeesMumbai.push(await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
+                optionsFeesSepolia.push(await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
+            }
             optionsFeesMumbai.push(await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
             optionsFeesSepolia.push(await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
         }
 
+        // Filter the deposits based on chainId and status of the deposit
+        const activePositionsSepolia = await this.borrowRepository.findBy(
+            {
+                chainId:Equal(11155111),
+                status:Equal(PositionStatus.DEPOSITED)
+            });
+        const activePositionsMumbai = await this.borrowRepository.findBy(
+            {                    
+                chainId:Equal(80001),
+                status:Equal(PositionStatus.DEPOSITED)
+            });
+        //Loop through all the deposits and deduct option fees based on their strike prices and deposited amount
         for(let i=0;i<5;i++){
-            let activePositionsSepolia = [await this.borrowRepository.findOne({where:
-                {
-                    chainId:Equal(11155111),
-                    status:Equal(PositionStatus.DEPOSITED),
-                    strikePricePercent:Equal(StrikePricePercent[i])}})];
-            activePositionsSepolia.map(async (activePosition) =>{
-                activePosition.totalFeesDeducted += ((optionsFeesSepolia * parseFloat(activePosition.depositedAmount))/30).toString();
-            })
-
-            let activePositionsMumbai = [await this.borrowRepository.findOne({where:
-                {
-                    chainId:Equal(80001),
-                    status:Equal(PositionStatus.DEPOSITED),
-                    strikePricePercent:Equal(StrikePricePercent[i])}})];
-            activePositionsMumbai.map(async (activePosition) =>{
-                activePosition.totalFeesDeducted += ((optionsFeesMumbai * parseFloat(activePosition.depositedAmount))/30).toString();
-            })
+            if(activePositionsMumbai.length != 0){
+                activePositionsMumbai.map(activePosition =>{
+                    if(Object.keys(StrikePricePercent).indexOf(activePosition.strikePricePercent) == i){
+                        activePosition.totalFeesDeducted = (parseFloat(activePosition.totalFeesDeducted) + ((optionsFeesMumbai[i] * parseFloat(activePosition.depositedAmount))/30)).toString();
+                    }
+                })                
+            }
+            if(activePositionsSepolia.length != 0){
+                activePositionsSepolia.map(activePosition =>{
+                    if(Object.keys(StrikePricePercent).indexOf(activePosition.strikePricePercent) == i){
+                        activePosition.totalFeesDeducted = (parseFloat(activePosition.totalFeesDeducted) + (optionsFeesSepolia[i] * parseFloat(activePosition.depositedAmount))/30).toString();
+                    }
+                })                
+            }
         }
+        // Save the updated data
+        await this.borrowRepository.save(activePositionsMumbai);
+        await this.borrowRepository.save(activePositionsSepolia);
     }
-
 }
