@@ -3,6 +3,7 @@ import { PositionStatus } from '../borrow-status.enum';
 import { BorrowerInfo } from './borrower.entity';
 import { Type } from 'class-transformer';
 import { StrikePricePercent } from '../borrow-strike-price.enum';
+import { Batch } from './batch.entity';
 
 
 @Entity()
@@ -72,6 +73,9 @@ export class BorrowInfo{
     @Column({nullable:true})
     optionFees:string;
 
+    @Column({type:'boolean'})
+    downsideProtectionStatus:boolean;
+
     //Option fees deducted till now
     @Column({nullable:true})
     totalFeesDeducted:string;
@@ -106,4 +110,7 @@ export class BorrowInfo{
 
     @ManyToOne(() => BorrowerInfo,(borrower) => borrower.borrows,{cascade:true})
     borrower:BorrowerInfo;
+
+    @ManyToOne(() => Batch,(batch) => batch.deposits,{cascade:true})
+    batch:Batch;
 }

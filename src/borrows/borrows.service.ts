@@ -5,12 +5,12 @@ import { AddBorrowDto } from './dto/create-borrow.dto';
 import { GetBorrowFilterDto } from './dto/get-borrow-filter.dto';
 import { BorrowInfo } from './entities/borrow.entity';
 import { Repository,Equal,Not,MoreThanOrEqual } from 'typeorm';
-import { ethers } from 'ethers';
+import { ethers,getDefaultProvider } from 'ethers';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
 import { CriticalPositions } from './entities/liquidation.entity';
-import { bybit } from 'ccxt';
+import { bybit, pro } from 'ccxt';
 
 import {
     borrowAddressSepolia,borrowABISepolia,
@@ -27,6 +27,8 @@ import { Cron,CronExpression } from '@nestjs/schedule';
 import { GlobalService } from '../global/global.service';
 import { LiquidationInfo } from './entities/liquidatedInfo.entity';
 import { StrikePricePercent } from './borrow-strike-price.enum';
+import { Batch } from './entities/batch.entity';
+import { HighLTVPositions } from './entities/high-ltv-positions.entity';
 require('dotenv').config();
 
 @Injectable()
@@ -41,6 +43,10 @@ export class BorrowsService {
         private criticalPositionsRepository: Repository<CriticalPositions>,
         @InjectRepository(LiquidationInfo)
         private liquidationInfoRepository: Repository<LiquidationInfo>,
+        @InjectRepository(Batch)
+        private batchRepository: Repository<Batch>,
+        @InjectRepository(HighLTVPositions)
+        private highLtvPositionsRepository: Repository<HighLTVPositions>,
         @Inject(GlobalService)
         private globalService:GlobalService,
     ){}
@@ -192,6 +198,8 @@ export class BorrowsService {
             strikePricePercent,
         } = addBorrowDto;
 
+        await this.globalService.setBatchNo(chainId);
+        const batchNo = await this.globalService.getBatchNo(chainId);
         const currentIndex = await this.getDepositorIndexByAddress(address,chainId);
         const strikePriceCalculated = (ethPrice * (1 + strikePrice/100));
         if(currentIndex == (index-1) || currentIndex == 0){
@@ -215,6 +223,7 @@ export class BorrowsService {
                 noOfAmintMinted,
                 strikePrice:strikePriceCalculated,
                 optionFees,
+                downsideProtectionStatus:true,
                 totalFeesDeducted:(parseFloat(optionFees)/30).toString(),
                 strikePricePercent:StrikePricePercent[strikePricePercent],
                 status:PositionStatus.DEPOSITED
@@ -240,6 +249,15 @@ export class BorrowsService {
                 borrower.borrows.push(borrow);
             }
             borrower.address = address;
+
+            const batch = await this.batchRepository.findOne({where:{
+                chainId:chainId,
+                batchNo:batchNo}});
+            if(!batch){
+                batch.deposits = [borrow]
+            }else{
+                batch.deposits.push(borrow);
+            }
 
             // Getting eth balance in treasury
             const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
@@ -459,63 +477,206 @@ export class BorrowsService {
         return[(volatility * 1e8),optionFees];
     }
 
-    /**
-     * Everyday it gets the option fees for a ETH,and deduct the option fees for the user based on the deposited amount
-     */
-    @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-    async calculatePeriodicFee(){
-        const signerMumbai = await this.getSignerOrProvider(80001,true);
-        const optionsContractMumbai = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signerMumbai);
-        const signerSepolia = await this.getSignerOrProvider(11155111,true);
-        const optionsContractSepolia = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signerSepolia);
-        const abc = await this.exchange.fetchVolatilityHistory('ETH',{period:30});
-        const volatility = abc.map(item => item.info[0].value)[0];
-        let optionsFeesMumbai;
-        let optionsFeesSepolia;
-        //Get the option fees for all strike prices
-        for(let i=0;i<5;i++){
-            if(!optionsFeesMumbai){
-                optionsFeesMumbai = [await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i)]
-            }else if(!optionsFeesSepolia){
-                optionsFeesSepolia = [await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i)]
-            }else {
-                optionsFeesMumbai.push(await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
-                optionsFeesSepolia.push(await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
-            }
-            optionsFeesMumbai.push(await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
-            optionsFeesSepolia.push(await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
+    // /**
+    //  * Everyday it gets the option fees for a ETH,and deduct the option fees for the user based on the deposited amount
+    //  */
+    // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+    // async calculatePeriodicFee(){
+    //     const signerMumbai = await this.getSignerOrProvider(80001,true);
+    //     const optionsContractMumbai = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signerMumbai);
+    //     const signerSepolia = await this.getSignerOrProvider(11155111,true);
+    //     const optionsContractSepolia = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signerSepolia);
+    //     const abc = await this.exchange.fetchVolatilityHistory('ETH',{period:30});
+    //     const volatility = abc.map(item => item.info[0].value)[0];
+    //     let optionsFeesMumbai;
+    //     let optionsFeesSepolia;
+    //     //Get the option fees for all strike prices
+    //     for(let i=0;i<5;i++){
+    //         if(!optionsFeesMumbai){
+    //             optionsFeesMumbai = [await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i)]
+    //         }else if(!optionsFeesSepolia){
+    //             optionsFeesSepolia = [await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i)]
+    //         }else {
+    //             optionsFeesMumbai.push(await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
+    //             optionsFeesSepolia.push(await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
+    //         }
+    //         optionsFeesMumbai.push(await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
+    //         optionsFeesSepolia.push(await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
+    //     }
+
+    //     // Filter the deposits based on chainId and status of the deposit
+    //     const activePositionsSepolia = await this.borrowRepository.findBy(
+    //         {
+    //             chainId:Equal(11155111),
+    //             status:Equal(PositionStatus.DEPOSITED)
+    //         });
+    //     const activePositionsMumbai = await this.borrowRepository.findBy(
+    //         {                    
+    //             chainId:Equal(80001),
+    //             status:Equal(PositionStatus.DEPOSITED)
+    //         });
+    //     //Loop through all the deposits and deduct option fees based on their strike prices and deposited amount
+    //     for(let i=0;i<5;i++){
+    //         if(activePositionsMumbai.length != 0){
+    //             activePositionsMumbai.map(activePosition =>{
+    //                 if(Object.keys(StrikePricePercent).indexOf(activePosition.strikePricePercent) == i){
+    //                     activePosition.totalFeesDeducted = (parseFloat(activePosition.totalFeesDeducted) + ((optionsFeesMumbai[i] * parseFloat(activePosition.depositedAmount))/30)).toString();
+    //                 }
+    //             })                
+    //         }
+    //         if(activePositionsSepolia.length != 0){
+    //             activePositionsSepolia.map(activePosition =>{
+    //                 if(Object.keys(StrikePricePercent).indexOf(activePosition.strikePricePercent) == i){
+    //                     activePosition.totalFeesDeducted = (parseFloat(activePosition.totalFeesDeducted) + (optionsFeesSepolia[i] * parseFloat(activePosition.depositedAmount))/30).toString();
+    //                 }
+    //             })                
+    //         }
+    //     }
+    //     // Save the updated data
+    //     await this.borrowRepository.save(activePositionsMumbai);
+    //     await this.borrowRepository.save(activePositionsSepolia);
+    // }
+
+    @Cron(CronExpression.EVERY_5_MINUTES)
+    async updateDownsideProtectionStatus(){
+        const currentBatchnNoMumbai = await this.globalService.getBatchNo(80001);
+        const currentBatchnNoSepolia = await this.globalService.getBatchNo(11155111);
+        if(currentBatchnNoMumbai > 30){
+            const updatingPositionsMumbai = await this.batchRepository.findOne({where:{
+                chainId:80001,
+                batchNo:Equal(currentBatchnNoMumbai - 30)
+            }});
+
+            updatingPositionsMumbai.deposits.map(updatingPosition =>{
+                if(updatingPosition.status == PositionStatus.DEPOSITED){
+                    updatingPosition.downsideProtectionStatus = false;
+                    updatingPosition.liquidationEthPrice = (updatingPosition.ethPrice * 90)/100;            
+                }
+            })
+            await this.batchRepository.save(updatingPositionsMumbai);
         }
 
-        // Filter the deposits based on chainId and status of the deposit
-        const activePositionsSepolia = await this.borrowRepository.findBy(
-            {
-                chainId:Equal(11155111),
-                status:Equal(PositionStatus.DEPOSITED)
-            });
-        const activePositionsMumbai = await this.borrowRepository.findBy(
-            {                    
-                chainId:Equal(80001),
-                status:Equal(PositionStatus.DEPOSITED)
-            });
-        //Loop through all the deposits and deduct option fees based on their strike prices and deposited amount
-        for(let i=0;i<5;i++){
-            if(activePositionsMumbai.length != 0){
-                activePositionsMumbai.map(activePosition =>{
-                    if(Object.keys(StrikePricePercent).indexOf(activePosition.strikePricePercent) == i){
-                        activePosition.totalFeesDeducted = (parseFloat(activePosition.totalFeesDeducted) + ((optionsFeesMumbai[i] * parseFloat(activePosition.depositedAmount))/30)).toString();
-                    }
-                })                
-            }
-            if(activePositionsSepolia.length != 0){
-                activePositionsSepolia.map(activePosition =>{
-                    if(Object.keys(StrikePricePercent).indexOf(activePosition.strikePricePercent) == i){
-                        activePosition.totalFeesDeducted = (parseFloat(activePosition.totalFeesDeducted) + (optionsFeesSepolia[i] * parseFloat(activePosition.depositedAmount))/30).toString();
-                    }
-                })                
+        if(currentBatchnNoSepolia > 30){
+            const updatingPositionsSepolia = await this.batchRepository.findOne({where:{
+                chainId:11155111,
+                batchNo:Equal(currentBatchnNoSepolia - 30)
+            }});
+    
+            updatingPositionsSepolia.deposits.map(updatingPosition =>{
+                if(updatingPosition.status == PositionStatus.DEPOSITED){
+                    updatingPosition.downsideProtectionStatus = false;
+                    updatingPosition.liquidationEthPrice = (updatingPosition.ethPrice * 90)/100;
+                }
+            })
+            await this.batchRepository.save(updatingPositionsSepolia);
+        }
+    }
+
+    @Cron(CronExpression.EVERY_5_MINUTES)
+    async liquidateOptionsExpiredUsers(){
+        const currentBatchnNoMumbai = await this.globalService.getBatchNo(80001);
+        const currentBatchnNoSepolia = await this.globalService.getBatchNo(11155111);
+
+        const liquidationPositionsMumbaiFromBatch = await this.batchRepository.findOne({where:{
+            chainId:80001,
+            batchNo:Equal(currentBatchnNoMumbai - 30)
+        }});
+
+        const liquidationPositionsSepoliaFromBatch = await this.batchRepository.findOne({where:{
+            chainId:11155111,
+            batchNo:Equal(currentBatchnNoSepolia - 30)
+        }});
+
+        const positionsMumbaiFromHighLtv = await this.highLtvPositionsRepository.findBy({
+            chainId:80001
+        });
+        const positionsSepoliaFromHighLtv = await this.highLtvPositionsRepository.findBy({
+            chainId:11155111
+        });
+
+        let liquidationPositionsMumbaiFromHighLtv:BorrowInfo[];
+        let liquidationPositionsSepoliaFromHighLtv:BorrowInfo[];
+
+        for(let i=0;i<positionsMumbaiFromHighLtv.length;i++){
+            if(!liquidationPositionsMumbaiFromHighLtv){
+                liquidationPositionsMumbaiFromHighLtv = [await this.borrowRepository.findOne({where:
+                    {id:Equal(positionsMumbaiFromHighLtv[i].positionId)}})]
+            }else{
+                liquidationPositionsMumbaiFromHighLtv.push(await this.borrowRepository.findOne({where:
+                    {id:Equal(positionsMumbaiFromHighLtv[i].positionId)}
+                }));
             }
         }
-        // Save the updated data
-        await this.borrowRepository.save(activePositionsMumbai);
-        await this.borrowRepository.save(activePositionsSepolia);
+
+        for(let i=0;i<positionsSepoliaFromHighLtv.length;i++){
+            if(!liquidationPositionsSepoliaFromHighLtv){
+                liquidationPositionsSepoliaFromHighLtv = [await this.borrowRepository.findOne({where:
+                    {id:Equal(positionsSepoliaFromHighLtv[i].positionId)}})]
+            }else{
+                liquidationPositionsSepoliaFromHighLtv.push(await this.borrowRepository.findOne({where:
+                    {id:Equal(positionsSepoliaFromHighLtv[i].positionId)}
+                }));
+            }
+        }
+
+        let liquidationPositionsMumbai = liquidationPositionsMumbaiFromHighLtv.concat(liquidationPositionsMumbaiFromBatch.deposits)
+        let liquidationPositionsSepolia = liquidationPositionsSepoliaFromHighLtv.concat(liquidationPositionsSepoliaFromBatch.deposits)
+
+        const signerMumbai = await this.getSignerOrProvider(80001,true);
+        const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
+
+        const signerSepolia = await this.getSignerOrProvider(11155111,true);
+        const borrowingContractSepolia = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signerSepolia);
+
+        const currentEthPrice = await borrowingContractMumbai.getUSDValue();
+        const ltv = await borrowingContractMumbai.getLTV();
+        const ethPrice = currentEthPrice.toNumber()/100;
+
+        if(ltv <= 90){
+            liquidationPositionsMumbai.map(async (liquidationPosition) =>{
+                if(liquidationPosition.liquidationEthPrice == ethPrice && !liquidationPosition.downsideProtectionStatus){
+                    await borrowingContractMumbai.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+                    liquidationPosition.status = PositionStatus.LIQUIDATED;
+                }else{
+                    return;
+                }
+            })
+    
+            liquidationPositionsSepolia.map(async (liquidationPosition) =>{
+                if(liquidationPosition.liquidationEthPrice == ethPrice && !liquidationPosition.downsideProtectionStatus){
+                    await borrowingContractSepolia.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+                    liquidationPosition.status = PositionStatus.LIQUIDATED;
+                }else{
+                    return;
+                }
+            })
+        }else{
+            // Getting all the entities in High LTV positions
+            const existingEntities = await this.highLtvPositionsRepository.find();
+            // Check whether the positions are already not stored 
+            liquidationPositionsMumbai = liquidationPositionsMumbai.filter(positionMumbai => !existingEntities.some(existingEntity => existingEntity.positionId === positionMumbai.id));
+            liquidationPositionsMumbai.map(async (position) =>{
+                const highLtvPositionsMumbai = new HighLTVPositions();
+                highLtvPositionsMumbai.batchNo = currentBatchnNoMumbai - 30;
+                highLtvPositionsMumbai.chainId = 80001;
+                highLtvPositionsMumbai.positionId = position.id;
+                highLtvPositionsMumbai.address = position.address;
+                highLtvPositionsMumbai.index = position.index;
+                highLtvPositionsMumbai.status = position.status;
+                await this.highLtvPositionsRepository.save(highLtvPositionsMumbai);
+            })
+            liquidationPositionsMumbai.map(async (position) =>{
+                const highLtvPositionsSepolia = new HighLTVPositions();
+                highLtvPositionsSepolia.batchNo = currentBatchnNoMumbai - 30;
+                highLtvPositionsSepolia.chainId = 11155111;
+                highLtvPositionsSepolia.positionId = position.id;
+                highLtvPositionsSepolia.address = position.address;
+                highLtvPositionsSepolia.index = position.index;
+                highLtvPositionsSepolia.status = position.status;
+                await this.highLtvPositionsRepository.save(highLtvPositionsSepolia);
+            })
+        }
+        await this.batchRepository.save(liquidationPositionsMumbaiFromBatch);
+        await this.batchRepository.save(liquidationPositionsSepoliaFromBatch);
     }
 }

@@ -112,6 +112,7 @@ export class CdsService {
             depositVal
         } = addCdsDto;
 
+        await this.globalService.setBatchNo(chainId);
         const currentIndex = await this.getCdsDepositorIndexByAddress(address,chainId);
         const initialLiquidationAmount = liquidationAmount.toString();
         const totalDepositedAmount = depositedAmint + depositedUsdt;

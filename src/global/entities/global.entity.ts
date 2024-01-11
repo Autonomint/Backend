@@ -41,4 +41,9 @@ export class GlobalVariables{
         nullable:true})
     fallbackEthPrice: number;
 
+    @Column({
+        type:'decimal',
+        nullable:true})
+    batchNo: number;
+
 }

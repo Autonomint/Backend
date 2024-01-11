@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GlobalVariables } from './entities/global.entity';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class GlobalService {
@@ -79,6 +80,32 @@ export class GlobalService {
         }
         await this.globalRepository.save(found);
     }
+
+    async setBatchNo(chainId:number):Promise<number>{
+        let found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            found = this.globalRepository.create({
+                chainId,
+                batchNo:1
+            })
+        }else{
+            return ;
+        }
+        await this.globalRepository.save(found);
+    }
+    
+    // Set Batch No
+    @Cron('0 0 0/24 * * *')
+    async incrementBatchNo(){
+        const foundMumbai = await this.globalRepository.findOne({where:{chainId:80001}});
+        const foundSepolia = await this.globalRepository.findOne({where:{chainId:11155111}});
+
+        foundMumbai.batchNo++;
+        foundSepolia.batchNo++;
+
+        await this.globalRepository.save(foundMumbai);
+        await this.globalRepository.save(foundSepolia);
+    }
     // Get amint balance in treasury
     async getTreasuryAmintBalance(chainId:number):Promise<number>{
         const found = await this.globalRepository.findOne({where:{chainId:chainId}});
@@ -119,5 +146,10 @@ export class GlobalService {
     async getEthPrices(chainId:number):Promise<number[]>{
         const found = await this.globalRepository.findOne({where:{chainId:chainId}});
         return [found.fallbackEthPrice,found.lastEthPrice];
+    }
+
+    async getBatchNo(chainId:number):Promise<number>{
+        const found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        return found.batchNo;
     }
 }
