@@ -6,10 +6,10 @@ export class Batch{
     @PrimaryGeneratedColumn('uuid')
     id:string;
 
-    @Column()
+    @Column({nullable:true})
     chainId:number;
 
-    @Column()
+    @Column({nullable:true})
     batchNo:number;
 
     @OneToMany(() => BorrowInfo, (borrowInfo) => borrowInfo.borrower,{ eager: true })

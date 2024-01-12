@@ -18,6 +18,9 @@ export class BorrowInfo{
     @Column({nullable:true})
     chainId:number;
 
+    @Column({nullable:true})
+    batchNo:number;
+
     @Column()
     index:number;
 
