@@ -104,8 +104,8 @@ export class GlobalService {
     }
     
     // Increase batch number
-    // @Cron('0 0 0/24 * * *')
-    @Cron('0 */1 * * * *')
+    @Cron('0 0 0/24 * * *',{name:'Increment Batch No'})
+    // @Cron("*/4 * * * * *",{name:'Increment Batch No'})
     async incrementBatchNo(){
         const foundMumbai = await this.globalRepository.findOne({where:{chainId:80001}});
         const foundSepolia = await this.globalRepository.findOne({where:{chainId:11155111}});

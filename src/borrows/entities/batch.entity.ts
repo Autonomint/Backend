@@ -12,6 +12,6 @@ export class Batch{
     @Column({nullable:true})
     batchNo:number;
 
-    @OneToMany(() => BorrowInfo, (borrowInfo) => borrowInfo.borrower,{ eager: true })
+    @OneToMany(() => BorrowInfo, (borrowInfo) => borrowInfo.batch,{ eager: true })
     deposits:BorrowInfo[]
 }
