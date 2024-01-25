@@ -115,7 +115,7 @@ export class CdsService {
         await this.globalService.setBatchNo(chainId);
         const currentIndex = await this.getCdsDepositorIndexByAddress(address,chainId);
         const initialLiquidationAmount = liquidationAmount.toString();
-        const totalDepositedAmount = depositedAmint + depositedUsdt;
+        const totalDepositedAmount = (parseFloat(depositedAmint) + parseFloat(depositedUsdt)).toString();
         if(currentIndex == (index-1) || currentIndex == 0){
             const cds = this.cdsRepository.create({
                 address,
@@ -163,9 +163,19 @@ export class CdsService {
 
             // Update the amint balance in treasury
             if(amintBalance == 0){
-                this.globalService.setTreasuryAmintBalance(chainId,parseFloat(depositedAmint)); 
+                await this.globalService.setTreasuryAmintBalance(chainId,(parseFloat(depositedAmint) + parseFloat(depositedUsdt))); 
             }else{
-                this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) + parseFloat(depositedAmint)); 
+                await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) + (parseFloat(depositedAmint) + parseFloat(depositedUsdt))); 
+            }
+
+            //get the amint balance in treasury
+            const totalAvailableLiquidationAmount = await this.globalService.getTotalAvailableLiquidationAmount(chainId);
+
+            // Update the amint balance in treasury
+            if(!totalAvailableLiquidationAmount){
+                await this.globalService.setTotalAvailableLiquidationAmount(chainId,parseFloat(initialLiquidationAmount)); 
+            }else{
+                await this.globalService.setTotalAvailableLiquidationAmount(chainId,parseFloat(totalAvailableLiquidationAmount.toString()) + parseFloat(initialLiquidationAmount)); 
             }
             //Update eth price
             await this.globalService.setEthPrice(chainId,ethPriceAtDeposit);
@@ -202,24 +212,24 @@ export class CdsService {
                 index:index
             }});
         const withdrawEthAmountInEther = ethers.utils.formatEther(withdrawEthAmount);
-        const withdrawAmountInEther = ethers.utils.formatEther(withdrawAmount);
-        const feesInEther = ethers.utils.formatEther(fees);
-        const feesWithdrawnInEther = ethers.utils.formatEther(feesWithdrawn);
+        const withdrawAmountFormated = (parseFloat(withdrawAmount)/1e6).toString();
+        const feesFormated = (parseFloat(fees)/1e6).toString();
+        const feesWithdrawnFormated = (parseFloat(feesWithdrawn)/1e6).toString();
         const cdsDepositor = await this.cdsDepositorRepository.findOne({where:{
             chainId:chainId,
             address:address}});
 
         found.withdrawTime = withdrawTime;
         found.ethPriceAtWithdraw = ethPriceAtWithdraw;
-        found.withdrawAmount = withdrawAmountInEther;
+        found.withdrawAmount = withdrawAmountFormated;
         found.withdrawEthAmount = withdrawEthAmountInEther;
-        found.fees = feesInEther;
+        found.fees = feesFormated;
         if(!cdsDepositor.totalFees){
-            cdsDepositor.totalFees= parseFloat(feesInEther);     
-            cdsDepositor.totalFeesWithdrawn = parseFloat(feesWithdrawnInEther);      
+            cdsDepositor.totalFees= parseFloat(feesFormated);     
+            cdsDepositor.totalFeesWithdrawn = parseFloat(feesWithdrawnFormated);      
         }else{
-            cdsDepositor.totalFees = parseFloat(cdsDepositor.totalFees.toString()) + parseFloat(feesInEther);
-            cdsDepositor.totalFeesWithdrawn = parseFloat(cdsDepositor.totalFeesWithdrawn.toString()) + parseFloat(feesWithdrawnInEther);  
+            cdsDepositor.totalFees = parseFloat(cdsDepositor.totalFees.toString()) + parseFloat(feesFormated);
+            cdsDepositor.totalFeesWithdrawn = parseFloat(cdsDepositor.totalFeesWithdrawn.toString()) + parseFloat(feesWithdrawnFormated);  
         }
         cdsDepositor.totalDepositedAmint = parseFloat(cdsDepositor.totalDepositedAmint.toString()) - parseFloat(found.depositedAmint);
         cdsDepositor.totalDepositedUsdt = parseFloat(cdsDepositor.totalDepositedUsdt.toString()) - parseFloat(found.depositedUsdt);
@@ -231,7 +241,7 @@ export class CdsService {
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
 
         //Update the amint and eth balance in treasury
-        await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(withdrawAmountInEther));
+        await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(withdrawAmountFormated));
         await this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawEthAmountInEther)); 
         await this.globalService.setEthPrice(chainId,ethPriceAtWithdraw);
 

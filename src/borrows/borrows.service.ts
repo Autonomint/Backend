@@ -266,9 +266,9 @@ export class BorrowsService {
 
             // Updating eth balance in treasury
             if(ethBalance == 0){
-                this.globalService.setTreasuryEthBalance(chainId,parseFloat(depositedAmount)); 
+                await this.globalService.setTreasuryEthBalance(chainId,parseFloat(depositedAmount)); 
             }else{
-                this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) + parseFloat(depositedAmount)); 
+                await this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) + parseFloat(depositedAmount)); 
             }
             await this.borrowRepository.save(borrow);
             await this.borrowerRepository.save(borrower);
@@ -309,7 +309,7 @@ export class BorrowsService {
         // Formatting the values in wei to Ether
         const withdrawAmountInEther = ethers.utils.formatEther(withdrawAmount);
         const amountYetToWithdrawInEther = ethers.utils.formatEther(amountYetToWithdraw);
-        const noOfAbondInEther = ethers.utils.formatEther(noOfAbond);
+        const noOfAbondInEther = (parseFloat(noOfAbond)/1e6).toString();
 
         if(!found.withdrawAmount1 && found.status != PositionStatus.LIQUIDATED){
             found.withdrawTime1 = withdrawTime;
@@ -333,7 +333,7 @@ export class BorrowsService {
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
 
         // Updating eth balance in treasury
-        this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawAmountInEther));
+        await this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawAmountInEther));
 
         await this.borrowRepository.save(found);
         await this.borrowerRepository.save(borrower);
