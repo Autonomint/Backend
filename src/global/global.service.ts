@@ -15,6 +15,8 @@ export class GlobalService {
         private batchRepository: Repository<Batch>
     ){}
 
+    private chainIds = [5,11155111,80001];
+
     // Set amint balance in treasury
     async setTreasuryAmintBalance(chainId:number,amintBalance:number){
         let found = await this.globalRepository.findOne({where:{chainId:chainId}});
@@ -104,29 +106,21 @@ export class GlobalService {
     }
     
     // Increase batch number
-    @Cron('0 0 0/24 * * *',{name:'Increment Batch No'})
-    // @Cron("*/4 * * * * *",{name:'Increment Batch No'})
+    // @Cron('0 0 0/24 * * *',{name:'Increment Batch No'})
+    @Cron(CronExpression.EVERY_10_SECONDS,{name:'Increment Batch No'})
     async incrementBatchNo(){
-        const foundMumbai = await this.globalRepository.findOne({where:{chainId:80001}});
-        const foundSepolia = await this.globalRepository.findOne({where:{chainId:11155111}});
 
-        if(foundMumbai){
-            const newBatchMumbai = this.batchRepository.create({
-                chainId:80001,
-                batchNo:parseInt((foundMumbai.batchNo).toString()) + 1,
-            })
-            foundMumbai.batchNo = parseInt((foundMumbai.batchNo).toString()) + 1;
-            await this.batchRepository.save(newBatchMumbai);
-            await this.globalRepository.save(foundMumbai);
-        }
-        if(foundSepolia){
-            const newBatchSepolia = this.batchRepository.create({
-                chainId:11155111,
-                batchNo:parseInt((foundSepolia.batchNo).toString()) + 1,
-            })
-            foundSepolia.batchNo = parseInt((foundSepolia.batchNo).toString()) + 1;
-            await this.batchRepository.save(newBatchSepolia);
-            await this.globalRepository.save(foundSepolia);
+        for (let i = 0;i < this.chainIds.length;i++){
+            const found = await this.globalRepository.findOne({where:{chainId:this.chainIds[i]}});
+            if(found){
+                const newBatch = this.batchRepository.create({
+                    chainId:this.chainIds[i],
+                    batchNo:parseInt((found.batchNo).toString()) + 1,
+                })
+                found.batchNo = parseInt((found.batchNo).toString()) + 1;
+                await this.batchRepository.save(newBatch);
+                await this.globalRepository.save(found);
+            }
         }
     }
     // Get amint balance in treasury

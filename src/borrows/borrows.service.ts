@@ -20,7 +20,11 @@ import {
     borrowAddressMumbai,borrowABIMumbai,
     cdsAddressMumbai,cdsABIMumbai,
     treasuryAddressMumbai,treasuryABIMumbai,
-    optionsAddressMumbai,optionsABIMumbai
+    optionsAddressMumbai,optionsABIMumbai,
+    borrowAddressGoerli,borrowABIGoerli,
+    cdsAddressGoerli,cdsABIGoerli,
+    treasuryAddressGoerli,treasuryABIGoerli,
+    optionsAddressGoerli,optionsABIGoerli
 } from '../utils/index';
 import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
 import { Cron,CronExpression } from '@nestjs/schedule';
@@ -50,6 +54,9 @@ export class BorrowsService {
         @Inject(GlobalService)
         private globalService:GlobalService,
     ){}
+
+    private chainIds = [5,11155111,80001];
+
     private exchange = new bybit({
         apiKey: 'BNi0E7lvKWezOwjV0N',
         secret: 'ER4G9Vm1z01Xzr31HbzofYLlU9m7ISue1ixo',
@@ -389,6 +396,8 @@ export class BorrowsService {
         const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
         const signerSepolia = await this.getSignerOrProvider(11155111,true);
         const borrowingContractSepolia = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signerSepolia);
+        const signerGoerli = await this.getSignerOrProvider(5,true);
+        const borrowingContractGoerli = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signerGoerli);
         let borrowingContract;
         const currentEthPrice = await borrowingContractMumbai.getUSDValue();
         const ethPrice = currentEthPrice.toNumber()/100;
@@ -413,6 +422,8 @@ export class BorrowsService {
                 borrowingContract = borrowingContractMumbai;
             }else if(liquidatedPosition.chainId == 11155111){
                 borrowingContract = borrowingContractSepolia
+            }else if(liquidatedPosition.chainId == 5){
+                borrowingContract = borrowingContractGoerli
             }
             await borrowingContract.liquidate(liquidatedPosition.address,liquidatedPosition.index,currentEthPrice);
             liquidatedPosition.status = PositionStatus.LIQUIDATED;
@@ -450,6 +461,9 @@ export class BorrowsService {
         }else if(chainId == 80001){
             rpcUrl = "https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/"
             pKey = '3cdf792b14656fcdcc415ba2fde3c7fbadacdcc887778f36e8ce98db34021e15';
+        }else if(chainId == 5){
+            rpcUrl = "https://goerli.infura.io/v3/e9cf275f1ddc4b81aa62c5aa0b11ac0f"
+            pKey = '3cdf792b14656fcdcc415ba2fde3c7fbadacdcc887778f36e8ce98db34021e15';
         }
         const provider =  new ethers.providers.JsonRpcProvider(rpcUrl);
         if(needSigner){
@@ -469,14 +483,16 @@ export class BorrowsService {
         const abc = await this.exchange.fetchVolatilityHistory('ETH',{period:30});
         const volatility = abc.map(item => item.info[0].value)[0];
         const signer = await this.getSignerOrProvider(chainId,true);
-        const optionsContractSepolia = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signer);
-        const optionsContractMumbai = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signer);
-        let optionFees;
-        if(chainId == 80001){
-            optionFees = await optionsContractMumbai.calculateOptionPrice(volatility,parseInt(amount),strikePricePercent);
-        }else if(chainId == 11155111){
-            optionFees = await optionsContractSepolia.calculateOptionPrice(volatility,parseInt(amount),strikePricePercent);
+        let optionsContract;
+        if(chainId == 11155111){
+            optionsContract = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signer);
+        }else if(chainId == 5){
+            optionsContract = new ethers.Contract(optionsAddressGoerli,optionsABIGoerli,signer);
+        }else if(chainId == 80001){
+            optionsContract = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signer);
         }
+        const optionFees = await optionsContract.calculateOptionPrice(volatility,parseInt(amount),strikePricePercent);
+
         return[(volatility * 1e8),optionFees];
     }
 
@@ -547,46 +563,72 @@ export class BorrowsService {
     @Cron(CronExpression.EVERY_5_MINUTES)
     // @Cron("0 */2 * * * *")
     async updateDownsideProtectionStatus(){
-        //Getting current batch number
-        const currentBatchnNoMumbai = await this.globalService.getBatchNo(80001);
-        const currentBatchnNoSepolia = await this.globalService.getBatchNo(11155111);
-        //If current batch number is less than or equal to 30,return
-        if(currentBatchnNoMumbai > 30){
-            // Getting positions based on batch number starting from 1
-            const updatingPositionsMumbai = await this.batchRepository.findOne({where:{
-                chainId:80001,
-                batchNo:Equal(currentBatchnNoMumbai - 30)
-            }});
 
-            // If the status of the position is deposited only,then update the liquidationEthPrice
-            updatingPositionsMumbai.deposits.map(updatingPosition =>{
-                if(updatingPosition.status == PositionStatus.DEPOSITED){
-                    updatingPosition.downsideProtectionStatus = false;
-                    updatingPosition.liquidationEthPrice = (updatingPosition.ethPrice * 90)/100;            
-                }
-            })
-            // Update the changes
-            await this.borrowRepository.save(updatingPositionsMumbai.deposits);
-            await this.batchRepository.save(updatingPositionsMumbai);
-        }
-        //If current batch number is less than or equal to 30,return
-        if(currentBatchnNoSepolia > 30){
-            // Getting positions based on batch number starting from 1
-            const updatingPositionsSepolia = await this.batchRepository.findOne({where:{
-                chainId:11155111,
-                batchNo:Equal(currentBatchnNoSepolia - 30)
-            }});
+        for (let i = 0;i < this.chainIds.length;i++){
+            //Getting current batch number
+            const currentBatchNo = await this.globalService.getBatchNo(this.chainIds[i]);
+            //If current batch number is less than or equal to 30,return
+            if(currentBatchNo > 30){
+                // Getting positions based on batch number starting from 1
+                const updatingPositions = await this.batchRepository.findOne({where:{
+                    chainId:this.chainIds[i],
+                    batchNo:Equal(currentBatchNo - 30)
+                }});
 
-            // If the status of the position is deposited only,then update the liquidationEthPrice
-            updatingPositionsSepolia.deposits.map(updatingPosition =>{
-                if(updatingPosition.status == PositionStatus.DEPOSITED){
-                    updatingPosition.downsideProtectionStatus = false;
-                    updatingPosition.liquidationEthPrice = (updatingPosition.ethPrice * 90)/100;
-                }
-            })
-            // Update the changes
-            await this.batchRepository.save(updatingPositionsSepolia);
+                // If the status of the position is deposited only,then update the liquidationEthPrice
+                updatingPositions.deposits.map(updatingPosition =>{
+                    if(updatingPosition.status == PositionStatus.DEPOSITED){
+                        updatingPosition.downsideProtectionStatus = false;
+                        updatingPosition.liquidationEthPrice = (updatingPosition.ethPrice * 90)/100;            
+                    }
+                })
+                // Update the changes
+                await this.borrowRepository.save(updatingPositions.deposits);
+                await this.batchRepository.save(updatingPositions);
+            }else{
+                return;
+            }
         }
+        // //Getting current batch number
+        // const currentBatchnNoMumbai = await this.globalService.getBatchNo(80001);
+        // const currentBatchnNoSepolia = await this.globalService.getBatchNo(11155111);
+        // //If current batch number is less than or equal to 30,return
+        // if(currentBatchnNoMumbai > 30){
+        //     // Getting positions based on batch number starting from 1
+        //     const updatingPositionsMumbai = await this.batchRepository.findOne({where:{
+        //         chainId:80001,
+        //         batchNo:Equal(currentBatchnNoMumbai - 30)
+        //     }});
+
+        //     // If the status of the position is deposited only,then update the liquidationEthPrice
+        //     updatingPositionsMumbai.deposits.map(updatingPosition =>{
+        //         if(updatingPosition.status == PositionStatus.DEPOSITED){
+        //             updatingPosition.downsideProtectionStatus = false;
+        //             updatingPosition.liquidationEthPrice = (updatingPosition.ethPrice * 90)/100;            
+        //         }
+        //     })
+        //     // Update the changes
+        //     await this.borrowRepository.save(updatingPositionsMumbai.deposits);
+        //     await this.batchRepository.save(updatingPositionsMumbai);
+        // }
+        // //If current batch number is less than or equal to 30,return
+        // if(currentBatchnNoSepolia > 30){
+        //     // Getting positions based on batch number starting from 1
+        //     const updatingPositionsSepolia = await this.batchRepository.findOne({where:{
+        //         chainId:11155111,
+        //         batchNo:Equal(currentBatchnNoSepolia - 30)
+        //     }});
+
+        //     // If the status of the position is deposited only,then update the liquidationEthPrice
+        //     updatingPositionsSepolia.deposits.map(updatingPosition =>{
+        //         if(updatingPosition.status == PositionStatus.DEPOSITED){
+        //             updatingPosition.downsideProtectionStatus = false;
+        //             updatingPosition.liquidationEthPrice = (updatingPosition.ethPrice * 90)/100;
+        //         }
+        //     })
+        //     // Update the changes
+        //     await this.batchRepository.save(updatingPositionsSepolia);
+        // }
     }
 
     // For every 5 minutes, it checks whether the expired option fees positions are in liquidation stage,if yes liquidate
@@ -595,26 +637,97 @@ export class BorrowsService {
     @Cron(CronExpression.EVERY_5_MINUTES)
     // @Cron("0 */1 * * * *")
     async liquidateOptionsExpiredUsers(){
-        // Get current batch number
-        const currentBatchnNoMumbai = await this.globalService.getBatchNo(80001);
-        const currentBatchnNoSepolia = await this.globalService.getBatchNo(11155111);
-        let liquidationPositionsMumbaiFromBatch:Batch;
-        let liquidationPositionsSepoliaFromBatch:Batch;
+        let liquidationPositionsFromBatch:Batch;
+        for (let i = 0;i < this.chainIds.length;i++){
+            //Getting current batch number
+            const currentBatchNo = await this.globalService.getBatchNo(this.chainIds[i]);
+            //If current batch number is less than or equal to 30,return
+            if(currentBatchNo > 30){
+                // Getting positions based on batch number starting from 1
+                liquidationPositionsFromBatch = await this.batchRepository.findOne({where:{
+                    chainId:this.chainIds[i],
+                    batchNo:Equal(currentBatchNo - 30)
+                }});
+            }else{
+                return;
+            }
 
-        if(currentBatchnNoMumbai > 30){
-            // Getting positions based on batch number starting from 1
-            liquidationPositionsMumbaiFromBatch = await this.batchRepository.findOne({where:{
-                chainId:80001,
-                batchNo:Equal(currentBatchnNoMumbai - 30)
-            }});
+            let borrowingContract;
+            const signer = await this.getSignerOrProvider(this.chainIds[i],true);
+
+            if(this.chainIds[i] == 11155111){
+                borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
+            }else if(this.chainIds[i] == 5){
+                borrowingContract = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signer);
+            }else if(this.chainIds[i] == 80001){
+                borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
+            }
+
+            // Get the current eth price
+            const currentEthPrice = await borrowingContract.getUSDValue();
+            //Get the LTV
+            const ltv = await borrowingContract.getLTV();
+            const ethPrice = currentEthPrice.toNumber()/100;
+
+            // If ltv is less than 90,liquidate the positions
+            if(ltv <= 90){
+                if(liquidationPositionsFromBatch && liquidationPositionsFromBatch.deposits.length != 0){
+                    liquidationPositionsFromBatch.deposits.map(async (liquidationPosition) =>{
+                        // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
+                        if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
+                            // Call the liquidate function in blockchain
+                            await borrowingContract.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+                            // Update the status of the position as Liquidated
+                            liquidationPosition.status = PositionStatus.LIQUIDATED;
+                        }else{
+                            return;
+                        }
+                    })
+                    // Update the position data
+                    await this.batchRepository.save(liquidationPositionsFromBatch);
+                    await this.borrowRepository.save(liquidationPositionsFromBatch.deposits);
+                }
+            }else{
+                // Getting all the entities in High LTV positions
+                const existingEntities = await this.highLtvPositionsRepository.find();
+    
+                // Create entities in HighLtvPositions
+                const highLtvPositions = liquidationPositionsFromBatch.deposits.map(position =>{
+                    const highLtvPosition = new HighLTVPositions();
+                    highLtvPosition.batchNo = position.batchNo;
+                    highLtvPosition.chainId = this.chainIds[i];
+                    highLtvPosition.positionId = position.id;
+                    highLtvPosition.address = position.address;
+                    highLtvPosition.index = position.index;
+                    highLtvPosition.status = position.status;
+                    return highLtvPosition;
+                })
+                // Check whether the positions are already not stored 
+                const liquidationPositions = highLtvPositions.filter(highLtvPosition => !existingEntities.some(existingEntity => existingEntity.positionId === highLtvPosition.positionId));
+                // Save them
+                await this.highLtvPositionsRepository.save(liquidationPositions);
+            }
         }
-        if(currentBatchnNoSepolia > 30){
-            // Getting positions based on batch number starting from 1
-            liquidationPositionsSepoliaFromBatch = await this.batchRepository.findOne({where:{
-                chainId:11155111,
-                batchNo:Equal(currentBatchnNoSepolia - 30)
-            }});
-        }
+        // // Get current batch number
+        // const currentBatchnNoMumbai = await this.globalService.getBatchNo(80001);
+        // const currentBatchnNoSepolia = await this.globalService.getBatchNo(11155111);
+        // let liquidationPositionsMumbaiFromBatch:Batch;
+        // let liquidationPositionsSepoliaFromBatch:Batch;
+
+        // if(currentBatchnNoMumbai > 30){
+        //     // Getting positions based on batch number starting from 1
+        //     liquidationPositionsMumbaiFromBatch = await this.batchRepository.findOne({where:{
+        //         chainId:80001,
+        //         batchNo:Equal(currentBatchnNoMumbai - 30)
+        //     }});
+        // }
+        // if(currentBatchnNoSepolia > 30){
+        //     // Getting positions based on batch number starting from 1
+        //     liquidationPositionsSepoliaFromBatch = await this.batchRepository.findOne({where:{
+        //         chainId:11155111,
+        //         batchNo:Equal(currentBatchnNoSepolia - 30)
+        //     }});
+        // }
 
         // const positionsMumbaiFromHighLtv = await this.highLtvPositionsRepository.findBy({
         //     chainId:80001
@@ -654,106 +767,106 @@ export class BorrowsService {
         // liquidationPositionsMumbai = liquidationPositionsMumbaiFromBatch.deposits.concat(liquidationPositionsMumbaiFromHighLtv);
         // liquidationPositionsSepolia = liquidationPositionsSepoliaFromBatch.deposits.concat(liquidationPositionsSepoliaFromHighLtv);
 
-        const signerMumbai = await this.getSignerOrProvider(80001,true);
-        const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
+        // const signerMumbai = await this.getSignerOrProvider(80001,true);
+        // const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
 
-        const signerSepolia = await this.getSignerOrProvider(11155111,true);
-        const borrowingContractSepolia = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signerSepolia);
+        // const signerSepolia = await this.getSignerOrProvider(11155111,true);
+        // const borrowingContractSepolia = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signerSepolia);
 
-        // Get the current eth price
-        const currentEthPrice = await borrowingContractMumbai.getUSDValue();
+        // // Get the current eth price
+        // const currentEthPrice = await borrowingContractMumbai.getUSDValue();
 
-        //Get the LTV
-        const ltv = await borrowingContractMumbai.getLTV();
-        const ethPrice = currentEthPrice.toNumber()/100;
+        // //Get the LTV
+        // const ltv = await borrowingContractMumbai.getLTV();
+        // const ethPrice = currentEthPrice.toNumber()/100;
 
-        // If ltv is less than 90,liquidate the positions
-        if(ltv <= 90){
-            if(liquidationPositionsMumbaiFromBatch && liquidationPositionsMumbaiFromBatch.deposits.length != 0){
-                liquidationPositionsMumbaiFromBatch.deposits.map(async (liquidationPosition) =>{
-                    // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
-                    if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
-                        // Call the liquidate function in blockchain
-                        await borrowingContractMumbai.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
-                        // Update the status of the position as Liquidated
-                        liquidationPosition.status = PositionStatus.LIQUIDATED;
-                    }else{
-                        return;
-                    }
-                })
-                // Update the position data
-                await this.batchRepository.save(liquidationPositionsMumbaiFromBatch);
-                await this.borrowRepository.save(liquidationPositionsMumbaiFromBatch.deposits);
-            }
+        // // If ltv is less than 90,liquidate the positions
+        // if(ltv <= 90){
+        //     if(liquidationPositionsMumbaiFromBatch && liquidationPositionsMumbaiFromBatch.deposits.length != 0){
+        //         liquidationPositionsMumbaiFromBatch.deposits.map(async (liquidationPosition) =>{
+        //             // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
+        //             if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
+        //                 // Call the liquidate function in blockchain
+        //                 await borrowingContractMumbai.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+        //                 // Update the status of the position as Liquidated
+        //                 liquidationPosition.status = PositionStatus.LIQUIDATED;
+        //             }else{
+        //                 return;
+        //             }
+        //         })
+        //         // Update the position data
+        //         await this.batchRepository.save(liquidationPositionsMumbaiFromBatch);
+        //         await this.borrowRepository.save(liquidationPositionsMumbaiFromBatch.deposits);
+        //     }
 
-            if(liquidationPositionsSepoliaFromBatch && liquidationPositionsSepoliaFromBatch.deposits.length != 0){
-                liquidationPositionsSepoliaFromBatch.deposits.map(async (liquidationPosition) =>{
-                    // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
-                    if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
-                        // Call the liquidate function in blockchain
-                        await borrowingContractSepolia.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
-                        // Update the status of the position as Liquidated
-                        liquidationPosition.status = PositionStatus.LIQUIDATED;
-                    }else{
-                        return;
-                    }
-                })
-                // Update the position data
-                await this.batchRepository.save(liquidationPositionsSepoliaFromBatch);
-                await this.borrowRepository.save(liquidationPositionsSepoliaFromBatch.deposits);
-            }
+        //     if(liquidationPositionsSepoliaFromBatch && liquidationPositionsSepoliaFromBatch.deposits.length != 0){
+        //         liquidationPositionsSepoliaFromBatch.deposits.map(async (liquidationPosition) =>{
+        //             // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
+        //             if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
+        //                 // Call the liquidate function in blockchain
+        //                 await borrowingContractSepolia.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+        //                 // Update the status of the position as Liquidated
+        //                 liquidationPosition.status = PositionStatus.LIQUIDATED;
+        //             }else{
+        //                 return;
+        //             }
+        //         })
+        //         // Update the position data
+        //         await this.batchRepository.save(liquidationPositionsSepoliaFromBatch);
+        //         await this.borrowRepository.save(liquidationPositionsSepoliaFromBatch.deposits);
+        //     }
 
 
-            // liquidationPositionsMumbaiFromHighLtv.map(async (liquidationPosition) =>{
-            //     if(liquidationPosition.liquidationEthPrice == ethPrice && !liquidationPosition.downsideProtectionStatus){
-            //         await borrowingContractMumbai.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
-            //         liquidationPosition.status = PositionStatus.LIQUIDATED;
-            //     }else{
-            //         return;
-            //     }
-            // })
+        //     // liquidationPositionsMumbaiFromHighLtv.map(async (liquidationPosition) =>{
+        //     //     if(liquidationPosition.liquidationEthPrice == ethPrice && !liquidationPosition.downsideProtectionStatus){
+        //     //         await borrowingContractMumbai.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+        //     //         liquidationPosition.status = PositionStatus.LIQUIDATED;
+        //     //     }else{
+        //     //         return;
+        //     //     }
+        //     // })
     
-            // liquidationPositionsSepoliaFromHighLtv.map(async (liquidationPosition) =>{
-            //     if(liquidationPosition.liquidationEthPrice == ethPrice && !liquidationPosition.downsideProtectionStatus){
-            //         await borrowingContractSepolia.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
-            //         liquidationPosition.status = PositionStatus.LIQUIDATED;
-            //     }else{
-            //         return;
-            //     }
-            // })
-        }else{
-            // Getting all the entities in High LTV positions
-            const existingEntities = await this.highLtvPositionsRepository.find();
+        //     // liquidationPositionsSepoliaFromHighLtv.map(async (liquidationPosition) =>{
+        //     //     if(liquidationPosition.liquidationEthPrice == ethPrice && !liquidationPosition.downsideProtectionStatus){
+        //     //         await borrowingContractSepolia.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+        //     //         liquidationPosition.status = PositionStatus.LIQUIDATED;
+        //     //     }else{
+        //     //         return;
+        //     //     }
+        //     // })
+        // }else{
+        //     // Getting all the entities in High LTV positions
+        //     const existingEntities = await this.highLtvPositionsRepository.find();
 
-            // Create entities in HighLtvPositions
-            const highLtvPositionsMumbai = liquidationPositionsMumbaiFromBatch.deposits.map(position =>{
-                const highLtvPositionMumbai = new HighLTVPositions();
-                highLtvPositionMumbai.batchNo = position.batchNo;
-                highLtvPositionMumbai.chainId = 80001;
-                highLtvPositionMumbai.positionId = position.id;
-                highLtvPositionMumbai.address = position.address;
-                highLtvPositionMumbai.index = position.index;
-                highLtvPositionMumbai.status = position.status;
-                return highLtvPositionMumbai;
-            })
-            const highLtvPositionsSepolia = liquidationPositionsSepoliaFromBatch.deposits.map(position =>{
-                const highLtvPositionSepolia = new HighLTVPositions();
-                highLtvPositionSepolia.batchNo = position.batchNo;
-                highLtvPositionSepolia.chainId = 11155111;
-                highLtvPositionSepolia.positionId = position.id;
-                highLtvPositionSepolia.address = position.address;
-                highLtvPositionSepolia.index = position.index;
-                highLtvPositionSepolia.status = position.status;
-                return highLtvPositionSepolia;
-            })
+        //     // Create entities in HighLtvPositions
+        //     const highLtvPositionsMumbai = liquidationPositionsMumbaiFromBatch.deposits.map(position =>{
+        //         const highLtvPositionMumbai = new HighLTVPositions();
+        //         highLtvPositionMumbai.batchNo = position.batchNo;
+        //         highLtvPositionMumbai.chainId = 80001;
+        //         highLtvPositionMumbai.positionId = position.id;
+        //         highLtvPositionMumbai.address = position.address;
+        //         highLtvPositionMumbai.index = position.index;
+        //         highLtvPositionMumbai.status = position.status;
+        //         return highLtvPositionMumbai;
+        //     })
+        //     const highLtvPositionsSepolia = liquidationPositionsSepoliaFromBatch.deposits.map(position =>{
+        //         const highLtvPositionSepolia = new HighLTVPositions();
+        //         highLtvPositionSepolia.batchNo = position.batchNo;
+        //         highLtvPositionSepolia.chainId = 11155111;
+        //         highLtvPositionSepolia.positionId = position.id;
+        //         highLtvPositionSepolia.address = position.address;
+        //         highLtvPositionSepolia.index = position.index;
+        //         highLtvPositionSepolia.status = position.status;
+        //         return highLtvPositionSepolia;
+        //     })
 
-            // Combination of high ltv positions in all chains
-            const combinedHighLtvPositions = highLtvPositionsMumbai.concat(highLtvPositionsSepolia);
-            // Check whether the positions are already not stored 
-            const liquidationPositions = combinedHighLtvPositions.filter(combinedPosition => !existingEntities.some(existingEntity => existingEntity.positionId === combinedPosition.positionId));
-            // Save them
-            await this.highLtvPositionsRepository.save(liquidationPositions);
-        }
+        //     // Combination of high ltv positions in all chains
+        //     const combinedHighLtvPositions = highLtvPositionsMumbai.concat(highLtvPositionsSepolia);
+        //     // Check whether the positions are already not stored 
+        //     const liquidationPositions = combinedHighLtvPositions.filter(combinedPosition => !existingEntities.some(existingEntity => existingEntity.positionId === combinedPosition.positionId));
+        //     // Save them
+        //     await this.highLtvPositionsRepository.save(liquidationPositions);
+        // }
 
     }
 
@@ -762,107 +875,174 @@ export class BorrowsService {
     // @Cron("0 */1 * * * *")
     async liquidateHighLtvUsers(){
 
-        const signerMumbai = await this.getSignerOrProvider(80001,true);
-        const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
+        for (let i = 0;i < this.chainIds.length;i++){
+            let borrowingContract;
+            const signer = await this.getSignerOrProvider(this.chainIds[i],true);
 
-        const signerSepolia = await this.getSignerOrProvider(11155111,true);
-        const borrowingContractSepolia = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signerSepolia);
+            if(this.chainIds[i] == 11155111){
+                borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
+            }else if(this.chainIds[i] == 5){
+                borrowingContract = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signer);
+            }else if(this.chainIds[i] == 80001){
+                borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
+            }
 
-        // Get the current eth price
-        const currentEthPrice = await borrowingContractMumbai.getUSDValue();
-        // Get the current ltv
-        const ltv = await borrowingContractMumbai.getLTV();
-        const ethPrice = currentEthPrice.toNumber()/100;
+            // Get the current eth price
+            const currentEthPrice = await borrowingContract.getUSDValue();
+            // Get the current ltv
+            const ltv = await borrowingContract.getLTV();
+            const ethPrice = currentEthPrice.toNumber()/100;
 
-        // If ltv is below 90 liquidate
-        if(ltv <= 90){
-            // Get the positions based on status of the position
-            const positionsMumbaiFromHighLtv = await this.highLtvPositionsRepository.findBy({
-                chainId:80001,
-                status:Not(PositionStatus.LIQUIDATED)
-            });
+            // If ltv is below 90 liquidate
+            if(ltv <= 90){
+                // Get the positions based on status of the position
+                const positionsFromHighLtv = await this.highLtvPositionsRepository.findBy({
+                    chainId:this.chainIds[i],
+                    status:Not(PositionStatus.LIQUIDATED)
+                });
 
-            const positionsSepoliaFromHighLtv = await this.highLtvPositionsRepository.findBy({
-                chainId:11155111,
-                status:Not(PositionStatus.LIQUIDATED)
-            });
-
-            let liquidationPositionsMumbaiFromHighLtv:BorrowInfo[];
-            let liquidationPositionsSepoliaFromHighLtv:BorrowInfo[];
-            if(positionsMumbaiFromHighLtv && positionsMumbaiFromHighLtv.length != 0){
-                // get the equivalent BorrowInfo
-                for(let i=0;i<positionsMumbaiFromHighLtv.length;i++){
-                    if(!liquidationPositionsMumbaiFromHighLtv){
-                        liquidationPositionsMumbaiFromHighLtv = [await this.borrowRepository.findOne({where:
-                            {id:Equal(positionsMumbaiFromHighLtv[i].positionId)}})]
-                    }else{
-                        liquidationPositionsMumbaiFromHighLtv.push(await this.borrowRepository.findOne({where:
-                            {id:Equal(positionsMumbaiFromHighLtv[i].positionId)}
-                        }));
+                let liquidationPositionsFromHighLtv:BorrowInfo[];
+                if(positionsFromHighLtv && positionsFromHighLtv.length != 0){
+                    // get the equivalent BorrowInfo
+                    for(let i=0;i<positionsFromHighLtv.length;i++){
+                        if(!liquidationPositionsFromHighLtv){
+                            liquidationPositionsFromHighLtv = [await this.borrowRepository.findOne({where:
+                                {id:Equal(positionsFromHighLtv[i].positionId)}})]
+                        }else{
+                            liquidationPositionsFromHighLtv.push(await this.borrowRepository.findOne({where:
+                                {id:Equal(positionsFromHighLtv[i].positionId)}
+                            }));
+                        }
                     }
                 }
-            }
 
-            if(positionsSepoliaFromHighLtv && positionsSepoliaFromHighLtv.length != 0){
-                // get the equivalent BorrowInfo
-                for(let i=0;i<positionsSepoliaFromHighLtv.length;i++){
-                    if(!liquidationPositionsSepoliaFromHighLtv){
-                        liquidationPositionsSepoliaFromHighLtv = [await this.borrowRepository.findOne({where:
-                            {id:Equal(positionsSepoliaFromHighLtv[i].positionId)}})]
-                    }else{
-                        liquidationPositionsSepoliaFromHighLtv.push(await this.borrowRepository.findOne({where:
-                            {id:Equal(positionsSepoliaFromHighLtv[i].positionId)}
-                        }));
-                    }
+                if(liquidationPositionsFromHighLtv && liquidationPositionsFromHighLtv.length != 0){
+                    liquidationPositionsFromHighLtv.map(async (liquidationPosition) =>{
+                        // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
+                        if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
+                            // Call the liquidate function in blockchain
+                            //await borrowingContractMumbai.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+                            // Get the equivalent high ltv position
+                            const liquidatedPosition = await this.highLtvPositionsRepository.findOne({where:
+                                {positionId:Equal(liquidationPosition.id)}})
+                            // Update the status of the position as Liquidated
+                            liquidatedPosition.status = PositionStatus.LIQUIDATED;
+                            liquidationPosition.status = PositionStatus.LIQUIDATED;
+                            // Update the data
+                            await this.highLtvPositionsRepository.save(liquidatedPosition);
+                        }else{
+                            return;
+                        }
+                    })
+                    await this.borrowRepository.save(liquidationPositionsFromHighLtv);
                 }
+            }else{
+                return;
             }
-
-            if(liquidationPositionsMumbaiFromHighLtv && liquidationPositionsMumbaiFromHighLtv.length != 0){
-                liquidationPositionsMumbaiFromHighLtv.map(async (liquidationPosition) =>{
-                    // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
-                    if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
-                        // Call the liquidate function in blockchain
-                        //await borrowingContractMumbai.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
-                        // Get the equivalent high ltv position
-                        const liquidatedPosition = await this.highLtvPositionsRepository.findOne({where:
-                            {positionId:Equal(liquidationPosition.id)}})
-                        // Update the status of the position as Liquidated
-                        liquidatedPosition.status = PositionStatus.LIQUIDATED;
-                        liquidationPosition.status = PositionStatus.LIQUIDATED;
-                        // Update the data
-                        await this.highLtvPositionsRepository.save(liquidatedPosition);
-                    }else{
-                        return;
-                    }
-                })
-                await this.borrowRepository.save(liquidationPositionsMumbaiFromHighLtv);
-
-            }
-
-            if(liquidationPositionsSepoliaFromHighLtv && liquidationPositionsSepoliaFromHighLtv.length != 0){
-                liquidationPositionsSepoliaFromHighLtv.map(async (liquidationPosition) =>{
-                    // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
-                    if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
-                        // Call the liquidate function in blockchain
-                        //await borrowingContractSepolia.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
-                        // Get the equivalent high ltv position
-                        const liquidatedPosition = await this.highLtvPositionsRepository.findOne({where:
-                            {positionId:Equal(liquidationPosition.id)}})
-                        // Update the status of the position as Liquidated
-                        liquidatedPosition.status = PositionStatus.LIQUIDATED;
-                        liquidationPosition.status = PositionStatus.LIQUIDATED;
-                        // Update the data
-                        await this.highLtvPositionsRepository.save(liquidatedPosition);
-                    }else{
-                        return;
-                    }
-                })
-                await this.borrowRepository.save(liquidationPositionsSepoliaFromHighLtv);
-
-            }
-
-        }else{
-            return;
         }
+        
+
+        // const signerMumbai = await this.getSignerOrProvider(80001,true);
+        // const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
+
+        // const signerSepolia = await this.getSignerOrProvider(11155111,true);
+        // const borrowingContractSepolia = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signerSepolia);
+
+        // // Get the current eth price
+        // const currentEthPrice = await borrowingContractMumbai.getUSDValue();
+        // // Get the current ltv
+        // const ltv = await borrowingContractMumbai.getLTV();
+        // const ethPrice = currentEthPrice.toNumber()/100;
+
+        // // If ltv is below 90 liquidate
+        // if(ltv <= 90){
+        //     // Get the positions based on status of the position
+        //     const positionsMumbaiFromHighLtv = await this.highLtvPositionsRepository.findBy({
+        //         chainId:80001,
+        //         status:Not(PositionStatus.LIQUIDATED)
+        //     });
+
+        //     const positionsSepoliaFromHighLtv = await this.highLtvPositionsRepository.findBy({
+        //         chainId:11155111,
+        //         status:Not(PositionStatus.LIQUIDATED)
+        //     });
+
+        //     let liquidationPositionsMumbaiFromHighLtv:BorrowInfo[];
+        //     let liquidationPositionsSepoliaFromHighLtv:BorrowInfo[];
+        //     if(positionsMumbaiFromHighLtv && positionsMumbaiFromHighLtv.length != 0){
+        //         // get the equivalent BorrowInfo
+        //         for(let i=0;i<positionsMumbaiFromHighLtv.length;i++){
+        //             if(!liquidationPositionsMumbaiFromHighLtv){
+        //                 liquidationPositionsMumbaiFromHighLtv = [await this.borrowRepository.findOne({where:
+        //                     {id:Equal(positionsMumbaiFromHighLtv[i].positionId)}})]
+        //             }else{
+        //                 liquidationPositionsMumbaiFromHighLtv.push(await this.borrowRepository.findOne({where:
+        //                     {id:Equal(positionsMumbaiFromHighLtv[i].positionId)}
+        //                 }));
+        //             }
+        //         }
+        //     }
+
+        //     if(positionsSepoliaFromHighLtv && positionsSepoliaFromHighLtv.length != 0){
+        //         // get the equivalent BorrowInfo
+        //         for(let i=0;i<positionsSepoliaFromHighLtv.length;i++){
+        //             if(!liquidationPositionsSepoliaFromHighLtv){
+        //                 liquidationPositionsSepoliaFromHighLtv = [await this.borrowRepository.findOne({where:
+        //                     {id:Equal(positionsSepoliaFromHighLtv[i].positionId)}})]
+        //             }else{
+        //                 liquidationPositionsSepoliaFromHighLtv.push(await this.borrowRepository.findOne({where:
+        //                     {id:Equal(positionsSepoliaFromHighLtv[i].positionId)}
+        //                 }));
+        //             }
+        //         }
+        //     }
+
+        //     if(liquidationPositionsMumbaiFromHighLtv && liquidationPositionsMumbaiFromHighLtv.length != 0){
+        //         liquidationPositionsMumbaiFromHighLtv.map(async (liquidationPosition) =>{
+        //             // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
+        //             if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
+        //                 // Call the liquidate function in blockchain
+        //                 //await borrowingContractMumbai.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+        //                 // Get the equivalent high ltv position
+        //                 const liquidatedPosition = await this.highLtvPositionsRepository.findOne({where:
+        //                     {positionId:Equal(liquidationPosition.id)}})
+        //                 // Update the status of the position as Liquidated
+        //                 liquidatedPosition.status = PositionStatus.LIQUIDATED;
+        //                 liquidationPosition.status = PositionStatus.LIQUIDATED;
+        //                 // Update the data
+        //                 await this.highLtvPositionsRepository.save(liquidatedPosition);
+        //             }else{
+        //                 return;
+        //             }
+        //         })
+        //         await this.borrowRepository.save(liquidationPositionsMumbaiFromHighLtv);
+
+        //     }
+
+        //     if(liquidationPositionsSepoliaFromHighLtv && liquidationPositionsSepoliaFromHighLtv.length != 0){
+        //         liquidationPositionsSepoliaFromHighLtv.map(async (liquidationPosition) =>{
+        //             // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
+        //             if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
+        //                 // Call the liquidate function in blockchain
+        //                 //await borrowingContractSepolia.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+        //                 // Get the equivalent high ltv position
+        //                 const liquidatedPosition = await this.highLtvPositionsRepository.findOne({where:
+        //                     {positionId:Equal(liquidationPosition.id)}})
+        //                 // Update the status of the position as Liquidated
+        //                 liquidatedPosition.status = PositionStatus.LIQUIDATED;
+        //                 liquidationPosition.status = PositionStatus.LIQUIDATED;
+        //                 // Update the data
+        //                 await this.highLtvPositionsRepository.save(liquidatedPosition);
+        //             }else{
+        //                 return;
+        //             }
+        //         })
+        //         await this.borrowRepository.save(liquidationPositionsSepoliaFromHighLtv);
+
+        //     }
+
+        // }else{
+        //     return;
+        // }
     }
 }
