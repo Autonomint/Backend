@@ -479,9 +479,9 @@ export class BorrowsService {
      * @param amount amount going to deposit
      * @returns ethVolatility and option price
      */
-    async getEthVolatility(chainId:number,amount:string,strikePricePercent:number):Promise<[number,number]>{
+    async getEthVolatility(chainId:number,amount:string,ethPrice:number,strikePricePercent:number):Promise<[number,number]>{
         const abc = await this.exchange.fetchVolatilityHistory('ETH',{period:30});
-        const volatility = abc.map(item => item.info[0].value)[0];
+        const volatility = (abc.map(item => item.info[0].value)[0] * 1e8);
         const signer = await this.getSignerOrProvider(chainId,true);
         let optionsContract;
         if(chainId == 11155111){
@@ -491,9 +491,9 @@ export class BorrowsService {
         }else if(chainId == 80001){
             optionsContract = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signer);
         }
-        const optionFees = await optionsContract.calculateOptionPrice(volatility,parseInt(amount),strikePricePercent);
+        const optionFees = await optionsContract.calculateOptionPrice(ethPrice,volatility,BigInt(amount),strikePricePercent);
 
-        return[(volatility * 1e8),optionFees];
+        return[volatility,optionFees.toNumber()];
     }
 
     // /**

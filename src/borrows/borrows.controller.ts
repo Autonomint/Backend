@@ -53,12 +53,13 @@ export class BorrowsController {
         return this.borrowsService.getDepositsByChainId(address,chainId);
     }
 
-    @Get('/optionFees/:chainId/:amount/:percent')
-    getEthVolatility(@Param() params:{chainId:number;amount:string;percent:number}):Promise<[number,number]>{
+    @Get('/optionFees/:chainId/:amount/:ethPrice/:percent')
+    getEthVolatility(@Param() params:{chainId:number;amount:string;ethPrice:number;percent:number}):Promise<[number,number]>{
         const chainId = params.chainId;
         const amount = params.amount;
+        const ethPrice = params.ethPrice;
         const strikePricePercent = params.percent
-        return this.borrowsService.getEthVolatility(chainId,amount,strikePricePercent);
+        return this.borrowsService.getEthVolatility(chainId,amount,ethPrice,strikePricePercent);
     }
 
     // To add the deposit in borrowing
