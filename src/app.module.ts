@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { GlobalService } from './global/global.service';
 import { GlobalModule } from './global/global.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ExternalProtocolsModule } from './external-protocols/external-protocols.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
     ScheduleModule.forRoot(),
     CdsModule,
-    GlobalModule],
+    GlobalModule,
+    ExternalProtocolsModule],
   controllers: [AppController],
   providers: [AppService]
 })
