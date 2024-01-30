@@ -11,10 +11,12 @@ import { GlobalModule } from '../global/global.module';
 import { GlobalController } from '../global/global.controller';
 import { GlobalVariables } from '../global/entities/global.entity';
 import { LiquidationInfo } from './entities/liquidatedInfo.entity';
+import { Batch } from './entities/batch.entity';
+import { HighLTVPositions } from './entities/high-ltv-positions.entity';
 
 @Module({
   imports:[
-    TypeOrmModule.forFeature([BorrowInfo,BorrowerInfo,CriticalPositions,GlobalVariables,LiquidationInfo]),
+    TypeOrmModule.forFeature([BorrowInfo,BorrowerInfo,CriticalPositions,GlobalVariables,LiquidationInfo,Batch,HighLTVPositions]),
     GlobalModule,
   ],
   controllers: [BorrowsController,GlobalController],

@@ -27,6 +27,10 @@ export class CdsInfo{
     @Column({nullable:true})
     depositedUsdt:string;
 
+    //Includes all types of deposited amount
+    @Column({nullable:true})
+    totalDepositedAmount:string;
+
     @Column({ nullable:true})
     depositedTime:string;
 
@@ -50,14 +54,17 @@ export class CdsInfo{
         nullable: true })
     ethPriceAtWithdraw:number;
 
+    // Liquidation amount user willing to give
     @Column({nullable:true})
     initialLiquidationAmount:string;
 
+    // current available liquidation amount
     @Column({
         type:'decimal',
         nullable: true })
     liquidationAmount:number;
 
+    //Liquidation index at deposit
     @Column({nullable:true})
     liquidationIndex:number;
 
@@ -82,6 +89,7 @@ export class CdsInfo{
         nullable:true})
     withdrawEthAmount:string;
 
+    // option fees accured by the user
     @Column({ nullable: true })
     fees:string;
 

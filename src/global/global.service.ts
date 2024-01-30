@@ -2,15 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { GlobalVariables } from './entities/global.entity';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { Batch } from '../borrows/entities/batch.entity';
 
 @Injectable()
 export class GlobalService {
 
     constructor(
         @InjectRepository(GlobalVariables)
-        private globalRepository: Repository<GlobalVariables>
+        private globalRepository: Repository<GlobalVariables>,
+        @InjectRepository(Batch)
+        private batchRepository: Repository<Batch>
     ){}
 
+    private chainIds = [5,11155111,80001];
+
+    // Set amint balance in treasury
     async setTreasuryAmintBalance(chainId:number,amintBalance:number){
         let found = await this.globalRepository.findOne({where:{chainId:chainId}});
         if(!found){
@@ -23,7 +30,7 @@ export class GlobalService {
         }
         await this.globalRepository.save(found);
     }
-
+    // Set Eth balance in treasury
     async setTreasuryEthBalance(chainId:number,ethBalance:number){
         let found = await this.globalRepository.findOne({where:{chainId:chainId}});
         if(!found){
@@ -36,7 +43,7 @@ export class GlobalService {
         }
         await this.globalRepository.save(found);
     }
-
+    // Set total available liquidation amount in treasury
     async setTotalAvailableLiquidationAmount(chainId:number,liquidationAmount:number){
         let found = await this.globalRepository.findOne({where:{chainId:chainId}});
         if(!found){
@@ -50,7 +57,7 @@ export class GlobalService {
 
         await this.globalRepository.save(found);
     }
-
+    // Set liquidation index
     async setLiquidationIndex(chainId:number,liquidationIndex:number){
         let found = await this.globalRepository.findOne({where:{chainId:chainId}});
         if(!found){
@@ -63,7 +70,7 @@ export class GlobalService {
         }
         await this.globalRepository.save(found);
     }
-
+    // Set Eth prices
     async setEthPrice(chainId:number,ethPrice:number){
         let found = await this.globalRepository.findOne({where:{chainId:chainId}});
         if(!found){
@@ -79,6 +86,44 @@ export class GlobalService {
         await this.globalRepository.save(found);
     }
 
+    // Initiate batch number
+    async setBatchNo(chainId:number){
+        let found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            found = this.globalRepository.create({
+                chainId,
+                batchNo:1,
+            })
+            const newBatch = this.batchRepository.create({
+                chainId,
+                batchNo:1
+            })
+            await this.globalRepository.save(found);
+            await this.batchRepository.save(newBatch);
+        }else{
+            return ;
+        }
+    }
+    
+    // Increase batch number
+    // @Cron('0 0 0/24 * * *',{name:'Increment Batch No'})
+    @Cron(CronExpression.EVERY_10_SECONDS,{name:'Increment Batch No'})
+    async incrementBatchNo(){
+
+        for (let i = 0;i < this.chainIds.length;i++){
+            const found = await this.globalRepository.findOne({where:{chainId:this.chainIds[i]}});
+            if(found){
+                const newBatch = this.batchRepository.create({
+                    chainId:this.chainIds[i],
+                    batchNo:parseInt((found.batchNo).toString()) + 1,
+                })
+                found.batchNo = parseInt((found.batchNo).toString()) + 1;
+                await this.batchRepository.save(newBatch);
+                await this.globalRepository.save(found);
+            }
+        }
+    }
+    // Get amint balance in treasury
     async getTreasuryAmintBalance(chainId:number):Promise<number>{
         const found = await this.globalRepository.findOne({where:{chainId:chainId}});
         if(!found){
@@ -91,7 +136,7 @@ export class GlobalService {
             }
         }
     }
-
+    // Get Eth balance in treasury
     async getTreasuryEthBalance(chainId:number):Promise<number>{
         const found = await this.globalRepository.findOne({where:{chainId:chainId}});
         if(!found){
@@ -104,19 +149,28 @@ export class GlobalService {
             }
         }
     }
-
+    // Get total available liquidation amount in treasury
     async getTotalAvailableLiquidationAmount(chainId:number):Promise<number>{
         const found = await this.globalRepository.findOne({where:{chainId:chainId}});
         return found.totalAvailableLiquidationAmount;
     }
-
+    // Get liquidation index
     async getLiquidationIndex(chainId:number):Promise<number>{
         const found = await this.globalRepository.findOne({where:{chainId:chainId}});
         return found.liquidationIndex;
     }
-
+    // Get Eth prices
     async getEthPrices(chainId:number):Promise<number[]>{
         const found = await this.globalRepository.findOne({where:{chainId:chainId}});
         return [found.fallbackEthPrice,found.lastEthPrice];
+    }
+
+    // Get batch number
+    async getBatchNo(chainId:number):Promise<number>{
+        const found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            return 0;
+        }
+        return found.batchNo;
     }
 }

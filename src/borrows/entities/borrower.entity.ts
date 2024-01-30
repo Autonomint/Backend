@@ -12,40 +12,25 @@ export class BorrowerInfo{
     address:string;
 
     @Column({nullable:true})
-    totalIndexInEthereum:number;
+    chainId:number;
 
     @Column({nullable:true})
-    totalIndexInPolygon:number;
+    totalIndex:number;
 
     @Column({
         type:'decimal',
         nullable: true })
-    totalDepositedAmountInEthereum:number;
-
-    @Column({
-        type:'decimal',
-        nullable: true })
-    totalDepositedAmountInPolygon:number;
+    totalDepositedAmount:number;
 
     @Column({
         type:'decimal',
         nullable:true})
-    totalAmintInEthereum:number;
+    totalAmint:number;
 
     @Column({
         type:'decimal',
         nullable:true})
-    totalAmintInPolygon:number;
-
-    @Column({
-        type:'decimal',
-        nullable:true})
-    totalAbondInEthereum:number;
-
-    @Column({
-        type:'decimal',
-        nullable:true})
-    totalAbondInPolygon:number;
+    totalAbond:number;
 
     @OneToMany(() => BorrowInfo, (borrowInfo) => borrowInfo.borrower,{ eager: true })
     borrows:BorrowInfo[]

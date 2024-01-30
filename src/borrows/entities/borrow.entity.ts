@@ -2,6 +2,8 @@ import { Entity,Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm'
 import { PositionStatus } from '../borrow-status.enum';
 import { BorrowerInfo } from './borrower.entity';
 import { Type } from 'class-transformer';
+import { StrikePricePercent } from '../borrow-strike-price.enum';
+import { Batch } from './batch.entity';
 
 
 @Entity()
@@ -15,6 +17,9 @@ export class BorrowInfo{
 
     @Column({nullable:true})
     chainId:number;
+
+    @Column({nullable:true})
+    batchNo:number;
 
     @Column()
     index:number;
@@ -64,6 +69,20 @@ export class BorrowInfo{
         nullable:true})
     strikePrice:number;
 
+    //Strike price that the depositor chose Eg:5%,10%,15%
+    @Column({nullable:true})
+    strikePricePercent:StrikePricePercent;
+
+    @Column({nullable:true})
+    optionFees:string;
+
+    @Column({type:'boolean'})
+    downsideProtectionStatus:boolean;
+
+    //Option fees deducted till now
+    @Column({nullable:true})
+    totalFeesDeducted:string;
+
     @Column({nullable:true})
     totalDebtAmount:string;
 
@@ -79,6 +98,7 @@ export class BorrowInfo{
     @Column({ nullable:true})
     withdrawAmount2:string;
 
+    //Amount yet to withdraw for 2nd time
     @Column({nullable:true})
     amountYetToWithdraw:string;
 
@@ -87,9 +107,13 @@ export class BorrowInfo{
         nullable:true})
     noOfAbondMinted:number;
 
+    // Status of the deposit
     @Column()
     status: PositionStatus;
 
     @ManyToOne(() => BorrowerInfo,(borrower) => borrower.borrows,{cascade:true})
     borrower:BorrowerInfo;
+
+    @ManyToOne(() => Batch,(batch) => batch.deposits,{cascade:true})
+    batch:Batch;
 }
