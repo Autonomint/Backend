@@ -209,6 +209,8 @@ export class BorrowsService {
         const batchNo = await this.globalService.getBatchNo(chainId);
         const currentIndex = await this.getDepositorIndexByAddress(address,chainId);
         const strikePriceCalculated = (ethPrice * (1 + strikePrice/100));
+        const noOfAmintInEther = (parseFloat(noOfAmintMinted)/1e6).toString();
+        const optionFeesInEther = (parseFloat(optionFees)/1e6).toString();
         if(currentIndex == (index-1) || currentIndex == 0){
             // Calculating liquidation eth price as 80% of current eth price
             const liquidationEthPrice = (ethPrice*80)/100;
@@ -228,9 +230,9 @@ export class BorrowsService {
                 ethPrice,
                 liquidationEthPrice,
                 criticalEthPrice,
-                noOfAmintMinted,
+                noOfAmintMinted:noOfAmintInEther,
                 strikePrice:strikePriceCalculated,
-                optionFees,
+                optionFees:optionFeesInEther,
                 downsideProtectionStatus:true,
                 totalFeesDeducted:(parseFloat(optionFees)/30).toString(),
                 strikePricePercent:StrikePricePercent[strikePricePercent],
@@ -252,7 +254,6 @@ export class BorrowsService {
             }else{
                 borrower.totalDepositedAmount = parseFloat(borrower.totalDepositedAmount.toString()) + parseFloat(depositedAmount);
                 borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) +  parseFloat(noOfAmintMinted);
-                borrower.totalAbond = 0;
                 borrower.totalIndex = index;
                 borrower.borrows.push(borrow);
             }
@@ -298,7 +299,6 @@ export class BorrowsService {
             chainId,
             index,
             withdrawTime,
-            borrowDebt,
             withdrawAmount,
             amountYetToWithdraw,
             noOfAbond,
@@ -312,18 +312,18 @@ export class BorrowsService {
                 index:index
             }});
         const borrower = await this.borrowerRepository.findOne({where:{address:address}});
-        // const borrowDebtInEther = ethers.utils.formatEther(borrowDebt);
         // Formatting the values in wei to Ether
         const withdrawAmountInEther = ethers.utils.formatEther(withdrawAmount);
         const amountYetToWithdrawInEther = ethers.utils.formatEther(amountYetToWithdraw);
         const noOfAbondInEther = (parseFloat(noOfAbond)/1e6).toString();
+        const totalDebtAmountInEther = (parseFloat(totalDebtAmount)/1e6).toString();
 
         if(!found.withdrawAmount1 && found.status != PositionStatus.LIQUIDATED){
             found.withdrawTime1 = withdrawTime;
             found.withdrawAmount1 = withdrawAmountInEther;
             found.noOfAbondMinted = parseFloat(noOfAbondInEther);
             found.amountYetToWithdraw = amountYetToWithdrawInEther;
-            found.totalDebtAmount = totalDebtAmount;
+            found.totalDebtAmount = totalDebtAmountInEther;
             found.status = PositionStatus.WITHDREW1;
             borrower.totalDepositedAmount = parseFloat(borrower.totalDepositedAmount.toString()) - parseFloat(found.depositedAmount);
             borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) - parseFloat(found.noOfAmintMinted);
