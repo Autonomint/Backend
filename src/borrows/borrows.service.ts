@@ -234,7 +234,7 @@ export class BorrowsService {
                 strikePrice:strikePriceCalculated,
                 optionFees:optionFeesInEther,
                 downsideProtectionStatus:true,
-                totalFeesDeducted:(parseFloat(optionFees)/30).toString(),
+                totalFeesDeducted:(parseFloat(optionFeesInEther)/30).toString(),
                 strikePricePercent:StrikePricePercent[strikePricePercent],
                 status:PositionStatus.DEPOSITED
             });
@@ -247,13 +247,13 @@ export class BorrowsService {
                 borrower = new BorrowerInfo();
                 borrower.chainId = chainId;
                 borrower.totalDepositedAmount = parseFloat(depositedAmount);
-                borrower.totalAmint = parseFloat(noOfAmintMinted);
+                borrower.totalAmint = parseFloat(noOfAmintInEther);
                 borrower.totalAbond = 0;
                 borrower.totalIndex = index;
                 borrower.borrows = [borrow];
             }else{
                 borrower.totalDepositedAmount = parseFloat(borrower.totalDepositedAmount.toString()) + parseFloat(depositedAmount);
-                borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) +  parseFloat(noOfAmintMinted);
+                borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) +  parseFloat(noOfAmintInEther);
                 borrower.totalIndex = index;
                 borrower.borrows.push(borrow);
             }
