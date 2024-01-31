@@ -106,8 +106,8 @@ export class GlobalService {
     }
     
     // Increase batch number
-    // @Cron('0 0 0/24 * * *',{name:'Increment Batch No'})
-    @Cron(CronExpression.EVERY_10_SECONDS,{name:'Increment Batch No'})
+    @Cron('0 0 0/24 * * *',{name:'Increment Batch No'})
+    // @Cron(CronExpression.EVERY_10_SECONDS,{name:'Increment Batch No'})
     async incrementBatchNo(){
 
         for (let i = 0;i < this.chainIds.length;i++){
