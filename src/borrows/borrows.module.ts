@@ -6,17 +6,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BorrowInfo } from './entities/borrow.entity';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { CriticalPositions } from './entities/liquidation.entity';
-import { GlobalService } from 'src/global/global.service';
 import { GlobalModule } from '../global/global.module';
 import { GlobalController } from '../global/global.controller';
 import { GlobalVariables } from '../global/entities/global.entity';
 import { LiquidationInfo } from './entities/liquidatedInfo.entity';
 import { Batch } from './entities/batch.entity';
 import { HighLTVPositions } from './entities/high-ltv-positions.entity';
+import { Charts } from './entities/chart.entity';
 
 @Module({
   imports:[
-    TypeOrmModule.forFeature([BorrowInfo,BorrowerInfo,CriticalPositions,GlobalVariables,LiquidationInfo,Batch,HighLTVPositions]),
+    TypeOrmModule.forFeature([BorrowInfo,BorrowerInfo,CriticalPositions,GlobalVariables,LiquidationInfo,Batch,HighLTVPositions,Charts]),
     GlobalModule,
   ],
   controllers: [BorrowsController,GlobalController],
