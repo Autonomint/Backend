@@ -46,4 +46,6 @@ export class GlobalVariables{
         nullable:true})
     batchNo: number;
 
+    @Column({nullable:true})
+    day: number;
 }
