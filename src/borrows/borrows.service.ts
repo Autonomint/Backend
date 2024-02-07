@@ -519,8 +519,11 @@ export class BorrowsService {
         }else if(chainId == 80001){
             borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
         }
-        const ratio = await borrowingContract.calculateRatio(0,ethPrice);
-        return (ratio/1e5);
+        const ethVaultValue = await borrowingContract.lastEthVaultValue();
+        const cdsPoolValue = await borrowingContract.lastCDSPoolValue();
+        const ratio = ((cdsPoolValue * 1e2)/ethVaultValue);
+
+        return ratio;
     }
 
     // Create chart data
