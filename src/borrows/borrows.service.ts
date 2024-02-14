@@ -285,6 +285,15 @@ export class BorrowsService {
             }else{
                 await this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) + parseFloat(depositedAmount)); 
             }
+
+            // Getting TotalBorrowDepositedETH
+            const depositedETH = await this.globalService.getTotalBorrowDepositedETH(chainId);
+            // Updating TotalBorrowDepositedETH
+            if(depositedETH == 0){
+                await this.globalService.setTotalBorrowDepositedETH(chainId,parseFloat(depositedAmount)); 
+            }else{
+                await this.globalService.setTotalBorrowDepositedETH(chainId,parseFloat(depositedETH.toString()) + parseFloat(depositedAmount)); 
+            }
             await this.borrowRepository.save(borrow);
             await this.borrowerRepository.save(borrower);
             await this.batchRepository.save(batch);
@@ -345,7 +354,10 @@ export class BorrowsService {
         }
 
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
-
+        // Getting TotalBorrowDepositedETH
+        const depositedETH = await this.globalService.getTotalBorrowDepositedETH(chainId);
+        // Updating TotalBorrowDepositedETH
+        await this.globalService.setTotalBorrowDepositedETH(chainId,parseFloat(depositedETH.toString()) - parseFloat(withdrawAmountInEther)); 
         // Updating eth balance in treasury
         await this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawAmountInEther));
 
@@ -521,7 +533,7 @@ export class BorrowsService {
         }
         const ethVaultValue = await borrowingContract.lastEthVaultValue();
         const cdsPoolValue = await borrowingContract.lastCDSPoolValue();
-        const ratio = ((cdsPoolValue * 1e2)/ethVaultValue);
+        const ratio = ((cdsPoolValue * 1e14)/ethVaultValue);
 
         return ratio;
     }
