@@ -340,7 +340,7 @@ export class CdsService {
                     gains = false;
                 }
             }
-            value = (amount * vaultBal * priceDiff) /(1e2*cdsBal);   
+            value = (amount * vaultBal * priceDiff) /cdsBal;   
         }
         return [value,gains];
     }
