@@ -298,11 +298,6 @@ export class CdsService {
         }else{
             cumulativeValue = parseFloat(cumulativeValue.toString()) - parseFloat(value.toString());
         }
-        let fk;
-        if(-10 < 9){
-            fk = false;
-        }
-        console.log(fk);
         await this.globalService.setCumulativeValue(chainId,cumulativeValue);
     }
 

@@ -14,15 +14,14 @@ export const borrowAddressMumbai = '0xbA78a0a4897a6E77d8Eec2f0285767124bC8Dc54'
 export const treasuryAddressMumbai = '0x77030Bb9992769B85Afa971983896acA5c4b1f58'
 export const optionsAddressMumbai = '0xFDF1C29DAf724Be45Dae1Cd3ABACc595f6ec01E8'
 
-export const amintAddressGoerli = "0x3819637c95326a428a840E4410E30Fc77aD27371"
-export const abondAddressGoerli = "0x3A616bc9d287d5E9391fdc14fb35c774e8af6Ba5"
-export const usdtGoerli = "0x30E55c6d818FCDC0F2b3F9A771DE511Ba3224578"
-export const multiSignAddressGoerli = "0x7dcB56b8905d396a5E5603A00360fc80dcc6f970"
-export const cdsAddressGoerli = "0x141A17b3E7d2995D3497b8B62FbcB5e338C1b255"
-export const borrowAddressGoerli = "0x58A86e6548aEa1F81e8c4Dd791446B360ee8369E"
-export const treasuryAddressGoerli = "0x418e58A61B5AbFBF17304aE9092C59230175ec10"
-export const optionsAddressGoerli = "0x04f9d9F35e2806f714efB1bE1088b93bE6756F46"
-
+export const amintAddressGoerli =  '0xb5cDCc26c8E6d08dFA4fcb7b01Da07b009ccfF5c'
+export const abondAddressGoerli = '0x895A4BB74651848cC05040645dBf0b0576355BA1'
+export const usdtGoerli = '0x92a66aFf583313848e9D75a36cB89ec696313245'
+export const cdsAddressGoerli = '0x5092cA24929bc31e5Bd7d7E18C3d0091fe896D7c'
+export const borrowAddressGoerli = '0x504928a9c2BDb625CE285fc448e98111E2C96292'
+export const treasuryAddressGoerli = '0x7564dceC10DF58E61D930Fd3F78462E356fb7aC7'
+export const optionsAddressGoerli = '0xAc7A5B24377822927438f887F2A4e994fe0c95A1'
+export const multiSignAddressGoerli = '0x2B5B9F73cC882a618D4070fcAd13CC283002EaeA'
 
 export const borrowABISepolia = [{"inputs":[{"internalType":"address","name":"_tokenAddress","type":"address"},{"internalType":"address","name":"_cds","type":"address"},{"internalType":"address","name":"_protocolToken","type":"address"},{"internalType":"address","name":"_priceFeedAddress","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"Borrowing_DepositFailed","type":"error"},{"inputs":[],"name":"Borrowing_GettingETHPriceFailed","type":"error"},{"inputs":[],"name":"Borrowing_LiquidateBurnFailed","type":"error"},{"inputs":[],"name":"Borrowing_LiquidateEthTransferToCdsFailed","type":"error"},{"inputs":[],"name":"Borrowing_MUSDMintFailed","type":"error"},{"inputs":[],"name":"Borrowing_WithdrawBurnFailed","type":"error"},{"inputs":[],"name":"Borrowing_WithdrawEthTransferFailed","type":"error"},{"inputs":[],"name":"Borrowing_WithdrawMUSDTransferFailed","type":"error"},{"inputs":[],"name":"Borrowing_pTokenMintFailed","type":"error"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint64","name":"index","type":"uint64"},{"indexed":false,"internalType":"uint256","name":"depositedAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"borrowAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"normalizedAmount","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint128","name":"liquidationIndex","type":"uint128"},{"indexed":false,"internalType":"uint128","name":"liquidationAmount","type":"uint128"},{"indexed":false,"internalType":"uint128","name":"cdsProfits","type":"uint128"},{"indexed":false,"internalType":"uint128","name":"ethAmount","type":"uint128"},{"indexed":false,"internalType":"uint256","name":"availableLiquidationAmount","type":"uint256"}],"name":"Liquidate","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"borrowDebt","type":"uint256"},{"indexed":false,"internalType":"uint128","name":"withdrawAmount","type":"uint128"},{"indexed":false,"internalType":"uint128","name":"noOfAbond","type":"uint128"}],"name":"Withdraw","type":"event"},{"inputs":[],"name":"APY","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"Trinity","outputs":[{"internalType":"contract ITrinityToken","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"admin","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"calculateCumulativeRate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"cds","outputs":[{"internalType":"contract CDSInterface","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"cdsAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"depositToAaveProtocol","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"depositToCompoundProtocol","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint128","name":"_ethPrice","type":"uint128"},{"internalType":"uint64","name":"_depositTime","type":"uint64"},{"internalType":"uint64","name":"_strikePrice","type":"uint64"}],"name":"depositTokens","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"getAPY","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getLTV","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getUSDValue","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_treasury","type":"address"}],"name":"initializeTreasury","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"lastCDSPoolValue","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastCumulativeRate","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastEthVaultValue","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastEthprice","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastTotalCDSPool","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_user","type":"address"},{"internalType":"uint64","name":"_index","type":"uint64"},{"internalType":"uint64","name":"currentEthPrice","type":"uint64"}],"name":"liquidate","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"noOfLiquidations","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"options","outputs":[{"internalType":"contract IOptions","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"priceFeedAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"protocolToken","outputs":[{"internalType":"contract IProtocolToken","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint8","name":"_apy","type":"uint8"}],"name":"setAPY","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_admin","type":"address"}],"name":"setAdmin","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint8","name":"_LTV","type":"uint8"}],"name":"setLTV","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_options","type":"address"}],"name":"setOptions","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint64","name":"_timeLimit","type":"uint64"}],"name":"setWithdrawTimeLimit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"totalAmintSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalDiracSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalNormalizedAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"treasury","outputs":[{"internalType":"contract ITreasury","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"treasuryAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"updateLastEthVaultValue","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_toAddress","type":"address"},{"internalType":"uint64","name":"_index","type":"uint64"},{"internalType":"uint64","name":"_ethPrice","type":"uint64"},{"internalType":"uint64","name":"_withdrawTime","type":"uint64"}],"name":"withDraw","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint64","name":"index","type":"uint64"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"withdrawFromAaveProtocol","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint64","name":"index","type":"uint64"}],"name":"withdrawFromCompoundProtocol","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"withdrawTimeLimit","outputs":[{"internalType":"uint64","name":"","type":"uint64"}],"stateMutability":"view","type":"function"}]
 export const cdsABISepolia = [{"inputs":[{"internalType":"address","name":"_trinity","type":"address"},{"internalType":"address","name":"priceFeed","type":"address"},{"internalType":"address","name":"_usdt","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint128","name":"depositedAmint","type":"uint128"},{"indexed":false,"internalType":"uint64","name":"index","type":"uint64"},{"indexed":false,"internalType":"uint128","name":"liquidationAmount","type":"uint128"},{"indexed":false,"internalType":"uint128","name":"normalizedAmount","type":"uint128"},{"indexed":false,"internalType":"uint128","name":"depositVal","type":"uint128"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint128","name":"withdrewAmint","type":"uint128"},{"indexed":false,"internalType":"uint128","name":"withdrawETH","type":"uint128"}],"name":"Withdraw","type":"event"},{"inputs":[],"name":"PRECISION","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"Trinity_token","outputs":[{"internalType":"contract ITrinityToken","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"amintLimit","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"borrowing","outputs":[{"internalType":"contract IBorrowing","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"borrowingContract","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint128","name":"fees","type":"uint128"}],"name":"calculateCumulativeRate","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"cdsCount","outputs":[{"internalType":"uint64","name":"","type":"uint64"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"cdsDetails","outputs":[{"internalType":"uint64","name":"index","type":"uint64"},{"internalType":"bool","name":"hasDeposited","type":"bool"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint128","name":"usdtAmount","type":"uint128"},{"internalType":"uint128","name":"amintAmount","type":"uint128"},{"internalType":"bool","name":"_liquidate","type":"bool"},{"internalType":"uint128","name":"_liquidationAmount","type":"uint128"}],"name":"deposit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"ethVault","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"fallbackEthPrice","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"depositor","type":"address"},{"internalType":"uint64","name":"index","type":"uint64"}],"name":"getCDSDepositDetails","outputs":[{"components":[{"internalType":"uint64","name":"depositedTime","type":"uint64"},{"internalType":"uint128","name":"depositedAmount","type":"uint128"},{"internalType":"uint64","name":"withdrawedTime","type":"uint64"},{"internalType":"uint128","name":"withdrawedAmount","type":"uint128"},{"internalType":"bool","name":"withdrawed","type":"bool"},{"internalType":"uint128","name":"depositPrice","type":"uint128"},{"internalType":"uint128","name":"depositValue","type":"uint128"},{"internalType":"bool","name":"optedLiquidation","type":"bool"},{"internalType":"uint128","name":"InitialLiquidationAmount","type":"uint128"},{"internalType":"uint128","name":"liquidationAmount","type":"uint128"},{"internalType":"uint128","name":"liquidationindex","type":"uint128"},{"internalType":"uint128","name":"normalizedAmount","type":"uint128"}],"internalType":"struct CDSTest.CdsAccountDetails","name":"","type":"tuple"},{"internalType":"uint64","name":"","type":"uint64"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastCumulativeRate","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"lastEthPrice","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint128","name":"liquidationIndex","type":"uint128"}],"name":"liquidationIndexToInfo","outputs":[{"internalType":"uint128","name":"liquidationAmount","type":"uint128"},{"internalType":"uint128","name":"profits","type":"uint128"},{"internalType":"uint128","name":"ethAmount","type":"uint128"},{"internalType":"uint256","name":"availableLiquidationAmount","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint128","name":"_amintAmount","type":"uint128"},{"internalType":"uint64","name":"amintPrice","type":"uint64"},{"internalType":"uint64","name":"usdtPrice","type":"uint64"}],"name":"redeemUSDT","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint8","name":"percent","type":"uint8"}],"name":"setAmintLimit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_address","type":"address"}],"name":"setBorrowingContract","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_treasury","type":"address"}],"name":"setTreasury","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint64","name":"amount","type":"uint64"}],"name":"setUsdtLimit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint64","name":"_timeLimit","type":"uint64"}],"name":"setWithdrawTimeLimit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"totalAvailableLiquidationAmount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalCdsDepositedAmount","outputs":[{"internalType":"uint128","name":"","type":"uint128"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"treasury","outputs":[{"internalType":"contract ITreasury","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"treasuryAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint128","name":"index","type":"uint128"},{"components":[{"internalType":"uint128","name":"liquidationAmount","type":"uint128"},{"internalType":"uint128","name":"profits","type":"uint128"},{"internalType":"uint128","name":"ethAmount","type":"uint128"},{"internalType":"uint256","name":"availableLiquidationAmount","type":"uint256"}],"internalType":"struct CDSTest.LiquidationInfo","name":"liquidationData","type":"tuple"}],"name":"updateLiquidationInfo","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"updateTotalAvailableLiquidationAmount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint128","name":"_amount","type":"uint128"}],"name":"updateTotalCdsDepositedAmount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"usdt","outputs":[{"internalType":"contract IERC20","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"usdtAmountDepositedTillNow","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"usdtLimit","outputs":[{"internalType":"uint64","name":"","type":"uint64"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint64","name":"_index","type":"uint64"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"withdrawTimeLimit","outputs":[{"internalType":"uint64","name":"","type":"uint64"}],"stateMutability":"view","type":"function"},{"stateMutability":"payable","type":"receive"}]
@@ -39,12 +38,37 @@ export const borrowABIGoerli = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "target",
+        "name": "_tokenAddress",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_cds",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_abondToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_multiSign",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_priceFeedAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint64",
+        "name": "chainId",
+        "type": "uint64"
       }
     ],
-    "name": "AddressEmptyCode",
-    "type": "error"
+    "stateMutability": "nonpayable",
+    "type": "constructor"
   },
   {
     "inputs": [],
@@ -92,80 +116,6 @@ export const borrowABIGoerli = [
     "type": "error"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "implementation",
-        "type": "address"
-      }
-    ],
-    "name": "ERC1967InvalidImplementation",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ERC1967NonPayable",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "FailedInnerCall",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidInitialization",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotInitializing",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      }
-    ],
-    "name": "OwnableInvalidOwner",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "OwnableUnauthorizedAccount",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ReentrancyGuardReentrantCall",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "UUPSUnauthorizedCallContext",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "slot",
-        "type": "bytes32"
-      }
-    ],
-    "name": "UUPSUnsupportedProxiableUUID",
-    "type": "error"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
@@ -194,19 +144,6 @@ export const borrowABIGoerli = [
       }
     ],
     "name": "Deposit",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "version",
-        "type": "uint64"
-      }
-    ],
-    "name": "Initialized",
     "type": "event"
   },
   {
@@ -269,19 +206,6 @@ export const borrowABIGoerli = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "implementation",
-        "type": "address"
-      }
-    ],
-    "name": "Upgraded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": false,
         "internalType": "uint256",
         "name": "borrowDebt",
@@ -337,19 +261,6 @@ export const borrowABIGoerli = [
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "UPGRADE_INTERFACE_VERSION",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -520,36 +431,11 @@ export const borrowABIGoerli = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "_tokenAddress",
+        "name": "_treasury",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_cds",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_abondToken",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_multiSign",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_priceFeedAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "uint64",
-        "name": "chainId",
-        "type": "uint64"
       }
     ],
-    "name": "initialize",
+    "name": "initializeTreasury",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -583,6 +469,32 @@ export const borrowABIGoerli = [
   {
     "inputs": [],
     "name": "lastEthVaultValue",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lastEthprice",
+    "outputs": [
+      {
+        "internalType": "uint128",
+        "name": "",
+        "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lastTotalCDSPool",
     "outputs": [
       {
         "internalType": "uint256",
@@ -696,19 +608,6 @@ export const borrowABIGoerli = [
   },
   {
     "inputs": [],
-    "name": "proxiableUUID",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "ratePerSec",
     "outputs": [
       {
@@ -795,19 +694,6 @@ export const borrowABIGoerli = [
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_treasury",
-        "type": "address"
-      }
-    ],
-    "name": "setTreasury",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint64",
         "name": "_timeLimit",
         "type": "uint64"
@@ -884,24 +770,6 @@ export const borrowABIGoerli = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newImplementation",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "data",
-        "type": "bytes"
-      }
-    ],
-    "name": "upgradeToAndCall",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "version",
     "outputs": [
@@ -941,6 +809,19 @@ export const borrowABIGoerli = [
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdrawTimeLimit",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   }
 ]
 export const cdsABIGoerli = [
@@ -948,86 +829,27 @@ export const cdsABIGoerli = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "target",
+        "name": "_amint",
         "type": "address"
-      }
-    ],
-    "name": "AddressEmptyCode",
-    "type": "error"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "address",
-        "name": "implementation",
+        "name": "priceFeed",
         "type": "address"
-      }
-    ],
-    "name": "ERC1967InvalidImplementation",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ERC1967NonPayable",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "FailedInnerCall",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidInitialization",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotInitializing",
-    "type": "error"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "address",
-        "name": "owner",
+        "name": "_usdt",
         "type": "address"
-      }
-    ],
-    "name": "OwnableInvalidOwner",
-    "type": "error"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "address",
-        "name": "account",
+        "name": "_multiSign",
         "type": "address"
       }
     ],
-    "name": "OwnableUnauthorizedAccount",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ReentrancyGuardReentrantCall",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "UUPSUnauthorizedCallContext",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "slot",
-        "type": "bytes32"
-      }
-    ],
-    "name": "UUPSUnsupportedProxiableUUID",
-    "type": "error"
+    "stateMutability": "nonpayable",
+    "type": "constructor"
   },
   {
     "anonymous": false,
@@ -1070,19 +892,6 @@ export const cdsABIGoerli = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "version",
-        "type": "uint64"
-      }
-    ],
-    "name": "Initialized",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "previousOwner",
@@ -1096,19 +905,6 @@ export const cdsABIGoerli = [
       }
     ],
     "name": "OwnershipTransferred",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "implementation",
-        "type": "address"
-      }
-    ],
-    "name": "Upgraded",
     "type": "event"
   },
   {
@@ -1138,19 +934,6 @@ export const cdsABIGoerli = [
         "internalType": "uint128",
         "name": "",
         "type": "uint128"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "UPGRADE_INTERFACE_VERSION",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -1230,7 +1013,13 @@ export const cdsABIGoerli = [
       }
     ],
     "name": "calculateCumulativeRate",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "uint128",
+        "name": "",
+        "type": "uint128"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -1327,6 +1116,19 @@ export const cdsABIGoerli = [
   },
   {
     "inputs": [],
+    "name": "ethVault",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "fallbackEthPrice",
     "outputs": [
       {
@@ -1342,28 +1144,96 @@ export const cdsABIGoerli = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "_amint",
+        "name": "depositor",
         "type": "address"
       },
       {
-        "internalType": "address",
-        "name": "priceFeed",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_usdt",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_multiSign",
-        "type": "address"
+        "internalType": "uint64",
+        "name": "index",
+        "type": "uint64"
       }
     ],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "name": "getCDSDepositDetails",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint64",
+            "name": "depositedTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint128",
+            "name": "depositedAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint64",
+            "name": "withdrawedTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint128",
+            "name": "withdrawedAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "bool",
+            "name": "withdrawed",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint128",
+            "name": "depositPrice",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "depositValue",
+            "type": "uint128"
+          },
+          {
+            "internalType": "bool",
+            "name": "depositValueSign",
+            "type": "bool"
+          },
+          {
+            "internalType": "bool",
+            "name": "optedLiquidation",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint128",
+            "name": "InitialLiquidationAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "liquidationAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "liquidationindex",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "normalizedAmount",
+            "type": "uint128"
+          }
+        ],
+        "internalType": "struct CDS.CdsAccountDetails",
+        "name": "",
+        "type": "tuple"
+      },
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1453,19 +1323,6 @@ export const cdsABIGoerli = [
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "proxiableUUID",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint128",
@@ -1491,19 +1348,6 @@ export const cdsABIGoerli = [
   {
     "inputs": [],
     "name": "renounceOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_admin",
-        "type": "address"
-      }
-    ],
-    "name": "setAdmin",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1731,24 +1575,6 @@ export const cdsABIGoerli = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newImplementation",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "data",
-        "type": "bytes"
-      }
-    ],
-    "name": "upgradeToAndCall",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "usdt",
     "outputs": [
@@ -1812,77 +1638,58 @@ export const cdsABIGoerli = [
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ]
-export const treasuryABIGoerli = [
+export const treasuryABIGoerli =[
   {
     "inputs": [
       {
         "internalType": "address",
-        "name": "target",
+        "name": "_borrowing",
         "type": "address"
-      }
-    ],
-    "name": "AddressEmptyCode",
-    "type": "error"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "address",
-        "name": "implementation",
+        "name": "_tokenAddress",
         "type": "address"
-      }
-    ],
-    "name": "ERC1967InvalidImplementation",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ERC1967NonPayable",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "FailedInnerCall",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidInitialization",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotInitializing",
-    "type": "error"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "address",
-        "name": "owner",
+        "name": "_cdsContract",
         "type": "address"
-      }
-    ],
-    "name": "OwnableInvalidOwner",
-    "type": "error"
-  },
-  {
-    "inputs": [
+      },
       {
         "internalType": "address",
-        "name": "account",
+        "name": "_wethGateway",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_cEther",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_aavePoolAddressProvider",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_aToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_usdt",
         "type": "address"
       }
     ],
-    "name": "OwnableUnauthorizedAccount",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ReentrancyGuardReentrantCall",
-    "type": "error"
+    "stateMutability": "nonpayable",
+    "type": "constructor"
   },
   {
     "inputs": [],
@@ -1927,22 +1734,6 @@ export const treasuryABIGoerli = [
   {
     "inputs": [],
     "name": "Treasury_ZeroWithdraw",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "UUPSUnauthorizedCallContext",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "slot",
-        "type": "bytes32"
-      }
-    ],
-    "name": "UUPSUnsupportedProxiableUUID",
     "type": "error"
   },
   {
@@ -2006,19 +1797,6 @@ export const treasuryABIGoerli = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "version",
-        "type": "uint64"
-      }
-    ],
-    "name": "Initialized",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "previousOwner",
@@ -2032,19 +1810,6 @@ export const treasuryABIGoerli = [
       }
     ],
     "name": "OwnershipTransferred",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "implementation",
-        "type": "address"
-      }
-    ],
-    "name": "Upgraded",
     "type": "event"
   },
   {
@@ -2103,19 +1868,6 @@ export const treasuryABIGoerli = [
     ],
     "name": "WithdrawFromCompound",
     "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "UPGRADE_INTERFACE_VERSION",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
   },
   {
     "inputs": [],
@@ -2348,21 +2100,14 @@ export const treasuryABIGoerli = [
     "name": "deposit",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "bool",
-            "name": "hasDeposited",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint64",
-            "name": "borrowerIndex",
-            "type": "uint64"
-          }
-        ],
-        "internalType": "struct Treasury.DepositResult",
+        "internalType": "bool",
         "name": "",
-        "type": "tuple"
+        "type": "bool"
+      },
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
       }
     ],
     "stateMutability": "payable",
@@ -2423,174 +2168,119 @@ export const treasuryABIGoerli = [
     "name": "getBorrowing",
     "outputs": [
       {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      },
+      {
         "components": [
           {
             "internalType": "uint64",
-            "name": "totalIndex",
+            "name": "depositedTime",
             "type": "uint64"
           },
           {
-            "components": [
-              {
-                "internalType": "uint64",
-                "name": "depositedTime",
-                "type": "uint64"
-              },
-              {
-                "internalType": "uint128",
-                "name": "depositedAmount",
-                "type": "uint128"
-              },
-              {
-                "internalType": "uint128",
-                "name": "depositedAmountUsdValue",
-                "type": "uint128"
-              },
-              {
-                "internalType": "uint64",
-                "name": "downsidePercentage",
-                "type": "uint64"
-              },
-              {
-                "internalType": "uint128",
-                "name": "ethPriceAtDeposit",
-                "type": "uint128"
-              },
-              {
-                "internalType": "uint128",
-                "name": "borrowedAmount",
-                "type": "uint128"
-              },
-              {
-                "internalType": "uint128",
-                "name": "normalizedAmount",
-                "type": "uint128"
-              },
-              {
-                "internalType": "uint8",
-                "name": "withdrawNo",
-                "type": "uint8"
-              },
-              {
-                "internalType": "bool",
-                "name": "withdrawed",
-                "type": "bool"
-              },
-              {
-                "internalType": "uint128",
-                "name": "withdrawAmount",
-                "type": "uint128"
-              },
-              {
-                "internalType": "bool",
-                "name": "liquidated",
-                "type": "bool"
-              },
-              {
-                "internalType": "uint64",
-                "name": "ethPriceAtWithdraw",
-                "type": "uint64"
-              },
-              {
-                "internalType": "uint64",
-                "name": "withdrawTime",
-                "type": "uint64"
-              },
-              {
-                "internalType": "uint128",
-                "name": "aBondTokensAmount",
-                "type": "uint128"
-              },
-              {
-                "internalType": "uint128",
-                "name": "strikePrice",
-                "type": "uint128"
-              },
-              {
-                "internalType": "uint128",
-                "name": "optionFees",
-                "type": "uint128"
-              },
-              {
-                "internalType": "uint256",
-                "name": "burnedAmint",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint64",
-                "name": "externalProtocolCount",
-                "type": "uint64"
-              },
-              {
-                "internalType": "uint256",
-                "name": "discountedPrice",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint128",
-                "name": "cTokensCredited",
-                "type": "uint128"
-              }
-            ],
-            "internalType": "struct Treasury.DepositDetails",
-            "name": "depositDetails",
-            "type": "tuple"
+            "internalType": "uint128",
+            "name": "depositedAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "depositedAmountUsdValue",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint64",
+            "name": "downsidePercentage",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint128",
+            "name": "ethPriceAtDeposit",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "borrowedAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "normalizedAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint8",
+            "name": "withdrawNo",
+            "type": "uint8"
+          },
+          {
+            "internalType": "bool",
+            "name": "withdrawed",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint128",
+            "name": "withdrawAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "bool",
+            "name": "liquidated",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint64",
+            "name": "ethPriceAtWithdraw",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "withdrawTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint128",
+            "name": "aBondTokensAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "strikePrice",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "optionFees",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint256",
+            "name": "burnedAmint",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "externalProtocolCount",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint256",
+            "name": "discountedPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint128",
+            "name": "cTokensCredited",
+            "type": "uint128"
           }
         ],
-        "internalType": "struct Treasury.GetBorrowingResult",
+        "internalType": "struct Treasury.DepositDetails",
         "name": "",
         "type": "tuple"
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_borrowing",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_tokenAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_cdsContract",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_wethGateway",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_cEther",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_aavePoolAddressProvider",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_aToken",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_usdt",
-        "type": "address"
-      }
-    ],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -2673,20 +2363,20 @@ export const treasuryABIGoerli = [
   },
   {
     "inputs": [],
-    "name": "proxiableUUID",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "renounceOwnership",
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_address",
+        "type": "address"
+      }
+    ],
+    "name": "setBorrowingContract",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -3065,24 +2755,6 @@ export const treasuryABIGoerli = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newImplementation",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "data",
-        "type": "bytes"
-      }
-    ],
-    "name": "upgradeToAndCall",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "usdt",
     "outputs": [
@@ -3236,139 +2908,27 @@ export const optionsABIGoerli = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "target",
-        "type": "address"
-      }
-    ],
-    "name": "AddressEmptyCode",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "implementation",
-        "type": "address"
-      }
-    ],
-    "name": "ERC1967InvalidImplementation",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ERC1967NonPayable",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "FailedInnerCall",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidInitialization",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotInitializing",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      }
-    ],
-    "name": "OwnableInvalidOwner",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "OwnableUnauthorizedAccount",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "UUPSUnauthorizedCallContext",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "slot",
-        "type": "bytes32"
-      }
-    ],
-    "name": "UUPSUnsupportedProxiableUUID",
-    "type": "error"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint64",
-        "name": "version",
-        "type": "uint64"
-      }
-    ],
-    "name": "Initialized",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "previousOwner",
+        "name": "_priceFeed",
         "type": "address"
       },
       {
-        "indexed": true,
         "internalType": "address",
-        "name": "newOwner",
+        "name": "_treasuryAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_cdsAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_borrowingAddress",
         "type": "address"
       }
     ],
-    "name": "OwnershipTransferred",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "implementation",
-        "type": "address"
-      }
-    ],
-    "name": "Upgraded",
-    "type": "event"
-  },
-  {
-    "inputs": [],
-    "name": "UPGRADE_INTERFACE_VERSION",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "nonpayable",
+    "type": "constructor"
   },
   {
     "inputs": [
@@ -3405,36 +2965,13 @@ export const optionsABIGoerli = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_treasuryAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_cdsAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_borrowingAddress",
-        "type": "address"
-      }
-    ],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
-    "name": "owner",
+    "name": "calculateStandardDeviation",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "uint256",
         "name": "",
-        "type": "address"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -3442,12 +2979,12 @@ export const optionsABIGoerli = [
   },
   {
     "inputs": [],
-    "name": "proxiableUUID",
+    "name": "getLatestPrice",
     "outputs": [
       {
-        "internalType": "bytes32",
+        "internalType": "uint256",
         "name": "",
-        "type": "bytes32"
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -3455,40 +2992,9 @@ export const optionsABIGoerli = [
   },
   {
     "inputs": [],
-    "name": "renounceOwnership",
+    "name": "updateDailyEMA",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "transferOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newImplementation",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "data",
-        "type": "bytes"
-      }
-    ],
-    "name": "upgradeToAndCall",
-    "outputs": [],
-    "stateMutability": "payable",
     "type": "function"
   },
   {
