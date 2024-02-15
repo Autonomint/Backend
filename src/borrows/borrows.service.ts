@@ -533,7 +533,7 @@ export class BorrowsService {
         }
         const ethVaultValue = await borrowingContract.lastEthVaultValue();
         const cdsPoolValue = await borrowingContract.lastCDSPoolValue();
-        const ratio = ((cdsPoolValue * 1e2)/ethVaultValue);
+        const ratio = ((cdsPoolValue * 1e14)/ethVaultValue);
 
         return ratio;
     }
