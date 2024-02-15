@@ -501,18 +501,22 @@ export class BorrowsService {
     async getEthVolatility(chainId:number,amount:string,ethPrice:number,strikePricePercent:number):Promise<[number,number]>{
         const abc = await this.exchange.fetchVolatilityHistory('ETH',{period:30});
         const volatility = (abc.map(item => item.info[0].value)[0] * 1e8);
-        const signer = await this.getSignerOrProvider(chainId,true);
-        let optionsContract;
-        if(chainId == 11155111){
-            optionsContract = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signer);
-        }else if(chainId == 5){
-            optionsContract = new ethers.Contract(optionsAddressGoerli,optionsABIGoerli,signer);
-        }else if(chainId == 80001){
-            optionsContract = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signer);
+        if(await this.globalService.getTotalCdsDepositedAmount(chainId) == 0){
+            return [Math.floor(volatility),0];
+        }else{
+            const signer = await this.getSignerOrProvider(chainId,true);
+            let optionsContract;
+            if(chainId == 11155111){
+                optionsContract = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signer);
+            }else if(chainId == 5){
+                optionsContract = new ethers.Contract(optionsAddressGoerli,optionsABIGoerli,signer);
+            }else if(chainId == 80001){
+                optionsContract = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signer);
+            }
+            const optionFees = await optionsContract.calculateOptionPrice(ethPrice,Math.floor(volatility),BigInt(amount),strikePricePercent);
+    
+            return[Math.floor(volatility),optionFees.toNumber()];
         }
-        const optionFees = await optionsContract.calculateOptionPrice(ethPrice,Math.floor(volatility),BigInt(amount),strikePricePercent);
-
-        return[Math.floor(volatility),optionFees.toNumber()];
     }
 
     /**
