@@ -398,7 +398,7 @@ export class CdsService {
             const liquidationGains = await this.calculateLiquidationGains(getCdsDepositDto);
             if(!liquidationGains){
                 const depositedAmintWithoutLiquidationAmount = parseFloat(found.depositedAmint) - parseFloat(found.initialLiquidationAmount);
-                returnAmounts = [(depositedAmintWithoutLiquidationAmount + priceChangeGainOrLoss + liquidationGains[1] - 2*(parseFloat(found.depositedAmint))),liquidationGains[0]];
+                returnAmounts = [(depositedAmintWithoutLiquidationAmount + priceChangeGainOrLoss + liquidationGains[1] - parseFloat(found.depositedAmint)),liquidationGains[0]];
             }else{
                 returnAmounts = [priceChangeGainOrLoss];
             }
