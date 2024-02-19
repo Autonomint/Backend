@@ -5,25 +5,21 @@ import { AddBorrowDto } from './dto/create-borrow.dto';
 import { GetBorrowFilterDto } from './dto/get-borrow-filter.dto';
 import { BorrowInfo } from './entities/borrow.entity';
 import { Repository,Equal,Not,MoreThanOrEqual } from 'typeorm';
-import { ethers,getDefaultProvider } from 'ethers';
+import { ethers } from 'ethers';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
 import { CriticalPositions } from './entities/liquidation.entity';
-import { bybit, pro } from 'ccxt';
+import { bybit } from 'ccxt';
 
 import {
     borrowAddressSepolia,borrowABISepolia,
-    cdsAddressSepolia,cdsABISepolia,
-    treasuryAddressSepolia,treasuryABISepolia,
     optionsAddressSepolia,optionsABISepolia,
+
     borrowAddressMumbai,borrowABIMumbai,
-    cdsAddressMumbai,cdsABIMumbai,
-    treasuryAddressMumbai,treasuryABIMumbai,
     optionsAddressMumbai,optionsABIMumbai,
+
     borrowAddressGoerli,borrowABIGoerli,
-    cdsAddressGoerli,cdsABIGoerli,
-    treasuryAddressGoerli,treasuryABIGoerli,
     optionsAddressGoerli,optionsABIGoerli
 } from '../utils/index';
 import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
