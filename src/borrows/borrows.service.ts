@@ -33,6 +33,8 @@ import { HighLTVPositions } from './entities/high-ltv-positions.entity';
 import { Charts } from './entities/chart.entity';
 import { GlobalVariables } from '../global/entities/global.entity';
 import { AllTime } from './allTime-fetch.enum';
+import { AmintPrice } from './entities/amint-price.entity';
+import { Days } from './entities/day.entity';
 require('dotenv').config();
 
 @Injectable()
@@ -53,6 +55,10 @@ export class BorrowsService {
         private highLtvPositionsRepository: Repository<HighLTVPositions>,
         @InjectRepository(Charts)
         private chartRepository: Repository<Charts>,
+        @InjectRepository(AmintPrice)
+        private amintPriceRepository: Repository<AmintPrice>,
+        @InjectRepository(Days)
+        private daysRepository: Repository<Days>,
         @InjectRepository(GlobalVariables)
         private globalRepository: Repository<GlobalVariables>,
         @Inject(GlobalService)
@@ -545,7 +551,6 @@ export class BorrowsService {
         const sqrtPriceX96 = Number(data);
         const buyOneOfToken0 = ((sqrtPriceX96 / 2**96)**2) / (Number((10**Decimal1 / 10**Decimal0).toFixed(Decimal1)));
         const buyOneOfToken1 = Number((1 / Number(buyOneOfToken0))).toFixed(Decimal0);
-        console.log(Number(buyOneOfToken0) * Number(buyOneOfToken1));
         return Number(buyOneOfToken0) * Number(buyOneOfToken1);
     }
 
@@ -591,6 +596,46 @@ export class BorrowsService {
                 await this.chartRepository.save(newChart);
                 await this.globalRepository.save(found);
             }
+        }
+    }
+
+    // Runs every day
+    @Cron('0 0 0/24 * * *',{name:'Create chart data'})
+    // @Cron(CronExpression.EVERY_10_SECONDS,{name:'Create chart data'})
+    async createAmintPriceChart(){
+        for (let i = 0;i < this.chainIds.length;i++){
+
+            const signerSepolia = await this.getSignerOrProvider(11155111,true);
+
+            let poolContract;
+            poolContract = new ethers.Contract(poolAddressSepolia,poolABISepolia,signerSepolia);
+            const slot0 = await poolContract.slot0();
+
+            let newChart:AmintPrice
+            let found = await this.daysRepository.findOne({where:{chainId:this.chainIds[i]}});
+
+            if(!found){
+                found = new Days();
+                found.chainId = this.chainIds[i]
+                found.days = 1
+
+                newChart = this.amintPriceRepository.create({
+                    chainId:this.chainIds[i],
+                    day:1,
+                    amintPrice:this.getAmintPrice(slot0[0]),
+                })
+            }else{
+                newChart = this.amintPriceRepository.create({
+                    chainId:this.chainIds[i],
+                    day:parseInt(found? (found.days).toString() : '0') + 1,
+                    amintPrice:this.getAmintPrice(slot0[0]),
+                })
+    
+                found.days = parseInt(found.days? (found.days).toString() : '0') + 1;
+            }
+
+            await this.amintPriceRepository.save(newChart);
+            await this.daysRepository.save(found);
         }
     }
 
@@ -690,10 +735,10 @@ export class BorrowsService {
     async getAmintPriceHistory(chainId:number,days:number,allTime:AllTime):Promise<number[]>{
         let amintPrice:number[];
         if(allTime == AllTime.YES){
-            days = (await this.globalRepository.findOne({where:{chainId:chainId}})).day;
+            days = (await this.daysRepository.findOne({where:{chainId:chainId}})).days;
         }
         for(let i = 1;i<=days;i++){
-            const found = await this.chartRepository.findOne({where:{
+            const found = await this.amintPriceRepository.findOne({where:{
                 chainId:chainId,
                 day:i
             }})
