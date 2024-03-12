@@ -8,6 +8,7 @@ import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
 import { CriticalPositions } from './entities/liquidation.entity';
+import { AllTime } from './allTime-fetch.enum';
 
 @Controller('borrows')
 export class BorrowsController {
@@ -62,6 +63,36 @@ export class BorrowsController {
         return this.borrowsService.getEthVolatility(chainId,amount,ethPrice,strikePricePercent);
     }
 
+    @Get('/ratio/:chainId/:ethPrice')
+    getRatio(@Param() params:{chainId:number;ethPrice:number;}):Promise<number>{
+        const chainId = params.chainId;
+        const ethPrice = params.ethPrice;
+        return this.borrowsService.getRatio(chainId,ethPrice);
+    }
+
+    @Get('/chart/optionFees/:chainId/:days/:allTime')
+    getOptionFeesHistory(@Param() params:{chainId:number;days:number;allTime:AllTime}):Promise<number[]>{
+        const chainId = params.chainId;
+        const days = params.days;
+        const allTime = params.allTime;
+        return this.borrowsService.getOptionFeesHistory(chainId,days,allTime);
+    }
+
+    @Get('/chart/ratio/:chainId/:days/:allTime')
+    getRatioHistory(@Param() params:{chainId:number;days:number;allTime:AllTime}):Promise<number[]>{
+        const chainId = params.chainId;
+        const days = params.days;
+        const allTime = params.allTime;
+        return this.borrowsService.getRatioHistory(chainId,days,allTime);
+    }
+
+    @Get('/chart/borrowingFees/:chainId/:days/:allTime')
+    getBorrowingFeesHistory(@Param() params:{chainId:number;days:number;allTime:AllTime}):Promise<number[]>{
+        const chainId = params.chainId;
+        const days = params.days;
+        const allTime = params.allTime;
+        return this.borrowsService.getBorrowingFeesHistory(chainId,days,allTime);
+    }
     // To add the deposit in borrowing
     @Post('/borrowAmint')
     @Header("Access-Control-Allow-Origin" , "*")

@@ -43,6 +43,32 @@ export class GlobalService {
         }
         await this.globalRepository.save(found);
     }
+    // Set TotalCdsDepositedAmount
+    async setTotalCdsDepositedAmount(chainId:number,amintAmount:number){
+        let found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            found = this.globalRepository.create({
+                    chainId,
+                    totalCdsDepositedAmount:amintAmount
+            })
+        }else{
+            found.totalCdsDepositedAmount = amintAmount;
+        }
+        await this.globalRepository.save(found);
+    }
+    // Set TotalBorrowDepositedETH
+    async setTotalBorrowDepositedETH(chainId:number,ethAmount:number){
+        let found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            found = this.globalRepository.create({
+                    chainId,
+                    totalBorrowDepositedETH:ethAmount
+            })
+        }else{
+            found.totalBorrowDepositedETH = ethAmount;
+        }
+        await this.globalRepository.save(found);
+    }
     // Set total available liquidation amount in treasury
     async setTotalAvailableLiquidationAmount(chainId:number,liquidationAmount:number){
         let found = await this.globalRepository.findOne({where:{chainId:chainId}});
@@ -104,6 +130,19 @@ export class GlobalService {
             return ;
         }
     }
+
+    async setCumulativeValue(chainId:number,value:number){
+        let found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            found = this.globalRepository.create({
+                    chainId,
+                    cumulativeValue:value
+            })
+        }else{
+            found.cumulativeValue = value;
+        }
+        await this.globalRepository.save(found);
+    }
     
     // Increase batch number
     @Cron('0 0 0/24 * * *',{name:'Increment Batch No'})
@@ -149,6 +188,32 @@ export class GlobalService {
             }
         }
     }
+    // Get TotalCdsDepositedAmount
+    async getTotalCdsDepositedAmount(chainId:number):Promise<number>{
+        const found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            return 0;
+        }else{
+            if(!found.totalCdsDepositedAmount){
+                return 0;
+            }else{
+                return found.totalCdsDepositedAmount;
+            }
+        }
+    }
+    // Get TotalBorrowDepositedETH
+    async getTotalBorrowDepositedETH(chainId:number):Promise<number>{
+        const found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            return 0;
+        }else{
+            if(!found.totalBorrowDepositedETH){
+                return 0;
+            }else{
+                return found.totalBorrowDepositedETH;
+            }
+        }
+    }
     // Get total available liquidation amount in treasury
     async getTotalAvailableLiquidationAmount(chainId:number):Promise<number>{
         const found = await this.globalRepository.findOne({where:{chainId:chainId}});
@@ -172,5 +237,18 @@ export class GlobalService {
             return 0;
         }
         return found.batchNo;
+    }
+
+    async getCumulativeValue(chainId:number):Promise<number>{
+        const found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(!found){
+            return 0;
+        }else{
+            if(!found.cumulativeValue){
+                return 0;
+            }else{
+                return found.cumulativeValue;
+            }
+        }
     }
 }

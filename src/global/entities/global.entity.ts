@@ -24,6 +24,16 @@ export class GlobalVariables{
     @Column({
         type:'decimal',
         nullable:true})
+    totalCdsDepositedAmount: number;
+
+    @Column({
+        type:'decimal',
+        nullable:true})
+    totalBorrowDepositedETH: number;
+
+    @Column({
+        type:'decimal',
+        nullable:true})
     totalAvailableLiquidationAmount: number;
 
     @Column({
@@ -46,4 +56,11 @@ export class GlobalVariables{
         nullable:true})
     batchNo: number;
 
+    @Column({
+        type:'decimal',
+        nullable:true})
+    cumulativeValue: number;
+
+    @Column({nullable:true})
+    day: number;
 }

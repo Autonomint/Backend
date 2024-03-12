@@ -5,25 +5,21 @@ import { AddBorrowDto } from './dto/create-borrow.dto';
 import { GetBorrowFilterDto } from './dto/get-borrow-filter.dto';
 import { BorrowInfo } from './entities/borrow.entity';
 import { Repository,Equal,Not,MoreThanOrEqual } from 'typeorm';
-import { ethers,getDefaultProvider } from 'ethers';
+import { ethers } from 'ethers';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
 import { CriticalPositions } from './entities/liquidation.entity';
-import { bybit, pro } from 'ccxt';
+import { bybit } from 'ccxt';
 
 import {
     borrowAddressSepolia,borrowABISepolia,
-    cdsAddressSepolia,cdsABISepolia,
-    treasuryAddressSepolia,treasuryABISepolia,
     optionsAddressSepolia,optionsABISepolia,
+
     borrowAddressMumbai,borrowABIMumbai,
-    cdsAddressMumbai,cdsABIMumbai,
-    treasuryAddressMumbai,treasuryABIMumbai,
     optionsAddressMumbai,optionsABIMumbai,
+
     borrowAddressGoerli,borrowABIGoerli,
-    cdsAddressGoerli,cdsABIGoerli,
-    treasuryAddressGoerli,treasuryABIGoerli,
     optionsAddressGoerli,optionsABIGoerli
 } from '../utils/index';
 import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
@@ -33,6 +29,9 @@ import { LiquidationInfo } from './entities/liquidatedInfo.entity';
 import { StrikePricePercent } from './borrow-strike-price.enum';
 import { Batch } from './entities/batch.entity';
 import { HighLTVPositions } from './entities/high-ltv-positions.entity';
+import { Charts } from './entities/chart.entity';
+import { GlobalVariables } from '../global/entities/global.entity';
+import { AllTime } from './allTime-fetch.enum';
 require('dotenv').config();
 
 @Injectable()
@@ -51,6 +50,10 @@ export class BorrowsService {
         private batchRepository: Repository<Batch>,
         @InjectRepository(HighLTVPositions)
         private highLtvPositionsRepository: Repository<HighLTVPositions>,
+        @InjectRepository(Charts)
+        private chartRepository: Repository<Charts>,
+        @InjectRepository(GlobalVariables)
+        private globalRepository: Repository<GlobalVariables>,
         @Inject(GlobalService)
         private globalService:GlobalService,
     ){}
@@ -278,6 +281,15 @@ export class BorrowsService {
             }else{
                 await this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) + parseFloat(depositedAmount)); 
             }
+
+            // Getting TotalBorrowDepositedETH
+            const depositedETH = await this.globalService.getTotalBorrowDepositedETH(chainId);
+            // Updating TotalBorrowDepositedETH
+            if(depositedETH == 0){
+                await this.globalService.setTotalBorrowDepositedETH(chainId,parseFloat(depositedAmount)); 
+            }else{
+                await this.globalService.setTotalBorrowDepositedETH(chainId,parseFloat(depositedETH.toString()) + parseFloat(depositedAmount)); 
+            }
             await this.borrowRepository.save(borrow);
             await this.borrowerRepository.save(borrower);
             await this.batchRepository.save(batch);
@@ -338,7 +350,10 @@ export class BorrowsService {
         }
 
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
-
+        // Getting TotalBorrowDepositedETH
+        const depositedETH = await this.globalService.getTotalBorrowDepositedETH(chainId);
+        // Updating TotalBorrowDepositedETH
+        await this.globalService.setTotalBorrowDepositedETH(chainId,parseFloat(depositedETH.toString()) - parseFloat(withdrawAmountInEther)); 
         // Updating eth balance in treasury
         await this.globalService.setTreasuryEthBalance(chainId,parseFloat(ethBalance.toString()) - parseFloat(withdrawAmountInEther));
 
@@ -482,18 +497,175 @@ export class BorrowsService {
     async getEthVolatility(chainId:number,amount:string,ethPrice:number,strikePricePercent:number):Promise<[number,number]>{
         const abc = await this.exchange.fetchVolatilityHistory('ETH',{period:30});
         const volatility = (abc.map(item => item.info[0].value)[0] * 1e8);
-        const signer = await this.getSignerOrProvider(chainId,true);
-        let optionsContract;
-        if(chainId == 11155111){
-            optionsContract = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signer);
-        }else if(chainId == 5){
-            optionsContract = new ethers.Contract(optionsAddressGoerli,optionsABIGoerli,signer);
-        }else if(chainId == 80001){
-            optionsContract = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signer);
+        if(await this.globalService.getTotalCdsDepositedAmount(chainId) == 0){
+            return [Math.floor(volatility),0];
+        }else{
+            const signer = await this.getSignerOrProvider(chainId,true);
+            let optionsContract;
+            if(chainId == 11155111){
+                optionsContract = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signer);
+            }else if(chainId == 5){
+                optionsContract = new ethers.Contract(optionsAddressGoerli,optionsABIGoerli,signer);
+            }else if(chainId == 80001){
+                optionsContract = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signer);
+            }
+            const optionFees = await optionsContract.calculateOptionPrice(ethPrice,Math.floor(volatility),BigInt(amount),strikePricePercent);
+    
+            return[Math.floor(volatility),optionFees.toNumber()];
         }
-        const optionFees = await optionsContract.calculateOptionPrice(ethPrice,volatility,BigInt(amount),strikePricePercent);
+    }
 
-        return[volatility,optionFees.toNumber()];
+    /**
+     * 
+     * @param chainId chainId
+     * @returns ratio of cds to the eth vault
+     */
+
+    async getRatio(chainId:number,ethPrice:number):Promise<number>{
+        const signer = await this.getSignerOrProvider(chainId,true);
+        let borrowingContract;
+        if(chainId == 11155111){
+            borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
+        }else if(chainId == 5){
+            borrowingContract = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signer);
+        }else if(chainId == 80001){
+            borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
+        }
+        const ethVaultValue = await borrowingContract.lastEthVaultValue();
+        const cdsPoolValue = await borrowingContract.lastCDSPoolValue();
+        const ratio = ((cdsPoolValue * 1e14)/ethVaultValue);
+
+        return ratio;
+    }
+
+    // Create chart data
+    // Runs every day
+    @Cron('0 0 0/24 * * *',{name:'Create chart data'})
+    // @Cron(CronExpression.EVERY_10_SECONDS,{name:'Create chart data'})
+    async createChart(){
+        for (let i = 0;i < this.chainIds.length;i++){
+            const found = await this.globalRepository.findOne({where:{
+                chainId:this.chainIds[i],
+                treasuryEthBalance:Not(0),
+                treasuryAmintBalance:Not(0)
+            }});
+            if(found){
+                const signer = await this.getSignerOrProvider(this.chainIds[i],true);
+                let borrowingContract;
+                if(this.chainIds[i] == 11155111){
+                    borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
+                }else if(this.chainIds[i] == 5){
+                    borrowingContract = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signer);
+                }else if(this.chainIds[i] == 80001){
+                    borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
+                }
+                const currentEthPrice = await borrowingContract.getUSDValue();
+                const optionfees = await this.getEthVolatility(this.chainIds[i],(ethers.utils.parseEther('1')).toString(),currentEthPrice,0);
+                const ratio = await this.getRatio(this.chainIds[i],currentEthPrice);
+
+                const newChart = this.chartRepository.create({
+                    chainId:this.chainIds[i],
+                    day:parseInt(found.day? (found.day).toString() : '0') + 1,
+                    optionFees:(optionfees[1]/1e6),
+                    ratio:ratio
+                })
+                found.day = parseInt(found.day? (found.day).toString() : '0') + 1;
+                await this.chartRepository.save(newChart);
+                await this.globalRepository.save(found);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param chainId chain id
+     * @param days number of days of data want
+     * @param allTime whether need all time data
+     * @returns 
+     */
+    async getOptionFeesHistory(chainId:number,days:number,allTime:AllTime):Promise<number[]>{
+        let optionFees:number[];
+        if(allTime == AllTime.YES){
+            days = (await this.globalRepository.findOne({where:{chainId:chainId}})).day;
+        }
+        for(let i = 1;i<=days;i++){
+            const found = await this.chartRepository.findOne({where:{
+                chainId:chainId,
+                day:i
+            }})
+            if(found){
+                if(optionFees){
+                    optionFees.push(found.optionFees);
+                }else{
+                    optionFees = [found.optionFees]
+                }
+            }else{
+                return optionFees;
+            }
+        }
+        return optionFees;
+    }
+
+    /**
+     * 
+     * @param chainId chain id
+     * @param days number of days of data want
+     * @param allTime whether need all time data
+     * @returns 
+     */
+
+    async getRatioHistory(chainId:number,days:number,allTime:AllTime):Promise<number[]>{
+        let ratio:number[];
+        if(allTime == AllTime.YES){
+            days = (await this.globalRepository.findOne({where:{chainId:chainId}})).day;
+        }
+        for(let i = 1;i<=days;i++){
+            const found = await this.chartRepository.findOne({where:{
+                chainId:chainId,
+                day:i
+            }})
+            if(found){
+                if(ratio){
+                    ratio.push(found.ratio);
+                }else{
+                    ratio = [found.ratio]
+                }
+            }else{
+                return ratio;
+            }
+        }
+        return ratio;
+    }
+
+    /**
+     * 
+     * @param chainId chain id
+     * @param days number of days of data want
+     * @param allTime whether need all time data
+     * @returns 
+     */
+
+    async getBorrowingFeesHistory(chainId:number,days:number,allTime:AllTime):Promise<number[]>{
+        let borrowingFees:number[];
+        if(allTime == AllTime.YES){
+            days = (await this.globalRepository.findOne({where:{chainId:chainId}})).day;
+        }
+        for(let i = 1;i<=days;i++){
+            const found = await this.chartRepository.findOne({where:{
+                chainId:chainId,
+                day:i
+            }})
+            if(found){
+                if(borrowingFees){
+                    borrowingFees.push(found.borrowingFees);
+                }else{
+                    borrowingFees = [found.borrowingFees]
+                }
+            }else{
+                return borrowingFees;
+            }
+        }
+        return borrowingFees;
     }
 
     // /**
@@ -679,8 +851,24 @@ export class BorrowsService {
                             await borrowingContract.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
                             // Update the status of the position as Liquidated
                             liquidationPosition.status = PositionStatus.LIQUIDATED;
-                        }else{
-                            return;
+                            const chainId = liquidationPosition.chainId;      
+                            borrowingContract.on('Liquidate',async (index,liquidationAmount,profits,ethAmount,availableLiquidationAmount) => {
+                                const liquidationInfo = this.liquidationInfoRepository.create({
+                                    chainId:chainId,
+                                    index,
+                                    liquidationAmount,
+                                    profits,
+                                    ethAmount,
+                                    availableLiquidationAmount,
+                                })
+                                await this.liquidationInfoRepository.save(liquidationInfo);
+                                //Update the liquidationIndex i.e no of liquidations done so far
+                                await this.globalService.setLiquidationIndex(chainId,index);
+                                const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
+                                // Update the amint and liquidation amount balance in treasury
+                                await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(liquidationAmount))
+                                await this.globalService.setTotalAvailableLiquidationAmount(chainId,availableLiquidationAmount);
+                            })
                         }
                     })
                     // Update the position data
@@ -921,23 +1109,37 @@ export class BorrowsService {
                         // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
                         if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
                             // Call the liquidate function in blockchain
-                            //await borrowingContractMumbai.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+                            await borrowingContract.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
                             // Get the equivalent high ltv position
                             const liquidatedPosition = await this.highLtvPositionsRepository.findOne({where:
                                 {positionId:Equal(liquidationPosition.id)}})
                             // Update the status of the position as Liquidated
                             liquidatedPosition.status = PositionStatus.LIQUIDATED;
                             liquidationPosition.status = PositionStatus.LIQUIDATED;
+                            const chainId = liquidationPosition.chainId;      
+                            borrowingContract.on('Liquidate',async (index,liquidationAmount,profits,ethAmount,availableLiquidationAmount) => {
+                                const liquidationInfo = this.liquidationInfoRepository.create({
+                                    chainId:chainId,
+                                    index,
+                                    liquidationAmount,
+                                    profits,
+                                    ethAmount,
+                                    availableLiquidationAmount,
+                                })
+                                await this.liquidationInfoRepository.save(liquidationInfo);
+                                //Update the liquidationIndex i.e no of liquidations done so far
+                                await this.globalService.setLiquidationIndex(chainId,index);
+                                const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
+                                // Update the amint and liquidation amount balance in treasury
+                                await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(liquidationAmount))
+                                await this.globalService.setTotalAvailableLiquidationAmount(chainId,availableLiquidationAmount);
+                            })
                             // Update the data
                             await this.highLtvPositionsRepository.save(liquidatedPosition);
-                        }else{
-                            return;
                         }
                     })
                     await this.borrowRepository.save(liquidationPositionsFromHighLtv);
                 }
-            }else{
-                return;
             }
         }
         

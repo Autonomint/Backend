@@ -117,6 +117,8 @@ export class CdsService {
         const initialLiquidationAmount = liquidationAmount.toString();
         const totalDepositedAmount = (parseFloat(depositedAmint) + parseFloat(depositedUsdt)).toString();
         if(currentIndex == (index-1) || currentIndex == 0){
+            const result = await this.calculateValue(ethPriceAtDeposit,chainId);
+            await this.setCumulativeValue(chainId,result[0],result[1]);
             const cds = this.cdsRepository.create({
                 address,
                 collateralType,
@@ -132,7 +134,7 @@ export class CdsService {
                 initialLiquidationAmount,
                 liquidationAmount,
                 optedForLiquidation,
-                depositVal,
+                depositVal:await this.globalService.getCumulativeValue(chainId),
                 status:CdsPositionStatus.DEPOSITED
             });
 
@@ -176,6 +178,16 @@ export class CdsService {
                 await this.globalService.setTotalAvailableLiquidationAmount(chainId,parseFloat(initialLiquidationAmount)); 
             }else{
                 await this.globalService.setTotalAvailableLiquidationAmount(chainId,parseFloat(totalAvailableLiquidationAmount.toString()) + parseFloat(initialLiquidationAmount)); 
+            }
+
+            //get amint amount
+            const amintAmount= await this.globalService.getTotalCdsDepositedAmount(chainId);
+
+            // Update TotalCdsDepositedAmount
+            if(amintAmount == 0){
+                await this.globalService.setTotalCdsDepositedAmount(chainId,(parseFloat(depositedAmint) + parseFloat(depositedUsdt))); 
+            }else{
+                await this.globalService.setTotalCdsDepositedAmount(chainId,parseFloat(amintAmount.toString()) + (parseFloat(depositedAmint) + parseFloat(depositedUsdt))); 
             }
             //Update eth price
             await this.globalService.setEthPrice(chainId,ethPriceAtDeposit);
@@ -239,6 +251,9 @@ export class CdsService {
 
         const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
+        //get amint amount
+        const amintAmount= await this.globalService.getTotalCdsDepositedAmount(chainId);
+        await this.globalService.setTotalCdsDepositedAmount(chainId,parseFloat(amintAmount.toString()) - parseFloat(withdrawAmountFormated)); 
 
         //Update the amint and eth balance in treasury
         await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(withdrawAmountFormated));
@@ -253,14 +268,17 @@ export class CdsService {
 
     async cdsAmountToReturn(cdsAmountToReturnDto : CdsAmountToReturn):Promise<number>{
         const {address,index,chainId,ethPrice} = cdsAmountToReturnDto;
-        
+
+        const result = await this.calculateValue(ethPrice,chainId);
+        await this.setCumulativeValue(chainId,result[0],result[1]);
+        const withdrawVal = await this.globalService.getCumulativeValue(chainId);
+
         let getCdsDepositDto = new GetCdsDeposit();
         getCdsDepositDto = {address,index,chainId}
         // Get the particular deposit
         const found = await this.getCdsDeposit(getCdsDepositDto);
 
         //Calculate the withdraw value
-        const withdrawVal = await this.calculateValue(ethPrice,chainId);
         const depositVal = found.depositVal;
         if(withdrawVal <= depositVal){
             const valDiff = depositVal - withdrawVal;
@@ -273,22 +291,53 @@ export class CdsService {
         }
     }
 
-    async calculateValue(ethPrice:number,chainId:number):Promise<number>{
+    async setCumulativeValue(chainId:number,value:number,gains:boolean){
+        let cumulativeValue = await this.globalService.getCumulativeValue(chainId);
+        if(gains){
+            cumulativeValue = parseFloat(cumulativeValue.toString()) + parseFloat(value.toString());
+        }else{
+            cumulativeValue = parseFloat(cumulativeValue.toString()) - parseFloat(value.toString());
+        }
+        await this.globalService.setCumulativeValue(chainId,cumulativeValue);
+    }
+
+    async calculateValue(ethPrice:number,chainId:number):Promise<[number,boolean]>{
         const amount = 1000;
-        const treasuryBal = await this.globalService.getTreasuryAmintBalance(chainId);
-        const vaultBal = await this.globalService.getTreasuryEthBalance(chainId);
+        const vaultBal = await this.globalService.getTotalBorrowDepositedETH(chainId);
+        const cdsBal = await this.globalService.getTotalCdsDepositedAmount(chainId);
 
         let priceDiff:number;
+        let value:number;
+        let gains:boolean;
 
-        const ethPrices = await this.globalService.getEthPrices(chainId);
-
-        if(ethPrice != ethPrices[1]){
-            priceDiff = ethPrice - ethPrices[1];
+        if(cdsBal == 0){
+            value = 0;
+            gains = true;
         }else{
-            priceDiff = ethPrice - ethPrices[0];
+            const ethPrices = await this.globalService.getEthPrices(chainId);
+            if(ethPrice != ethPrices[1]){
+                // If the current eth price is higher than last eth price,then it is gains
+                if(ethPrice > ethPrices[1]){
+                    priceDiff = ethPrice - ethPrices[1];
+                    gains = true;    
+                }else{
+                    priceDiff = ethPrices[1] - ethPrice;
+                    gains = false;
+                }
+            }
+            else{
+                // If the current eth price is higher than fallback eth price,then it is gains
+                if(ethPrice > ethPrices[0]){
+                    priceDiff = ethPrice - ethPrices[0];
+                    gains = true;   
+                }else{
+                    priceDiff = ethPrices[0] - ethPrice;
+                    gains = false;
+                }
+            }
+            value = (amount * vaultBal * priceDiff) /cdsBal;   
         }
-        const value = (amount * vaultBal * priceDiff)/treasuryBal;
-        return value;
+        return [value,gains];
     }
 
     /**
@@ -349,7 +398,7 @@ export class CdsService {
             const liquidationGains = await this.calculateLiquidationGains(getCdsDepositDto);
             if(!liquidationGains){
                 const depositedAmintWithoutLiquidationAmount = parseFloat(found.depositedAmint) - parseFloat(found.initialLiquidationAmount);
-                returnAmounts = [(depositedAmintWithoutLiquidationAmount + priceChangeGainOrLoss + liquidationGains[1] - 2*(parseFloat(found.depositedAmint))),liquidationGains[0]];
+                returnAmounts = [(depositedAmintWithoutLiquidationAmount + priceChangeGainOrLoss + liquidationGains[1] - parseFloat(found.depositedAmint)),liquidationGains[0]];
             }else{
                 returnAmounts = [priceChangeGainOrLoss];
             }
