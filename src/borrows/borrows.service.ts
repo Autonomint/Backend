@@ -334,7 +334,7 @@ export class BorrowsService {
         // Formatting the values in wei to Ether
         const withdrawAmountInEther = ethers.utils.formatEther(withdrawAmount);
         const amountYetToWithdrawInEther = ethers.utils.formatEther(amountYetToWithdraw);
-        const noOfAbondInEther = (parseFloat(noOfAbond)/1e6).toString();
+        const noOfAbondInEther = (parseFloat(noOfAbond)/1e18).toString();
         const totalDebtAmountInEther = (parseFloat(totalDebtAmount)/1e6).toString();
 
         if(!found.withdrawAmount1 && found.status != PositionStatus.LIQUIDATED){
