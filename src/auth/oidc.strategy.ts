@@ -5,25 +5,27 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-openidconnect';
 import { User } from "./user.entity";
 import { OidcPayload } from "./oidc-payload.interface";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class OidcStrategy extends PassportStrategy(Strategy, 'oidc') {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>
+    private userRepository: Repository<User>,
+    private configService: ConfigService
   ) {
     super({
-      issuer: "process.env.OIDC_ISSUER",
-      authorizationURL: "process.env.OIDC_AUTH_URL",
-      clientID: "process.env.OIDC_CLIENT_ID",
-      clientSecret: "process.env.OIDC_CLIENT_SECRET",
-      callbackURL: "process.env.OIDC_CALLBACK_URL",
-      tokenURL: "process.env.OIDC_TOKEN_URL",
-      scope: ['openid', 'profile', 'email', 'address']
+      issuer: configService.get<string>('oidc.issuer'),
+      authorizationURL: configService.get<string>('oidc.authorizationURL'),
+      clientID: configService.get<string>('oidc.clientID'),
+      clientSecret: configService.get<string>('oidc.clientSecret'),
+      callbackURL: configService.get<string>('oidc.callbackURL'),
+      tokenURL: configService.get<string>('oidc.tokenURL'),
+      scope: ['openid', 'profile', 'email']
     });
   }
 
-  async validate(payload: OidcPayload, done: Function) {
+  async validate(payload: OidcPayload) {
 
     const { id, name, email, address} = payload;
 
@@ -33,6 +35,6 @@ export class OidcStrategy extends PassportStrategy(Strategy, 'oidc') {
       throw new UnauthorizedException();
     }
 
-    return done(null, user);
+    return user;
   }
 }

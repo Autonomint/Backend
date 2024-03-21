@@ -7,10 +7,12 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { OidcStrategy } from './oidc.strategy';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy : 'oidc'}),
+    ConfigModule,
+    PassportModule.register({ session: true, defaultStrategy : 'oidc'}),
     JwtModule.register({
       secret: '',
       signOptions:{
