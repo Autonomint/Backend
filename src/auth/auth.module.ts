@@ -6,8 +6,18 @@ import { User } from './user.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
-import { OidcStrategy } from './oidc.strategy';
-import { ConfigModule } from '@nestjs/config';
+import { OidcStrategy, buildOpenIdClient } from './oidc.strategy';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+
+const OidcStrategyFactory = {
+  provide: 'OidcStrategy',
+  useFactory: async (configService: ConfigService) => {
+    const client = await buildOpenIdClient(); // secret sauce! build the dynamic client before injecting it into the strategy for use in the constructor super call.
+    const strategy = new OidcStrategy(configService, client);
+    return strategy;
+  },
+  inject: [AuthService]
+};
 
 @Module({
   imports: [
@@ -22,7 +32,7 @@ import { ConfigModule } from '@nestjs/config';
     TypeOrmModule.forFeature([User])
   ],
   controllers: [AuthController],
-  providers: [AuthService,JwtStrategy, OidcStrategy],
-  exports: [OidcStrategy, JwtStrategy, PassportModule]
+  providers: [AuthService,JwtStrategy,OidcStrategyFactory],
+  exports: [JwtStrategy, PassportModule]
 })
 export class AuthModule {}
