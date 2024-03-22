@@ -23,7 +23,7 @@ async function bootstrap() {
     saveUninitialized: false,
     rolling: true, // keep session alive
     cookie: {
-      maxAge: 30 * 60 * 100, // session expires in 1hr, refreshed by `rolling: true` option.
+      maxAge: 3600000, // session expires in 1hr, refreshed by `rolling: true` option.
       httpOnly: true, // so that cookie can't be accessed via client-side script
     }
   }))

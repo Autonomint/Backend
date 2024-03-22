@@ -1,3 +1,6 @@
+require('dotenv').config();
+import 'dotenv/config';
+
 export default () =>({
     pKey: process.env.P_KEY,
     oidc:{

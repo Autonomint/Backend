@@ -21,7 +21,13 @@ export class OidcStrategy extends PassportStrategy(Strategy, 'oidc') {
       clientSecret: configService.get<string>('oidc.clientSecret'),
       callbackURL: configService.get<string>('oidc.callbackURL'),
       tokenURL: configService.get<string>('oidc.tokenURL'),
-      scope: ['openid', 'profile', 'email']
+      scope: [
+        "openid",
+        "email",
+        "profile",
+        "Joseon/Citizen:check",
+        "Joseon/Corporation:check"
+    ]
     });
   }
 
