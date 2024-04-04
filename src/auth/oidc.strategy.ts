@@ -46,7 +46,7 @@ export class OidcStrategy extends PassportStrategy(Strategy, 'oidc') {
         params: {
           // response_type: "id_token",
           redirect_uri: "https://3.7.222.91/auth/callback", // configService.get<string>('oidc.callbackURL'),
-          scope: "openid profile email",
+          scope: "openid",
         },
         passReqToCallback: false,
         usePKCE: false,

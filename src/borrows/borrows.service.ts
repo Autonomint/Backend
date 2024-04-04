@@ -20,8 +20,6 @@ import {
     borrowAddressMumbai,borrowABIMumbai,
     optionsAddressMumbai,optionsABIMumbai,
 
-    borrowAddressGoerli,borrowABIGoerli,
-    optionsAddressGoerli,optionsABIGoerli
 } from '../utils/index';
 import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
 import { Cron,CronExpression } from '@nestjs/schedule';
@@ -67,7 +65,7 @@ export class BorrowsService {
         private configService:ConfigService
     ){}
 
-    private chainIds = [11155111,5,80001];
+    private chainIds = [11155111,80001];
 
     private exchange = new bybit({
         apiKey: 'BNi0E7lvKWezOwjV0N',
@@ -420,8 +418,7 @@ export class BorrowsService {
         const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
         const signerSepolia = await this.getSignerOrProvider(11155111,true);
         const borrowingContractSepolia = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signerSepolia);
-        const signerGoerli = await this.getSignerOrProvider(5,true);
-        const borrowingContractGoerli = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signerGoerli);
+
         let borrowingContract;
         const currentEthPrice = await borrowingContractMumbai.getUSDValue();
         const ethPrice = currentEthPrice.toNumber()/100;
@@ -446,8 +443,6 @@ export class BorrowsService {
                 borrowingContract = borrowingContractMumbai;
             }else if(liquidatedPosition.chainId == 11155111){
                 borrowingContract = borrowingContractSepolia
-            }else if(liquidatedPosition.chainId == 5){
-                borrowingContract = borrowingContractGoerli
             }
             await borrowingContract.liquidate(liquidatedPosition.address,liquidatedPosition.index,currentEthPrice);
             liquidatedPosition.status = PositionStatus.LIQUIDATED;
@@ -485,9 +480,6 @@ export class BorrowsService {
         }else if(chainId == 80001){
             rpcUrl = "https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/"
             pKey = '3cdf792b14656fcdcc415ba2fde3c7fbadacdcc887778f36e8ce98db34021e15';
-        }else if(chainId == 5){
-            rpcUrl = "https://goerli.infura.io/v3/e9cf275f1ddc4b81aa62c5aa0b11ac0f"
-            pKey = '3cdf792b14656fcdcc415ba2fde3c7fbadacdcc887778f36e8ce98db34021e15';
         }
         const provider =  new ethers.providers.JsonRpcProvider(rpcUrl);
         if(needSigner){
@@ -513,8 +505,6 @@ export class BorrowsService {
             let optionsContract;
             if(chainId == 11155111){
                 optionsContract = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signer);
-            }else if(chainId == 5){
-                optionsContract = new ethers.Contract(optionsAddressGoerli,optionsABIGoerli,signer);
             }else if(chainId == 80001){
                 optionsContract = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signer);
             }
@@ -535,8 +525,6 @@ export class BorrowsService {
         let borrowingContract;
         if(chainId == 11155111){
             borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
-        }else if(chainId == 5){
-            borrowingContract = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signer);
         }else if(chainId == 80001){
             borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
         }
@@ -558,7 +546,7 @@ export class BorrowsService {
 
     // Create chart data
     // Runs every day
-    @Cron('0 0 0/24 * * *',{name:'Create chart data'})
+    @Cron('0 0 0/24 * * *')
     // @Cron(CronExpression.EVERY_10_SECONDS,{name:'Create chart data'})
     async createChart(){
         for (let i = 0;i < this.chainIds.length;i++){
@@ -577,8 +565,6 @@ export class BorrowsService {
 
                 if(this.chainIds[i] == 11155111){
                     borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
-                }else if(this.chainIds[i] == 5){
-                    borrowingContract = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signer);
                 }else if(this.chainIds[i] == 80001){
                     borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
                 }
@@ -918,8 +904,6 @@ export class BorrowsService {
 
             if(this.chainIds[i] == 11155111){
                 borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
-            }else if(this.chainIds[i] == 5){
-                borrowingContract = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signer);
             }else if(this.chainIds[i] == 80001){
                 borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
             }
@@ -1158,8 +1142,6 @@ export class BorrowsService {
 
             if(this.chainIds[i] == 11155111){
                 borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
-            }else if(this.chainIds[i] == 5){
-                borrowingContract = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signer);
             }else if(this.chainIds[i] == 80001){
                 borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
             }
