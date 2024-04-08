@@ -15,8 +15,6 @@ export const buildOpenIdClient = async () => {
 
   const TrustIssuer = await Issuer.discover('https://www.joseon.com/.well-known/openid-configuration');
   const client = new TrustIssuer.Client({
-    // token_endpoint_auth_signing_alg: "https://www.joseon.com/_special/rest/OAuth2:token",
-    // authorization_signed_response_alg: "https://www.joseon.com/_special/rest/OAuth2:auth",
     client_id: "oaap-ahofgp-fdoj-dwdm-idww-rhtyfi64", // configService.get<string>('oidc.clientID'),
     client_secret: "sk_slY4qta3XQdBv8f7MWiJiQw4nMqRm", // configService.get<string>('oidc.clientSecret'),
   });
@@ -44,11 +42,11 @@ export class OidcStrategy extends PassportStrategy(Strategy, 'oidc') {
       super({
         client: client,
         params: {
-          // response_type: "id_token",
+          // response_type: "code",
           redirect_uri: "https://3.7.222.91/auth/callback", // configService.get<string>('oidc.callbackURL'),
-          scope: "openid",
+          scope: "openid profile Joseon/Citizen:check email",
         },
-        passReqToCallback: false,
+        passReqToCallback: true,
         usePKCE: false,
       });
 
