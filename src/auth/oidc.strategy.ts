@@ -42,11 +42,7 @@ export class OidcStrategy extends PassportStrategy(Strategy, 'oidc') {
       super({
         client: client,
         params: {
-<<<<<<< HEAD
           // response_type: "code",
-=======
-          response_type: "token",
->>>>>>> 20ac0ef203c19516c26d5a42420f37423eeb96dc
           redirect_uri: "https://3.7.222.91/auth/callback", // configService.get<string>('oidc.callbackURL'),
           scope: "openid profile Joseon/Citizen:check email",
         },
