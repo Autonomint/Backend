@@ -68,8 +68,8 @@ export class BorrowsService {
     private chainIds = [11155111,80001];
 
     private exchange = new bybit({
-        apiKey: 'BNi0E7lvKWezOwjV0N',
-        secret: 'ER4G9Vm1z01Xzr31HbzofYLlU9m7ISue1ixo',
+        apiKey: 'T8SLTSFrNvRowNRUuL',
+        secret: '6YpoYGG4wib9BlReoisyZAT4YyG5iDQSPWb5',
     });
 
     getDeposits(getBorrowFilterDto:GetBorrowFilterDto):Promise<BorrowInfo[]>{
