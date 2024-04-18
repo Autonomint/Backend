@@ -28,6 +28,11 @@ export class CdsController {
     }
 
     // To get the depositor's total deposits details
+    @Get('/cds/leaderboard')
+    getCdsLeaderboard():Promise<CdsDepositorInfo[]>{
+        return this.cdsService.getCdsLeaderboardData();
+    }
+
     @Get('/totalDeposits/:chainId/:address')
     getDepositorByAddress(@Param() params:{address:string;chainId:number}):Promise<CdsDepositorInfo>{
         const address = params.address;

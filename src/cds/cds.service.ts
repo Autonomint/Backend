@@ -58,6 +58,16 @@ export class CdsService {
             return found;
         }
     }
+    async getCdsLeaderboardData():Promise<CdsDepositorInfo[]>{
+        const data = await this.cdsDepositorRepository.find({
+            order: {
+              totalDepositedAmount: 'DESC'
+            },
+            take: 25
+          });
+        return data;
+    }
+
     /**
      * Return totalIndex of cds depositor
      * @param address address of the depositor
@@ -149,6 +159,8 @@ export class CdsService {
                 cdsDepositor.totalDepositedUsdt = parseFloat(depositedUsdt);
                 cdsDepositor.totalDepositedAmount = parseFloat(totalDepositedAmount);
                 cdsDepositor.deposits = [cds]
+                cdsDepositor.points =0;
+                cdsDepositor.totalYields = 0;
             }else{
                 cdsDepositor.totalDepositedAmint = parseFloat(cdsDepositor.totalDepositedAmint.toString()) + parseFloat(depositedAmint);
                 cdsDepositor.totalDepositedUsdt = parseFloat(cdsDepositor.totalDepositedUsdt.toString()) + parseFloat(depositedUsdt);

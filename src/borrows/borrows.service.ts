@@ -149,6 +149,15 @@ export class BorrowsService {
             return found;
         }
     }
+    async getBorrowLeaderboardData():Promise<BorrowerInfo[]>{
+        const data = await this.borrowerRepository.find({
+            order: {
+              totalDepositedAmount: 'DESC'
+            },
+            take: 25
+          });
+        return data;
+    }
 
     /**
      * 
@@ -254,6 +263,9 @@ export class BorrowsService {
                 borrower.totalAbond = 0;
                 borrower.totalIndex = index;
                 borrower.borrows = [borrow];
+                borrower.totalLTV=0;
+                borrower.points=0;
+                borrower.totalYields=0;
             }else{
                 borrower.totalDepositedAmount = parseFloat(borrower.totalDepositedAmount.toString()) + parseFloat(depositedAmount);
                 borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) +  parseFloat(noOfAmintInEther);
