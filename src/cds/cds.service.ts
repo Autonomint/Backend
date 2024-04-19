@@ -90,6 +90,16 @@ export class CdsService {
         }
     }
 
+    async getCdsLeaderboardData():Promise<CdsDepositorInfo[]>{
+        const data = await this.cdsDepositorRepository.find({
+            order: {
+              totalDepositedAmount: 'DESC'
+            },
+            take: 25
+          });
+        return data;
+    }
+
     /**
      * add a position in cds
      * @param addCdsDto 
