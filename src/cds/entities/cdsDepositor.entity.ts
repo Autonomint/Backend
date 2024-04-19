@@ -43,7 +43,17 @@ export class CdsDepositorInfo{
         type:'decimal',
         nullable: true })
     totalFeesWithdrawn:number;
-
+    @Column({
+        type: 'decimal',
+        nullable: true,
+      })
+      points: number;
+    
+      @Column({
+        type: 'decimal',
+        nullable: true,
+      })
+      totalYields: number;
     @OneToMany(() => CdsInfo, (cdsInfo) => cdsInfo.cdsDepositor,{ eager: true })
     deposits:CdsInfo[]
 }

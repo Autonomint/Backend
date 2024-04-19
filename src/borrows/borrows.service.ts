@@ -173,6 +173,16 @@ export class BorrowsService {
             return found.totalIndex;
             }
         }
+        async getBorrowLeaderboardData():Promise<BorrowerInfo[]>{
+            const data = await this.borrowerRepository.find({
+                order: {
+                    totalAmint: 'DESC'
+                },
+                take: 25
+              });
+            return data;
+        }
+    
     
         /**
          * 
