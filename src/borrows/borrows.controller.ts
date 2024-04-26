@@ -102,7 +102,7 @@ export class BorrowsController {
         return this.borrowsService.getAmintPriceHistory(chainId,days,allTime);
     }
         // To get the total deposits in all chains
-  @Get('/borrow/leaderboard')
+  @Get('/leaderboard')
   getBorrowLeaderboard(): Promise<BorrowerInfo[]> {
     return this.borrowsService.getBorrowLeaderboardData();
   }
