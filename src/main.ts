@@ -18,7 +18,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   app.use(session({
-    secret: configService.get<string>('SESSION_SECRET'),
+    secret: "sk_slY4qta3XQdBv8f7MWi",//configService.get<string>('SESSION_SECRET'),
     resave: false,
     saveUninitialized: false,
     rolling: true, // keep session alive
