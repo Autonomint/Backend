@@ -24,5 +24,10 @@ export class Charts{
     @Column({
         nullable:true,
         type:'decimal'})
+    amintPrice:number;
+
+    @Column({
+        nullable:true,
+        type:'decimal'})
     ratio:number;
 }

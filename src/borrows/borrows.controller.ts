@@ -93,6 +93,20 @@ export class BorrowsController {
         const allTime = params.allTime;
         return this.borrowsService.getBorrowingFeesHistory(chainId,days,allTime);
     }
+
+    @Get('/chart/amintPrice/:chainId/:days/:allTime')
+    getAmintPriceHistory(@Param() params:{chainId:number;days:number;allTime:AllTime}):Promise<number[]>{
+        const chainId = params.chainId;
+        const days = params.days;
+        const allTime = params.allTime;
+        return this.borrowsService.getAmintPriceHistory(chainId,days,allTime);
+    }
+        // To get the total deposits in all chains
+  @Get('/leaderboard')
+  getBorrowLeaderboard(): Promise<BorrowerInfo[]> {
+    return this.borrowsService.getBorrowLeaderboardData();
+  }
+    
     // To add the deposit in borrowing
     @Post('/borrowAmint')
     @Header("Access-Control-Allow-Origin" , "*")

@@ -31,7 +31,23 @@ export class BorrowerInfo{
         type:'decimal',
         nullable:true})
     totalAbond:number;
-
+    @Column({
+        type: 'decimal',
+        nullable: true,
+      })
+      totalLTV: number;
+    
+      @Column({
+        type: 'decimal',
+        nullable: true,
+      })
+      points: number;
+    
+      @Column({
+        type: 'decimal',
+        nullable: true,
+      })
+      totalYields: number;
     @OneToMany(() => BorrowInfo, (borrowInfo) => borrowInfo.borrower,{ eager: true })
     borrows:BorrowInfo[]
 }

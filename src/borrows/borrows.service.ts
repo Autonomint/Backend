@@ -15,12 +15,11 @@ import { bybit } from 'ccxt';
 import {
     borrowAddressSepolia,borrowABISepolia,
     optionsAddressSepolia,optionsABISepolia,
+    poolAddressSepolia,poolABISepolia,
 
     borrowAddressMumbai,borrowABIMumbai,
     optionsAddressMumbai,optionsABIMumbai,
 
-    borrowAddressGoerli,borrowABIGoerli,
-    optionsAddressGoerli,optionsABIGoerli
 } from '../utils/index';
 import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
 import { Cron,CronExpression } from '@nestjs/schedule';
@@ -32,6 +31,9 @@ import { HighLTVPositions } from './entities/high-ltv-positions.entity';
 import { Charts } from './entities/chart.entity';
 import { GlobalVariables } from '../global/entities/global.entity';
 import { AllTime } from './allTime-fetch.enum';
+import { AmintPrice } from './entities/amint-price.entity';
+import { Days } from './entities/day.entity';
+import { ConfigService } from '@nestjs/config';
 require('dotenv').config();
 
 @Injectable()
@@ -52,17 +54,22 @@ export class BorrowsService {
         private highLtvPositionsRepository: Repository<HighLTVPositions>,
         @InjectRepository(Charts)
         private chartRepository: Repository<Charts>,
+        @InjectRepository(AmintPrice)
+        private amintPriceRepository: Repository<AmintPrice>,
+        @InjectRepository(Days)
+        private daysRepository: Repository<Days>,
         @InjectRepository(GlobalVariables)
         private globalRepository: Repository<GlobalVariables>,
         @Inject(GlobalService)
         private globalService:GlobalService,
+        private configService:ConfigService
     ){}
 
-    private chainIds = [5,11155111,80001];
+    private chainIds = [11155111,80001];
 
     private exchange = new bybit({
-        apiKey: 'BNi0E7lvKWezOwjV0N',
-        secret: 'ER4G9Vm1z01Xzr31HbzofYLlU9m7ISue1ixo',
+        apiKey: 'T8SLTSFrNvRowNRUuL',
+        secret: '6YpoYGG4wib9BlReoisyZAT4YyG5iDQSPWb5',
     });
 
     getDeposits(getBorrowFilterDto:GetBorrowFilterDto):Promise<BorrowInfo[]>{
@@ -166,6 +173,16 @@ export class BorrowsService {
             return found.totalIndex;
             }
         }
+        async getBorrowLeaderboardData():Promise<BorrowerInfo[]>{
+            const data = await this.borrowerRepository.find({
+                order: {
+                    totalAmint: 'DESC'
+                },
+                take: 25
+              });
+            return data;
+        }
+    
     
         /**
          * 
@@ -327,7 +344,7 @@ export class BorrowsService {
         // Formatting the values in wei to Ether
         const withdrawAmountInEther = ethers.utils.formatEther(withdrawAmount);
         const amountYetToWithdrawInEther = ethers.utils.formatEther(amountYetToWithdraw);
-        const noOfAbondInEther = (parseFloat(noOfAbond)/1e6).toString();
+        const noOfAbondInEther = (parseFloat(noOfAbond)/1e18).toString();
         const totalDebtAmountInEther = (parseFloat(totalDebtAmount)/1e6).toString();
 
         if(!found.withdrawAmount1 && found.status != PositionStatus.LIQUIDATED){
@@ -411,8 +428,7 @@ export class BorrowsService {
         const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
         const signerSepolia = await this.getSignerOrProvider(11155111,true);
         const borrowingContractSepolia = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signerSepolia);
-        const signerGoerli = await this.getSignerOrProvider(5,true);
-        const borrowingContractGoerli = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signerGoerli);
+
         let borrowingContract;
         const currentEthPrice = await borrowingContractMumbai.getUSDValue();
         const ethPrice = currentEthPrice.toNumber()/100;
@@ -437,8 +453,6 @@ export class BorrowsService {
                 borrowingContract = borrowingContractMumbai;
             }else if(liquidatedPosition.chainId == 11155111){
                 borrowingContract = borrowingContractSepolia
-            }else if(liquidatedPosition.chainId == 5){
-                borrowingContract = borrowingContractGoerli
             }
             await borrowingContract.liquidate(liquidatedPosition.address,liquidatedPosition.index,currentEthPrice);
             liquidatedPosition.status = PositionStatus.LIQUIDATED;
@@ -476,9 +490,6 @@ export class BorrowsService {
         }else if(chainId == 80001){
             rpcUrl = "https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/"
             pKey = '3cdf792b14656fcdcc415ba2fde3c7fbadacdcc887778f36e8ce98db34021e15';
-        }else if(chainId == 5){
-            rpcUrl = "https://goerli.infura.io/v3/e9cf275f1ddc4b81aa62c5aa0b11ac0f"
-            pKey = '3cdf792b14656fcdcc415ba2fde3c7fbadacdcc887778f36e8ce98db34021e15';
         }
         const provider =  new ethers.providers.JsonRpcProvider(rpcUrl);
         if(needSigner){
@@ -504,8 +515,6 @@ export class BorrowsService {
             let optionsContract;
             if(chainId == 11155111){
                 optionsContract = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signer);
-            }else if(chainId == 5){
-                optionsContract = new ethers.Contract(optionsAddressGoerli,optionsABIGoerli,signer);
             }else if(chainId == 80001){
                 optionsContract = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signer);
             }
@@ -526,8 +535,6 @@ export class BorrowsService {
         let borrowingContract;
         if(chainId == 11155111){
             borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
-        }else if(chainId == 5){
-            borrowingContract = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signer);
         }else if(chainId == 80001){
             borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
         }
@@ -538,9 +545,18 @@ export class BorrowsService {
         return ratio;
     }
 
+    getAmintPrice(data:BigInt):number {
+        const Decimal0 = 6;
+        const Decimal1 = 18;
+        const sqrtPriceX96 = Number(data);
+        const buyOneOfToken0 = ((sqrtPriceX96 / 2**96)**2) / (Number((10**Decimal1 / 10**Decimal0).toFixed(Decimal1)));
+        const buyOneOfToken1 = Number((1 / Number(buyOneOfToken0))).toFixed(Decimal0);
+        return Number(buyOneOfToken0) * Number(buyOneOfToken1);
+    }
+
     // Create chart data
     // Runs every day
-    @Cron('0 0 0/24 * * *',{name:'Create chart data'})
+    @Cron('0 0 0/24 * * *')
     // @Cron(CronExpression.EVERY_10_SECONDS,{name:'Create chart data'})
     async createChart(){
         for (let i = 0;i < this.chainIds.length;i++){
@@ -551,28 +567,73 @@ export class BorrowsService {
             }});
             if(found){
                 const signer = await this.getSignerOrProvider(this.chainIds[i],true);
+                const signerSepolia = await this.getSignerOrProvider(11155111,true);
+
                 let borrowingContract;
+                let poolContract;
+                poolContract = new ethers.Contract(poolAddressSepolia,poolABISepolia,signerSepolia);
+
                 if(this.chainIds[i] == 11155111){
                     borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
-                }else if(this.chainIds[i] == 5){
-                    borrowingContract = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signer);
                 }else if(this.chainIds[i] == 80001){
                     borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
                 }
                 const currentEthPrice = await borrowingContract.getUSDValue();
                 const optionfees = await this.getEthVolatility(this.chainIds[i],(ethers.utils.parseEther('1')).toString(),currentEthPrice,0);
                 const ratio = await this.getRatio(this.chainIds[i],currentEthPrice);
+                const slot0 = await poolContract.slot0();
 
                 const newChart = this.chartRepository.create({
                     chainId:this.chainIds[i],
                     day:parseInt(found.day? (found.day).toString() : '0') + 1,
                     optionFees:(optionfees[1]/1e6),
+                    amintPrice:this.getAmintPrice(slot0[0]),
                     ratio:ratio
                 })
                 found.day = parseInt(found.day? (found.day).toString() : '0') + 1;
                 await this.chartRepository.save(newChart);
                 await this.globalRepository.save(found);
             }
+        }
+    }
+
+    // Runs every day
+    @Cron('0 0 0/24 * * *',{name:'Create chart data'})
+    // @Cron(CronExpression.EVERY_10_SECONDS,{name:'Create chart data'})
+    async createAmintPriceChart(){
+        for (let i = 0;i < this.chainIds.length;i++){
+
+            const signerSepolia = await this.getSignerOrProvider(11155111,true);
+
+            let poolContract;
+            poolContract = new ethers.Contract(poolAddressSepolia,poolABISepolia,signerSepolia);
+            const slot0 = await poolContract.slot0();
+
+            let newChart:AmintPrice
+            let found = await this.daysRepository.findOne({where:{chainId:this.chainIds[i]}});
+
+            if(!found){
+                found = new Days();
+                found.chainId = this.chainIds[i]
+                found.days = 1
+
+                newChart = this.amintPriceRepository.create({
+                    chainId:this.chainIds[i],
+                    day:1,
+                    amintPrice:this.getAmintPrice(slot0[0]),
+                })
+            }else{
+                newChart = this.amintPriceRepository.create({
+                    chainId:this.chainIds[i],
+                    day:parseInt(found? (found.days).toString() : '0') + 1,
+                    amintPrice:this.getAmintPrice(slot0[0]),
+                })
+    
+                found.days = parseInt(found.days? (found.days).toString() : '0') + 1;
+            }
+
+            await this.amintPriceRepository.save(newChart);
+            await this.daysRepository.save(found);
         }
     }
 
@@ -666,6 +727,30 @@ export class BorrowsService {
             }
         }
         return borrowingFees;
+    }
+
+    // funtion for getting priceHistory 
+    async getAmintPriceHistory(chainId:number,days:number,allTime:AllTime):Promise<number[]>{
+        let amintPrice:number[];
+        if(allTime == AllTime.YES){
+            days = (await this.daysRepository.findOne({where:{chainId:chainId}})).days;
+        }
+        for(let i = 1;i<=days;i++){
+            const found = await this.amintPriceRepository.findOne({where:{
+                chainId:chainId,
+                day:i
+            }})
+            if(found){
+                if(amintPrice){
+                    amintPrice.push(found.amintPrice);
+                }else{
+                    amintPrice = [found.amintPrice]
+                }
+            }else{
+                return amintPrice;
+            }
+        }
+        return amintPrice;
     }
 
     // /**
@@ -829,8 +914,6 @@ export class BorrowsService {
 
             if(this.chainIds[i] == 11155111){
                 borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
-            }else if(this.chainIds[i] == 5){
-                borrowingContract = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signer);
             }else if(this.chainIds[i] == 80001){
                 borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
             }
@@ -1069,8 +1152,6 @@ export class BorrowsService {
 
             if(this.chainIds[i] == 11155111){
                 borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
-            }else if(this.chainIds[i] == 5){
-                borrowingContract = new ethers.Contract(borrowAddressGoerli,borrowABIGoerli,signer);
             }else if(this.chainIds[i] == 80001){
                 borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
             }

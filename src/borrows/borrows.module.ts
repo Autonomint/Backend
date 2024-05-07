@@ -13,10 +13,22 @@ import { LiquidationInfo } from './entities/liquidatedInfo.entity';
 import { Batch } from './entities/batch.entity';
 import { HighLTVPositions } from './entities/high-ltv-positions.entity';
 import { Charts } from './entities/chart.entity';
+import { AmintPrice } from './entities/amint-price.entity';
+import { Days } from './entities/day.entity';
 
 @Module({
   imports:[
-    TypeOrmModule.forFeature([BorrowInfo,BorrowerInfo,CriticalPositions,GlobalVariables,LiquidationInfo,Batch,HighLTVPositions,Charts]),
+    TypeOrmModule.forFeature([
+      BorrowInfo,
+      BorrowerInfo,
+      CriticalPositions,
+      GlobalVariables,
+      LiquidationInfo,
+      Batch,
+      HighLTVPositions,
+      Charts,
+      AmintPrice,
+      Days]),
     GlobalModule,
   ],
   controllers: [BorrowsController,GlobalController],

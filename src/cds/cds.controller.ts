@@ -26,7 +26,11 @@ export class CdsController {
         const chainId = params.chainId;
         return this.cdsService.getCdsDepositorIndexByAddress(address,chainId);
     }
-
+    // To get the depositor's total deposits details
+    @Get('/cds/leaderboard')
+    getCdsLeaderboard():Promise<CdsDepositorInfo[]>{
+        return this.cdsService.getCdsLeaderboardData();
+    }
     // To get the depositor's total deposits details
     @Get('/totalDeposits/:chainId/:address')
     getDepositorByAddress(@Param() params:{address:string;chainId:number}):Promise<CdsDepositorInfo>{
