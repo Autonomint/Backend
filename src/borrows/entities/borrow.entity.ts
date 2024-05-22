@@ -87,20 +87,10 @@ export class BorrowInfo{
     totalDebtAmount:string;
 
     @Column({ nullable:true})
-    withdrawTime1:string;
-
-    @Column({ nullable:true})
-    withdrawTime2:string;
+    withdrawTime:string;
 
     @Column({nullable:true})
-    withdrawAmount1:string;
-
-    @Column({ nullable:true})
-    withdrawAmount2:string;
-
-    //Amount yet to withdraw for 2nd time
-    @Column({nullable:true})
-    amountYetToWithdraw:string;
+    withdrawAmount:string;
 
     @Column({
         type:'decimal',
