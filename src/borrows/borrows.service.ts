@@ -1,11 +1,11 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
-import { PositionStatus } from './borrow-status.enum';
+import { PositionStatus, ProtocolFunction } from './borrow-status.enum';
 import { AddBorrowDto } from './dto/create-borrow.dto';
 import { GetBorrowFilterDto } from './dto/get-borrow-filter.dto';
 import { BorrowInfo } from './entities/borrow.entity';
 import { Repository,Equal,Not,MoreThanOrEqual } from 'typeorm';
-import { ethers,ZeroAddress } from 'ethers';
+import { ethers,Contract,ZeroAddress, NonceManager } from 'ethers';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
@@ -394,7 +394,7 @@ export class BorrowsService {
                 borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,provider);
             }
             const currentEthPrice = await borrowingContract.getUSDValue();
-            const ethPrice = (currentEthPrice.toNumber())/100;
+            const ethPrice = Number(currentEthPrice)/100;
 
             //Filtering the positions based on current eth price
             const positions = await this.borrowRepository.findBy({
@@ -463,7 +463,9 @@ export class BorrowsService {
             }
 
             const currentEthPrice = await borrowingContract.getUSDValue();
-            const ethPrice = currentEthPrice.toNumber()/100;
+            console.log(currentEthPrice);
+            const ethPrice = Number(currentEthPrice)/100;
+            console.log(ethPrice);
             const liquidationPositions = await this.criticalPositionsRepository.findBy({
                 status:Not(PositionStatus.LIQUIDATED),
                 chainId:Equal(this.chainIds[i]),
@@ -978,7 +980,7 @@ export class BorrowsService {
             const currentEthPrice = await borrowingContract.getUSDValue();
             //Get the LTV
             const ltv = await borrowingContract.getLTV();
-            const ethPrice = currentEthPrice.toNumber()/100;
+            const ethPrice = Number(currentEthPrice)/100;
 
             // If ltv is less than 90,liquidate the positions
             if(ltv <= 90){
@@ -1238,7 +1240,7 @@ export class BorrowsService {
             const currentEthPrice = await borrowingContract.getUSDValue();
             // Get the current ltv
             const ltv = await borrowingContract.getLTV();
-            const ethPrice = currentEthPrice.toNumber()/100;
+            const ethPrice = Number(currentEthPrice)/100;
 
             // If ltv is below 90 liquidate
             if(ltv <= 90){
@@ -1408,5 +1410,38 @@ export class BorrowsService {
         // }else{
         //     return;
         // }
+    }
+
+    async listenEvents(chainId:number,protocolFunction:ProtocolFunction):Promise<number[]> {
+
+        let borrowingContract: Contract;
+        let cdsContract: Contract;
+        if(chainId == 11155111){
+            const signer = await this.getSignerOrProvider(chainId,true);
+
+            borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
+            cdsContract = new ethers.Contract(cdsAddressSepolia,cdsABI,signer);;
+
+        }else if(chainId == 84532){
+            const signer = await this.getSignerOrProvider(chainId,true);
+            borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signer);
+            cdsContract = new ethers.Contract(cdsAddressBaseSepolia,cdsABI,signer);
+
+        }
+
+        let result:number[];
+
+        if(protocolFunction == ProtocolFunction.BORROW_DEPOSIT){
+            borrowingContract.on('Deposit',async (index,depositingAmount,tokensToLend,normalizedAmount) => {
+                result = [index,depositingAmount,tokensToLend,normalizedAmount];
+            })
+        }else{
+            cdsContract.on('Deposit',async (totalDepositingAmount,usdaAmount,usdtAmount,index,liquidationAmount,normalizedAmount,depositValue) => {
+                result = [totalDepositingAmount,usdaAmount,usdtAmount,index,liquidationAmount,normalizedAmount,depositValue];
+            })
+        }
+
+        return result;
+
     }
 }
