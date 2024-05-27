@@ -16,7 +16,7 @@ export class Points{
     perDayPoints:number
 
     @Column({ nullable:true })
-    lastEventTime:Date;
+    lastEventTime:string;
 
     @Column({ nullable:true })
     lastUpdatedPoints:number

@@ -1,11 +1,11 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
-import { PositionStatus, ProtocolFunction } from './borrow-status.enum';
+import { PositionStatus } from './borrow-status.enum';
 import { AddBorrowDto } from './dto/create-borrow.dto';
 import { GetBorrowFilterDto } from './dto/get-borrow-filter.dto';
 import { BorrowInfo } from './entities/borrow.entity';
 import { Repository,Equal,Not,MoreThanOrEqual } from 'typeorm';
-import { ethers,Contract,ZeroAddress, NonceManager } from 'ethers';
+import { ethers,ZeroAddress,Contract } from 'ethers';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
@@ -18,8 +18,8 @@ import {
     cdsAddressSepolia,cdsAddressBaseSepolia,
     treasuryAddressSepolia,treasuryAddressBaseSepolia,
     optionsAddressSepolia,optionsAddressBaseSepolia,
-    poolAddressSepolia,
-    borrowABI,cdsABI,treasuryABI,optionsABI,poolABI,
+    poolAddressSepolia,usdaAddressModeSepolia,
+    borrowABI,cdsABI,treasuryABI,optionsABI,poolABI,usdaABI,
     eidSepolia,eidBaseSepolia
 
 } from '../utils/index';
@@ -36,6 +36,7 @@ import { AllTime } from './allTime-fetch.enum';
 import { AmintPrice } from './entities/amint-price.entity';
 import { Days } from './entities/day.entity';
 import { ConfigService } from '@nestjs/config';
+import { PointsService } from '../points/points.service';
 require('dotenv').config();
 
 @Injectable()
@@ -64,7 +65,9 @@ export class BorrowsService {
         private globalRepository: Repository<GlobalVariables>,
         @Inject(GlobalService)
         private globalService:GlobalService,
-        private configService:ConfigService
+        private configService:ConfigService,
+        @Inject(PointsService)
+        private pointsService:PointsService,
     ){}
 
     private chainIds = [11155111,84532];
@@ -309,6 +312,8 @@ export class BorrowsService {
             }else{
                 await this.globalService.setTotalBorrowDepositedETH(chainId,parseFloat(depositedETH.toString()) + parseFloat(depositedAmount)); 
             }
+
+            await this.pointsService.setBorrowPoints(address,chainId,ethers.parseEther(depositedAmount).toString(),Date.now().toString());
             await this.borrowRepository.save(borrow);
             await this.borrowerRepository.save(borrower);
             await this.batchRepository.save(batch);
@@ -463,9 +468,7 @@ export class BorrowsService {
             }
 
             const currentEthPrice = await borrowingContract.getUSDValue();
-            console.log(currentEthPrice);
             const ethPrice = Number(currentEthPrice)/100;
-            console.log(ethPrice);
             const liquidationPositions = await this.criticalPositionsRepository.findBy({
                 status:Not(PositionStatus.LIQUIDATED),
                 chainId:Equal(this.chainIds[i]),
@@ -1412,36 +1415,46 @@ export class BorrowsService {
         // }
     }
 
-    async listenEvents(chainId:number,protocolFunction:ProtocolFunction):Promise<number[]> {
+    // async listenEvents():Promise<number[]> {
 
-        let borrowingContract: Contract;
-        let cdsContract: Contract;
-        if(chainId == 11155111){
-            const signer = await this.getSignerOrProvider(chainId,true);
+    //     let borrowingContractSepolia: Contract;
+    //     let cdsContractSepolia: Contract;
+    //     let borrowingContractBaseSepolia: Contract;
+    //     let cdsContractBaseSepolia: Contract;
+    //     let usdaContractMode:Contract
 
-            borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
-            cdsContract = new ethers.Contract(cdsAddressSepolia,cdsABI,signer);;
+    //     const signerSepolia = await this.getSignerOrProvider(11155111,true);
+    //     borrowingContractSepolia = new ethers.Contract('0xfBAE0d4337d936538995A26685f69644e6427213',borrowABI,signerSepolia);
+    //     cdsContractSepolia = new ethers.Contract(cdsAddressSepolia,cdsABI,signerSepolia);
 
-        }else if(chainId == 84532){
-            const signer = await this.getSignerOrProvider(chainId,true);
-            borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signer);
-            cdsContract = new ethers.Contract(cdsAddressBaseSepolia,cdsABI,signer);
+    //     const signerBaseSepolia = await this.getSignerOrProvider(84532,true);
+    //     borrowingContractBaseSepolia = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signerBaseSepolia);
+    //     cdsContractBaseSepolia = new ethers.Contract(cdsAddressBaseSepolia,cdsABI,signerBaseSepolia);
 
-        }
+    //     const signerMode = await this.getSignerOrProvider(919,true);
+    //     usdaContractMode = new ethers.Contract(usdaAddressModeSepolia,usdaABI,signerMode);
 
-        let result:number[];
+    //     let result:number[];
 
-        if(protocolFunction == ProtocolFunction.BORROW_DEPOSIT){
-            borrowingContract.on('Deposit',async (index,depositingAmount,tokensToLend,normalizedAmount) => {
-                result = [index,depositingAmount,tokensToLend,normalizedAmount];
-            })
-        }else{
-            cdsContract.on('Deposit',async (totalDepositingAmount,usdaAmount,usdtAmount,index,liquidationAmount,normalizedAmount,depositValue) => {
-                result = [totalDepositingAmount,usdaAmount,usdtAmount,index,liquidationAmount,normalizedAmount,depositValue];
-            })
-        }
+    //     borrowingContractSepolia.on('Deposit',async (index,depositingAmount,tokensToLend,normalizedAmount) => {
+    //         result = [index,depositingAmount,tokensToLend,normalizedAmount];
+    //     })
+    //     cdsContractSepolia.on('Deposit',async (totalDepositingAmount,usdaAmount,usdtAmount,index,liquidationAmount,normalizedAmount,depositValue) => {
+    //         result = [totalDepositingAmount,usdaAmount,usdtAmount,index,liquidationAmount,normalizedAmount,depositValue];
+    //     })
+    //     borrowingContractBaseSepolia.on('Deposit',async (index,depositingAmount,tokensToLend,normalizedAmount) => {
+    //         result = [index,depositingAmount,tokensToLend,normalizedAmount];
+    //     })
+    //     cdsContractBaseSepolia.on('Deposit',async (totalDepositingAmount,usdaAmount,usdtAmount,index,liquidationAmount,normalizedAmount,depositValue) => {
+    //         result = [totalDepositingAmount,usdaAmount,usdtAmount,index,liquidationAmount,normalizedAmount,depositValue];
+    //     })
+    //     usdaContractMode.on('OFTReceived',async(guid,srcEid,toAddress,amountReceivedLD) => {
+    //         result = [guid,srcEid,toAddress,amountReceivedLD]
+    //     })
 
-        return result;
+    //     console.log(result);
 
-    }
+    //     return result;
+
+    // }
 }

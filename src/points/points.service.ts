@@ -159,9 +159,9 @@ export class PointsService {
     //     }
     // }
 
-    async getDaysBetween(date1: Date, date2: Date): Promise<number> {
+    async getDaysBetween(date1: string, date2: string): Promise<number> {
         // Get the difference in milliseconds
-        const timeDiff = Math.abs(date2.getTime() - date1.getTime());
+        const timeDiff = Math.abs(parseInt(date2) - parseInt(date1));
       
         // Convert milliseconds to days by dividing by the number of milliseconds in a day
         const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
@@ -184,10 +184,10 @@ export class PointsService {
     async setBorrowPoints(
         address:string,
         chainId:number,
-        depositedAmount:number,
-        depositedTime:Date,
+        depositedAmount:string,
+        depositedTime:string,
     ){
-        if(depositedAmount && depositedAmount > ethers.parseEther("0.05")){
+        if(parseInt(depositedAmount) && parseInt(depositedAmount) >= ethers.parseEther("0.05")){
             let found = await this.pointsRepository.findOne({ where:{
                 chainId:chainId,
                 address:address}
@@ -199,14 +199,20 @@ export class PointsService {
                     address:address,
                     borrowIndex: 1,
                     perDayPoints:10,
+                    lastUpdatedPoints:10,
                     lastEventTime:depositedTime
                 })
             }else {
-                found.borrowIndex += 1;
-                found.lastEventTime = depositedTime;
-                found.lastUpdatedPoints += 10;
-                // found.perDayPoints = found.perDayPoints + 10;
+                if(found.borrowIndex == 0){
+                    found.borrowIndex += 1;
+                    found.lastEventTime = depositedTime;
+                    found.lastUpdatedPoints += 10;
+                    // found.perDayPoints = found.perDayPoints + 10;
+                }
+
             }
+
+            await this.pointsRepository.save(found);
         }
     }
 
@@ -214,7 +220,7 @@ export class PointsService {
         address:string,
         chainId:number,
         depositedAmount:number,
-        depositedTime:Date,
+        depositedTime:string,
     ){
         if(depositedAmount && depositedAmount > 200000000){
             let found = await this.pointsRepository.findOne({ where:{
@@ -231,11 +237,15 @@ export class PointsService {
                     lastEventTime:depositedTime
                 })
             }else{
-                found.usdaCDSIndexEligible += 1;
-                found.lastEventTime = depositedTime;
-                found.lastUpdatedPoints += 10;
-                // found.perDayPoints = found.perDayPoints + 10;
+                if(found.usdaCDSIndexEligible == 0){
+                    found.usdaCDSIndexEligible += 1;
+                    found.lastEventTime = depositedTime;
+                    found.lastUpdatedPoints += 10;
+                    // found.perDayPoints = found.perDayPoints + 10;
+                }
+
             }
+            await this.pointsRepository.save(found);
         }
     }
 
@@ -243,7 +253,7 @@ export class PointsService {
         address:string,
         chainId:number,
         depositedAmount:number,
-        depositedTime:Date,
+        depositedTime:string,
     ){
         if(depositedAmount && depositedAmount > 200000000){
             let found = await this.pointsRepository.findOne({ where:{
@@ -260,11 +270,16 @@ export class PointsService {
                     lastEventTime:depositedTime
                 })
             }else{
-                found.usdtCDSIndexEligible += 1;
-                found.lastEventTime = depositedTime;
-                found.lastUpdatedPoints += 5;
-                // found.perDayPoints = found.perDayPoints + 5;
+                if(found.usdtCDSIndexEligible == 0){
+                    found.usdtCDSIndexEligible += 1;
+                    found.lastEventTime = depositedTime;
+                    found.lastUpdatedPoints += 5;
+                    // found.perDayPoints = found.perDayPoints + 5;
+                }
+
             }
+            await this.pointsRepository.save(found);
+
         }
     }
 
@@ -272,7 +287,7 @@ export class PointsService {
         address:string,
         chainId:number,
         bridgedAmount:string,
-        depositedTime:Date,
+        depositedTime:string,
     ){
         if(parseInt(bridgedAmount) > 200000000){
             let found = await this.pointsRepository.findOne({ where:{
@@ -289,11 +304,16 @@ export class PointsService {
                     lastEventTime:depositedTime
                 })
             }else{
-                found.usdaBridgedToMode = (parseInt(found.usdaBridgedToMode) + parseInt(bridgedAmount)).toString();
-                found.lastEventTime = depositedTime;
-                found.lastUpdatedPoints += 10;
-                // found.perDayPoints = found.perDayPoints + 5;
+                if(parseInt(found.usdaBridgedToMode) <= 200000000){
+                    found.usdaBridgedToMode = (parseInt(found.usdaBridgedToMode) + parseInt(bridgedAmount)).toString();
+                    found.lastEventTime = depositedTime;
+                    found.lastUpdatedPoints += 10;
+                    // found.perDayPoints = found.perDayPoints + 5;
+                }
+
             }
+            await this.pointsRepository.save(found);
+
         }
     }
 
@@ -301,7 +321,7 @@ export class PointsService {
         address:string,
         chainId:number,
         referred:boolean,
-        depositedTime:Date,
+        depositedTime:string,
     ){
         if(referred){
             let found = await this.pointsRepository.findOne({ where:{
@@ -318,11 +338,16 @@ export class PointsService {
                     lastEventTime:depositedTime
                 })
             }else{
-                found.noOfReferrals += 1;
-                found.lastEventTime = depositedTime;
-                found.lastUpdatedPoints += 5
-                // found.perDayPoints = found.perDayPoints + 5;
+                if(found.noOfReferrals == 0){
+                    found.noOfReferrals += 1;
+                    found.lastEventTime = depositedTime;
+                    found.lastUpdatedPoints += 5
+                    // found.perDayPoints = found.perDayPoints + 5;
+                }
+
             }
+            await this.pointsRepository.save(found);
+
         }
     }
 
@@ -330,7 +355,7 @@ export class PointsService {
         address:string,
         chainId:number,
         posted:boolean,
-        depositedTime:Date,
+        depositedTime:string,
     ){
         if(posted){
             let found = await this.pointsRepository.findOne({ where:{
@@ -347,11 +372,16 @@ export class PointsService {
                     lastEventTime:depositedTime
                 })
             }else{
-                found.noOfPostsInX += 1;
-                found.lastEventTime = depositedTime;
-                found.lastUpdatedPoints += 5;
-                // found.perDayPoints = found.perDayPoints + 5;
+                if(found.noOfPostsInX == 0){
+                    found.noOfPostsInX += 1;
+                    found.lastEventTime = depositedTime;
+                    found.lastUpdatedPoints += 5;
+                    // found.perDayPoints = found.perDayPoints + 5;
+                }
+
             }
+            await this.pointsRepository.save(found);
+
         }
     }
 }
