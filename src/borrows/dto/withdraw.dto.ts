@@ -21,9 +21,6 @@ export class WithdrawDto{
     withdrawAmount:string;
 
     @IsNotEmpty()
-    amountYetToWithdraw:string;
-
-    @IsNotEmpty()
     noOfAbond:string;
 
     @IsNotEmpty()

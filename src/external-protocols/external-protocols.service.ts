@@ -92,8 +92,8 @@ export class ExternalProtocolsService {
         } = addDepositDto;
 
         const currentIndex = await this.getTotalIndex(protocolName,chainId);
-        const depositedAmountInEth = ethers.utils.formatEther(depositedAmount);
-        const creditedTokensInEth = ethers.utils.formatEther(creditedTokens);
+        const depositedAmountInEth = ethers.formatEther(depositedAmount);
+        const creditedTokensInEth = ethers.formatEther(creditedTokens);
 
         if(currentIndex == (index-1)){
             const deposit = this.externalProtocolDepositDataRepository.create({
@@ -146,8 +146,8 @@ export class ExternalProtocolsService {
             interestGained,
         } = withdrawDto;
 
-        const withdrawAmountInEth = ethers.utils.formatEther(withdrawAmount);
-        const interestGainedInEth = ethers.utils.formatEther(interestGained);
+        const withdrawAmountInEth = ethers.formatEther(withdrawAmount);
+        const interestGainedInEth = ethers.formatEther(interestGained);
 
         const found = await this.externalProtocolDepositDataRepository.findOne({
             where:{

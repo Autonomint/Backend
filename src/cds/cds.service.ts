@@ -233,7 +233,7 @@ export class CdsService {
                 chainId:chainId,
                 index:index
             }});
-        const withdrawEthAmountInEther = ethers.utils.formatEther(withdrawEthAmount);
+        const withdrawEthAmountInEther = ethers.formatEther(withdrawEthAmount);
         const withdrawAmountFormated = (parseFloat(withdrawAmount)/1e6).toString();
         const feesFormated = (parseFloat(fees)/1e6).toString();
         const feesWithdrawnFormated = (parseFloat(feesWithdrawn)/1e6).toString();

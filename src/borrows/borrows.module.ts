@@ -15,6 +15,7 @@ import { HighLTVPositions } from './entities/high-ltv-positions.entity';
 import { Charts } from './entities/chart.entity';
 import { AmintPrice } from './entities/amint-price.entity';
 import { Days } from './entities/day.entity';
+import { PointsModule } from '../points/points.module';
 
 @Module({
   imports:[
@@ -30,6 +31,7 @@ import { Days } from './entities/day.entity';
       AmintPrice,
       Days]),
     GlobalModule,
+    PointsModule
   ],
   controllers: [BorrowsController,GlobalController],
   providers: [BorrowsService]
