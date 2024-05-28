@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { BorrowsService } from './borrows/borrows.service';
-import { CdsService } from './cds/cds.service';
-import { PointsService } from './points/points.service';
+import { Inject,Injectable } from '@nestjs/common';
+import { BorrowsService } from '../borrows/borrows.service';
+import { CdsService } from '../cds/cds.service';
+import { PointsService } from '../points/points.service';
 import { Contract,ethers } from 'ethers';
 import {
     borrowAddressSepolia,borrowAddressBaseSepolia,
@@ -12,10 +12,10 @@ import {
     borrowABI,cdsABI,treasuryABI,optionsABI,poolABI,usdaABI,
     eidSepolia,eidBaseSepolia
 
-} from './utils/index';
+} from '../utils/index';
 
 @Injectable()
-export class EventListenersService {
+export class EventListeners{
     
     constructor(
         @Inject(BorrowsService)
@@ -72,6 +72,7 @@ export class EventListenersService {
                 optionFees,
                 strikePricePercent
             };
+            console.log(result);
             await borrowService.addBorrow(result);
         })
 
@@ -110,6 +111,8 @@ export class EventListenersService {
                 liquidationAmount,
                 optedForLiquidation,
                 depositVal};
+
+            console.log(result);
             await cdsService.addCds(result);
 
         })
@@ -141,7 +144,7 @@ export class EventListenersService {
                 optionFees,
                 strikePricePercent
             };
-            await borrowService.addBorrow(result);
+           await borrowService.addBorrow(result);
         })
 
         cdsContractBaseSepolia.on('Deposit',async (            

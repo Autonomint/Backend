@@ -562,7 +562,7 @@ export class BorrowsService {
             }
             const optionFees = await optionsContract.calculateOptionPrice(ethPrice,Math.floor(volatility),BigInt(amount),strikePricePercent);
     
-            return[Math.floor(volatility),optionFees.toNumber()];
+            return[Math.floor(volatility),Number(optionFees)];
         }
     }
 
