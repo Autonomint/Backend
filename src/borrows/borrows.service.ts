@@ -233,7 +233,6 @@ export class BorrowsService {
         await this.globalService.setBatchNo(chainId);
         const batchNo = await this.globalService.getBatchNo(chainId);
         const currentIndex = await this.getDepositorIndexByAddress(address,chainId);
-        const strikePriceCalculated = (ethPrice * (1 + strikePrice/100));
         const noOfAmintInEther = (parseFloat(noOfAmintMinted)/1e6).toString();
         const optionFeesInEther = (parseFloat(optionFees)/1e6).toString();
         if(currentIndex == (index-1) || currentIndex == 0){
@@ -256,7 +255,7 @@ export class BorrowsService {
                 liquidationEthPrice,
                 criticalEthPrice,
                 noOfAmintMinted:noOfAmintInEther,
-                strikePrice:strikePriceCalculated,
+                strikePrice,
                 optionFees:optionFeesInEther,
                 downsideProtectionStatus:true,
                 totalFeesDeducted:(parseFloat(optionFeesInEther)/30).toString(),
@@ -574,14 +573,17 @@ export class BorrowsService {
 
     async getRatio(chainId:number,ethPrice:number):Promise<number>{
         const signer = await this.getSignerOrProvider(chainId,true);
-        let borrowingContract;
+        let borrowingContract:Contract;
+        let treasuryContract:Contract;
         if(chainId == 11155111){
             borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
+            treasuryContract = new ethers.Contract(treasuryAddressSepolia,treasuryABI,signer);
         }else if(chainId == 84532){
             borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signer);
+            treasuryContract = new ethers.Contract(treasuryAddressBaseSepolia,treasuryABI,signer);
         }
-        const ethVaultValue = await borrowingContract.omniChainBorrowing(1);
-        const cdsPoolValue = await borrowingContract.omniChainBorrowing(2);
+        const ethVaultValue = await treasuryContract.omniChainTreasuryTotalVolumeOfBorrowersAmountinUSD();
+        const cdsPoolValue = await borrowingContract.omniChainBorrowingCDSPoolValue();
         const ratio = ((cdsPoolValue * 1e14)/ethVaultValue);
 
         return ratio;

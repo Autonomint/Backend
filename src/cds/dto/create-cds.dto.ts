@@ -36,7 +36,4 @@ export class AddCdsDto{
 
     @IsNotEmpty()
     liquidationAmount:number;
-
-    @IsNotEmpty()
-    depositVal:number;
 }

@@ -120,8 +120,7 @@ export class CdsService {
             ethPriceAtDeposit,
             lockingPeriod,
             liquidationAmount,
-            optedForLiquidation,
-            depositVal
+            optedForLiquidation
         } = addCdsDto;
 
         await this.globalService.setBatchNo(chainId);

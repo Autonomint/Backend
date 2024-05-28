@@ -1,4 +1,4 @@
-import { Inject,Injectable } from '@nestjs/common';
+import { Inject } from '@nestjs/common';
 import { BorrowsService } from '../borrows/borrows.service';
 import { CdsService } from '../cds/cds.service';
 import { PointsService } from '../points/points.service';
@@ -13,8 +13,11 @@ import {
     eidSepolia,eidBaseSepolia
 
 } from '../utils/index';
+import { AddCdsDto } from '../cds/dto/create-cds.dto';
+import { WithdrawCdsDto } from '../cds/dto/withdraw-cds.dto';
+import { AddBorrowDto } from '../borrows/dto/create-borrow.dto';
+import { WithdrawDto } from 'src/borrows/dto/withdraw.dto';
 
-@Injectable()
 export class EventListeners{
     
     constructor(
@@ -43,7 +46,6 @@ export class EventListeners{
         const providerMode = this.getProvider(919);
         usdaContractMode = new ethers.Contract(usdaAddressModeSepolia,usdaABI,providerMode);
 
-        let result:any;
 
         borrowingContractSepolia.on('Deposit',async (            
             address,
@@ -56,23 +58,28 @@ export class EventListeners{
             strikePrice,
             optionFees,
             strikePricePercent) => {
+
+            let result:AddBorrowDto
+            const strikePriceIndex = Number(strikePricePercent);
+
+            strikePricePercent = strikePriceIndex == 0 ? 'FIVE' : strikePriceIndex == 1 ? 'TEN' : strikePriceIndex == 2 ? 'FIFTEEN' :
+                                    strikePriceIndex == 3 ? 'TWENTY' : 'TWENTY_FIVE';
             result = {            
                 address,
                 chainId:11155111,
                 collateralType: 'ETH',
-                index,
+                index:Number(index),
                 downsideProtectionPercentage:20,
                 aprAtDeposit:5,
-                depositedAmount,
-                normalizedAmount,
-                depositedTime,
-                ethPrice,
-                noOfAmintMinted,
-                strikePrice,
-                optionFees,
+                depositedAmount:ethers.formatEther(depositedAmount),
+                normalizedAmount:ethers.formatEther(Number(normalizedAmount) * 1e12),
+                depositedTime:Number(depositedTime).toString(),
+                ethPrice:Number(ethPrice),
+                noOfAmintMinted:Number(noOfAmintMinted).toString(),
+                strikePrice:Number(strikePrice),
+                optionFees:Number(optionFees).toString(),
                 strikePricePercent
             };
-            console.log(result);
             await borrowService.addBorrow(result);
         })
 
@@ -85,10 +92,10 @@ export class EventListeners{
             ethPriceAtDeposit,
             lockingPeriod,
             liquidationAmount,
-            optedForLiquidation,
-            depositVal) => {
+            optedForLiquidation) => {
             
             let collateralType:string;
+            let result:AddCdsDto;
 
             if(depositedAmint > 0 && depositedUsdt > 0){
                 collateralType = 'USDA&USDT'
@@ -99,20 +106,19 @@ export class EventListeners{
             }
             result = {            
                 address,
-                collateralType,
-                index,
                 chainId:11155111,
+                collateralType,
+                index: Number(index),
                 aprAtDeposit:5,
-                depositedAmint,
-                depositedUsdt,
-                depositedTime,
-                ethPriceAtDeposit,
-                lockingPeriod,
-                liquidationAmount,
+                depositedAmint:ethers.formatEther(Number(depositedAmint) * 1e12),
+                depositedUsdt:ethers.formatEther(Number(depositedUsdt) * 1e12),
+                depositedTime:Number(depositedTime).toString(),
+                ethPriceAtDeposit:Number(ethPriceAtDeposit),
+                lockingPeriod:Number(lockingPeriod),
                 optedForLiquidation,
-                depositVal};
+                liquidationAmount:Number(liquidationAmount)
+                };
 
-            console.log(result);
             await cdsService.addCds(result);
 
         })
@@ -128,23 +134,29 @@ export class EventListeners{
             strikePrice,
             optionFees,
             strikePricePercent) => {
+
+            let result:AddBorrowDto
+            const strikePriceIndex = Number(strikePricePercent);
+
+            strikePricePercent = strikePriceIndex == 0 ? 'FIVE' : strikePriceIndex == 1 ? 'TEN' : strikePriceIndex == 2 ? 'FIFTEEN' :
+                                    strikePriceIndex == 3 ? 'TWENTY' : 'TWENTY_FIVE';
             result = {            
                 address,
                 chainId:84532,
-                collateralType: 'BASE',
-                index,
+                collateralType: 'ETH',
+                index:Number(index),
                 downsideProtectionPercentage:20,
                 aprAtDeposit:5,
-                depositedAmount,
-                normalizedAmount,
-                depositedTime,
-                ethPrice,
-                noOfAmintMinted,
-                strikePrice,
-                optionFees,
+                depositedAmount:ethers.formatEther(depositedAmount),
+                normalizedAmount:ethers.formatEther(Number(normalizedAmount) * 1e12),
+                depositedTime:Number(depositedTime).toString(),
+                ethPrice:Number(ethPrice),
+                noOfAmintMinted:Number(noOfAmintMinted).toString(),
+                strikePrice:Number(strikePrice),
+                optionFees:Number(optionFees).toString(),
                 strikePricePercent
             };
-           await borrowService.addBorrow(result);
+            await borrowService.addBorrow(result);
         })
 
         cdsContractBaseSepolia.on('Deposit',async (            
@@ -156,10 +168,10 @@ export class EventListeners{
             ethPriceAtDeposit,
             lockingPeriod,
             liquidationAmount,
-            optedForLiquidation,
-            depositVal) => {
+            optedForLiquidation) => {
             
             let collateralType:string;
+            let result:AddCdsDto;
 
             if(depositedAmint > 0 && depositedUsdt > 0){
                 collateralType = 'USDA&USDT'
@@ -170,18 +182,19 @@ export class EventListeners{
             }
             result = {            
                 address,
-                collateralType,
-                index,
                 chainId:84532,
+                collateralType,
+                index: Number(index),
                 aprAtDeposit:5,
-                depositedAmint,
-                depositedUsdt,
-                depositedTime,
-                ethPriceAtDeposit,
-                lockingPeriod,
-                liquidationAmount,
+                depositedAmint:ethers.formatEther(Number(depositedAmint) * 1e12),
+                depositedUsdt:ethers.formatEther(Number(depositedUsdt) * 1e12),
+                depositedTime:Number(depositedTime).toString(),
+                ethPriceAtDeposit:Number(ethPriceAtDeposit),
+                lockingPeriod:Number(lockingPeriod),
                 optedForLiquidation,
-                depositVal};
+                liquidationAmount:Number(liquidationAmount)
+                };
+                
             await cdsService.addCds(result);
         })
 
@@ -192,14 +205,16 @@ export class EventListeners{
             withdrawAmount,
             noOfAbond,
             totalDebtAmount) => {
+
+            let result:WithdrawDto
             result = {            
                 address,
                 chainId:11155111,
-                index,
-                withdrawTime,
-                withdrawAmount,
-                noOfAbond,
-                totalDebtAmount
+                index:Number(index),
+                withdrawTime:Number(withdrawTime).toString(),
+                withdrawAmount:Number(withdrawAmount).toString(),
+                noOfAbond:Number(noOfAbond).toString(),
+                totalDebtAmount:Number(totalDebtAmount).toString()
             };
             await borrowService.withdraw(result);
         })
@@ -213,16 +228,18 @@ export class EventListeners{
             withdrawEthAmount,
             fees,
             feesWithdrawn) => {
+
+            let result:WithdrawCdsDto;
             result = {            
                 address,
-                index,
                 chainId:11155111,
-                ethPriceAtWithdraw,
-                withdrawTime,
-                withdrawAmount,
-                withdrawEthAmount,
-                fees,
-                feesWithdrawn};
+                index:Number(index),
+                withdrawAmount:Number(withdrawAmount).toString(),
+                withdrawTime:Number(withdrawTime).toString(),
+                withdrawEthAmount:Number(withdrawEthAmount).toString(),
+                ethPriceAtWithdraw:Number(ethPriceAtWithdraw),
+                fees:Number(fees).toString(),
+                feesWithdrawn:Number(feesWithdrawn).toString()};
             await cdsService.cdsWithdraw(result);
         })
 
@@ -233,14 +250,16 @@ export class EventListeners{
             withdrawAmount,
             noOfAbond,
             totalDebtAmount) => {
+
+            let result:WithdrawDto
             result = {            
                 address,
                 chainId:84532,
-                index,
-                withdrawTime,
-                withdrawAmount,
-                noOfAbond,
-                totalDebtAmount
+                index:Number(index),
+                withdrawTime:Number(withdrawTime).toString(),
+                withdrawAmount:Number(withdrawAmount).toString(),
+                noOfAbond:Number(noOfAbond).toString(),
+                totalDebtAmount:Number(totalDebtAmount).toString()
             };
             await borrowService.withdraw(result);
         })
@@ -254,22 +273,23 @@ export class EventListeners{
             withdrawEthAmount,
             fees,
             feesWithdrawn) => {
+
+            let result:WithdrawCdsDto;
             result = {            
                 address,
-                index,
                 chainId:84532,
-                ethPriceAtWithdraw,
-                withdrawTime,
-                withdrawAmount,
-                withdrawEthAmount,
-                fees,
-                feesWithdrawn};
+                index:Number(index),
+                withdrawAmount:Number(withdrawAmount).toString(),
+                withdrawTime:Number(withdrawTime).toString(),
+                withdrawEthAmount:Number(withdrawEthAmount).toString(),
+                ethPriceAtWithdraw:Number(ethPriceAtWithdraw),
+                fees:Number(fees).toString(),
+                feesWithdrawn:Number(feesWithdrawn).toString()};
             await cdsService.cdsWithdraw(result);
         })
         
         usdaContractMode.on('OFTReceived',async(guid,srcEid,toAddress,amountReceivedLD) => {
-            result = [guid,srcEid,toAddress,amountReceivedLD];
-            await this.pointsService.setUSDaBridgeToModePoints(toAddress,919,amountReceivedLD,Date.now().toString())
+            await this.pointsService.setUSDaBridgeToModePoints(toAddress,919,Number(amountReceivedLD).toString(),Date.now().toString())
         })
     }
 

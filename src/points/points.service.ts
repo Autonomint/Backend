@@ -187,7 +187,7 @@ export class PointsService {
         depositedAmount:string,
         depositedTime:string,
     ){
-        if(parseInt(depositedAmount) && parseInt(depositedAmount) >= ethers.parseEther("0.05")){
+        if(parseInt(depositedAmount) && parseInt(depositedAmount) >= 0.05){
             let found = await this.pointsRepository.findOne({ where:{
                 chainId:chainId,
                 address:address}
@@ -222,7 +222,7 @@ export class PointsService {
         depositedAmount:string,
         depositedTime:string,
     ){
-        if(parseInt(depositedAmount) && parseInt(depositedAmount) > 200000000){
+        if(parseInt(depositedAmount) && parseInt(depositedAmount) > 200){
             let found = await this.pointsRepository.findOne({ where:{
                 chainId:chainId,
                 address:address}
@@ -255,7 +255,7 @@ export class PointsService {
         depositedAmount:string,
         depositedTime:string,
     ){
-        if(parseInt(depositedAmount) && parseInt(depositedAmount) > 200000000){
+        if(parseInt(depositedAmount) && parseInt(depositedAmount) > 200){
             let found = await this.pointsRepository.findOne({ where:{
                 chainId:chainId,
                 address:address}
@@ -289,7 +289,7 @@ export class PointsService {
         bridgedAmount:string,
         depositedTime:string,
     ){
-        if(parseInt(bridgedAmount) > 200000000){
+        if(parseInt(bridgedAmount) > 200){
             let found = await this.pointsRepository.findOne({ where:{
                 chainId:chainId,
                 address:address}
