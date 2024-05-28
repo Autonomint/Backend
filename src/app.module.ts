@@ -11,6 +11,8 @@ import { ExternalProtocolsModule } from './external-protocols/external-protocols
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import config from './config/configuration';
+import { EventListenersModule } from './event-listeners/event-listeners.module';
+import { PointsModule } from './points/points.module';
 
 @Module({
   imports: [
@@ -33,7 +35,9 @@ import config from './config/configuration';
     CdsModule,
     GlobalModule,
     ExternalProtocolsModule,
-    AuthModule],
+    AuthModule,
+    EventListenersModule,
+    PointsModule],
   controllers: [AppController],
   providers: [AppService]
 })

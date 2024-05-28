@@ -16,7 +16,7 @@ import {
 import { AddCdsDto } from '../cds/dto/create-cds.dto';
 import { WithdrawCdsDto } from '../cds/dto/withdraw-cds.dto';
 import { AddBorrowDto } from '../borrows/dto/create-borrow.dto';
-import { WithdrawDto } from 'src/borrows/dto/withdraw.dto';
+import { WithdrawDto } from '../borrows/dto/withdraw.dto';
 
 export class EventListeners{
     
@@ -72,7 +72,7 @@ export class EventListeners{
                 downsideProtectionPercentage:20,
                 aprAtDeposit:5,
                 depositedAmount:ethers.formatEther(depositedAmount),
-                normalizedAmount:ethers.formatEther(Number(normalizedAmount) * 1e12),
+                normalizedAmount:(Number(normalizedAmount)/1e6).toString(),
                 depositedTime:Number(depositedTime).toString(),
                 ethPrice:Number(ethPrice),
                 noOfAmintMinted:Number(noOfAmintMinted).toString(),
