@@ -219,10 +219,10 @@ export class PointsService {
     async setUSDaCDSPoints(
         address:string,
         chainId:number,
-        depositedAmount:number,
+        depositedAmount:string,
         depositedTime:string,
     ){
-        if(depositedAmount && depositedAmount > 200000000){
+        if(parseInt(depositedAmount) && parseInt(depositedAmount) > 200000000){
             let found = await this.pointsRepository.findOne({ where:{
                 chainId:chainId,
                 address:address}
@@ -252,10 +252,10 @@ export class PointsService {
     async setUSDTCDSPoints(
         address:string,
         chainId:number,
-        depositedAmount:number,
+        depositedAmount:string,
         depositedTime:string,
     ){
-        if(depositedAmount && depositedAmount > 200000000){
+        if(parseInt(depositedAmount) && parseInt(depositedAmount) > 200000000){
             let found = await this.pointsRepository.findOne({ where:{
                 chainId:chainId,
                 address:address}

@@ -12,6 +12,7 @@ import { GetCdsDepositByChainId } from './dto/get-cds-deposit-by-chainid.dto';
 import { CdsAmountToReturn } from './dto/cdsAmountToReturn.dto';
 import { GlobalService } from '../global/global.service';
 import { LiquidationInfo } from '../borrows/entities/liquidatedInfo.entity';
+import { PointsService } from '../points/points.service';
 
 @Injectable()
 export class CdsService {
@@ -22,7 +23,8 @@ export class CdsService {
         private cdsDepositorRepository: Repository<CdsDepositorInfo>,
         @InjectRepository(LiquidationInfo)
         private liquidationInfoRepository: Repository<LiquidationInfo>,
-        private globalService:GlobalService
+        private globalService:GlobalService,
+        private pointsService:PointsService
     ){}
      /**
       * Return cds deposit info
@@ -203,6 +205,8 @@ export class CdsService {
             await this.globalService.setEthPrice(chainId,ethPriceAtDeposit);
             await this.cdsRepository.save(cds);
             await this.cdsDepositorRepository.save(cdsDepositor);
+            await this.pointsService.setUSDTCDSPoints(address,chainId,depositedUsdt,depositedTime);
+            await this.pointsService.setUSDaCDSPoints(address,chainId,depositedAmint,depositedTime);
             return cds;
         }else{
             throw new NotFoundException('Incorrect index');
