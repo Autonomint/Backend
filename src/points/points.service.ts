@@ -234,6 +234,7 @@ export class PointsService {
                     address:address,
                     usdaCDSIndexEligible: 1,
                     perDayPoints:10,
+                    lastUpdatedPoints:10,
                     lastEventTime:depositedTime
                 })
             }else{
@@ -267,6 +268,7 @@ export class PointsService {
                     address:address,
                     usdtCDSIndexEligible: 1,
                     perDayPoints:5,
+                    lastUpdatedPoints:5,
                     lastEventTime:depositedTime
                 })
             }else{
@@ -301,10 +303,11 @@ export class PointsService {
                     address:address,
                     usdaBridgedToMode: bridgedAmount,
                     perDayPoints:10,
+                    lastUpdatedPoints:10,
                     lastEventTime:depositedTime
                 })
             }else{
-                if(parseInt(found.usdaBridgedToMode) <= 200000000){
+                if(parseInt(found.usdaBridgedToMode) <= 200){
                     found.usdaBridgedToMode = (parseInt(found.usdaBridgedToMode) + parseInt(bridgedAmount)).toString();
                     found.lastEventTime = depositedTime;
                     found.lastUpdatedPoints += 10;
@@ -335,6 +338,7 @@ export class PointsService {
                     address:address,
                     noOfReferrals: 1,
                     perDayPoints:5,
+                    lastUpdatedPoints:5,
                     lastEventTime:depositedTime
                 })
             }else{
@@ -369,6 +373,7 @@ export class PointsService {
                     address:address,
                     noOfPostsInX: 1,
                     perDayPoints:5,
+                    lastUpdatedPoints:5,
                     lastEventTime:depositedTime
                 })
             }else{
