@@ -584,7 +584,7 @@ export class BorrowsService {
         }
         const ethVaultValue = await treasuryContract.omniChainTreasuryTotalVolumeOfBorrowersAmountinUSD();
         const cdsPoolValue = await borrowingContract.omniChainBorrowingCDSPoolValue();
-        const ratio = ((cdsPoolValue * 1e14)/ethVaultValue);
+        const ratio = ((Number(cdsPoolValue) * 1e14)/Number(ethVaultValue));
 
         return ratio;
     }
