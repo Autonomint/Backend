@@ -9,12 +9,12 @@ export class AppController {
 
     constructor(private appService: AppService) { }
 
-    @Get('/.well-known/pki-validation/59CECB806AAF2AD6A1502507BA6F477D.txt')
+    @Get('/.well-known/pki-validation/0595EBE5A89E0C2090316DC7BC8257D1.txt')
     async giveCertificateData(@Res() res: Response) {
         try {
-            const file = fs.readFileSync('/home/ubuntu/Backend/src/59CECB806AAF2AD6A1502507BA6F477D.txt');
+            const file = fs.readFileSync('/home/ubuntu/Backend/src/0595EBE5A89E0C2090316DC7BC8257D1.txt');
             res.setHeader('Content-Type', 'application/octet-stream');
-            res.setHeader('Content-Disposition', 'attachment; filename=59CECB806AAF2AD6A1502507BA6F477D.txt');
+            res.setHeader('Content-Disposition', 'attachment; filename=0595EBE5A89E0C2090316DC7BC8257D1.txt');
             res.send(file);
         } catch (error) {
             console.log("error", error);
