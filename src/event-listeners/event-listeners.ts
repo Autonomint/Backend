@@ -143,12 +143,12 @@ export class EventListeners{
             result = {            
                 address,
                 chainId:84532,
-                collateralType: 'ETH',
+                collateralType: 'BASE',
                 index:Number(index),
                 downsideProtectionPercentage:20,
                 aprAtDeposit:5,
                 depositedAmount:ethers.formatEther(depositedAmount),
-                normalizedAmount:ethers.formatEther(Number(normalizedAmount) * 1e12),
+                normalizedAmount:(Number(normalizedAmount)/1e6).toString(),
                 depositedTime:Number(depositedTime).toString(),
                 ethPrice:Number(ethPrice),
                 noOfAmintMinted:Number(noOfAmintMinted).toString(),
@@ -194,7 +194,7 @@ export class EventListeners{
                 optedForLiquidation,
                 liquidationAmount:Number(liquidationAmount)
                 };
-                
+
             await cdsService.addCds(result);
         })
 
