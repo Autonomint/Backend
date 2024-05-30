@@ -9,6 +9,8 @@ import { GlobalService } from '../global/global.service';
 import { WithdrawExternalProtocolDto } from './dto/withdraw.dto';
 import { GetExternalProtocolDepositDto } from './dto/get-external-protocol-deposit.dto';
 import { GetExternalProtocolDepositByChainIdDto } from './dto/get-external-protocol-deposits-by-chainid.dto';
+import { v4 as uuidv4 } from 'uuid';
+
 
 @Injectable()
 export class ExternalProtocolsService {
@@ -179,6 +181,32 @@ export class ExternalProtocolsService {
         
         return found;
 
+    }
+
+    
+    private counter = 0; // Keep track of generated codes (if not using uuid)
+    private bigCounter = 1; // Keep track of generated codes (if not using uuid)
+    private alphabetIndex = 0;
+
+    generateReferralCode(): string {
+
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        // if (process.env.USE_UUID === 'true') {
+        //     return `A${uuidv4().slice(0, 4)}`; // Shorten the uuid for aesthetics
+        // }
+
+        if(this.counter >= 999 ){
+            this.counter = 0;
+            this.alphabetIndex++;
+        }
+
+        if(this.alphabetIndex > 25){
+            this.alphabetIndex = 0;
+            this.bigCounter++;
+        }
+
+        this.counter++;
+        return this.bigCounter.toString().padStart(1, '0') + alphabet[this.alphabetIndex] + this.counter.toString().padStart(3, '0'); // Pad with zeros
     }
 
 }

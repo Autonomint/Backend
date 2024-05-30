@@ -235,7 +235,7 @@ export class BorrowsService {
         const currentIndex = await this.getDepositorIndexByAddress(address,chainId);
         const noOfAmintInEther = (parseFloat(noOfAmintMinted)/1e6).toString();
         const optionFeesInEther = (parseFloat(optionFees)/1e6).toString();
-        if(currentIndex == (index-1) || currentIndex == 0){
+        if(currentIndex >= (index-1) || currentIndex == 0){
             // Calculating liquidation eth price as 80% of current eth price
             const liquidationEthPrice = (ethPrice*80)/100;
             // Calculating critical eth price as 83% of current eth price
