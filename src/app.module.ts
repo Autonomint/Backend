@@ -23,11 +23,11 @@ import { PointsModule } from './points/points.module';
     BorrowsModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'ec2-3-7-222-91.ap-south-1.compute.amazonaws.com',
+      host: 'ec2-43-204-73-16.ap-south-1.compute.amazonaws.com',
       port: 5432,
       username: 'ubuntu',
       password: 'AutonomintPostgres@2023',
-      database:'borrowing_dev',
+      database:'borrowing',
       autoLoadEntities:true,
       synchronize:true
     }),
