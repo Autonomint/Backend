@@ -10,11 +10,13 @@ import { GlobalController } from '../global/global.controller';
 import { GlobalVariables } from '../global/entities/global.entity';
 import { LiquidationInfo } from '../borrows/entities/liquidatedInfo.entity';
 import { Batch } from '../borrows/entities/batch.entity';
+import { PointsModule } from '../points/points.module';
 
 @Module({
   imports:[
     GlobalModule,
     TypeOrmModule.forFeature([CdsInfo, CdsDepositorInfo, GlobalVariables,LiquidationInfo,Batch]),
+    PointsModule
   ],
   controllers: [CdsController,GlobalController],
   providers: [CdsService, GlobalService],

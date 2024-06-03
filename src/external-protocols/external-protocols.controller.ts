@@ -46,5 +46,10 @@ export class ExternalProtocolsController {
         const chainId = params.chainId;
         return this.externalProtocolsService.getDepositsByChainId(protocolName,chainId);
     }
+
+    @Get('/code')
+    getReferralCode(): string {
+      return this.externalProtocolsService.generateReferralCode();
+    }
     
 }

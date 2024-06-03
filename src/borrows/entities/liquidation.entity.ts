@@ -1,10 +1,14 @@
 import { Column,PrimaryGeneratedColumn,Entity } from 'typeorm';
+import { PositionStatus } from '../borrow-status.enum';
 
 @Entity()
 export class CriticalPositions{
 
     @PrimaryGeneratedColumn('uuid')
     id:string;
+
+    @Column({nullable:true})
+    chainId:number;
 
     //Deposit Id
     @Column()
@@ -35,4 +39,7 @@ export class CriticalPositions{
         type:'decimal',
         nullable: true })
     ethPriceAtLiquidation:number;
+
+    @Column()
+    status:PositionStatus;
 }

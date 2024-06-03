@@ -12,16 +12,10 @@ export class WithdrawDto{
     index:number;
 
     @IsNotEmpty()
-    borrowDebt:string;
-
-    @IsNotEmpty()
     withdrawTime:string;
 
     @IsNotEmpty()
     withdrawAmount:string;
-
-    @IsNotEmpty()
-    amountYetToWithdraw:string;
 
     @IsNotEmpty()
     noOfAbond:string;

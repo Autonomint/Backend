@@ -5,20 +5,22 @@ import { AddBorrowDto } from './dto/create-borrow.dto';
 import { GetBorrowFilterDto } from './dto/get-borrow-filter.dto';
 import { BorrowInfo } from './entities/borrow.entity';
 import { Repository,Equal,Not,MoreThanOrEqual } from 'typeorm';
-import { ethers } from 'ethers';
+import { ethers,ZeroAddress,Contract } from 'ethers';
 import { BorrowerInfo } from './entities/borrower.entity';
 import { WithdrawDto } from './dto/withdraw.dto';
 import { GetBorrowDeposit } from './dto/get-borrow-deposit.dto';
 import { CriticalPositions } from './entities/liquidation.entity';
 import { bybit } from 'ccxt';
+import { Options } from '@layerzerolabs/lz-v2-utilities';
 
 import {
-    borrowAddressSepolia,borrowABISepolia,
-    optionsAddressSepolia,optionsABISepolia,
-    poolAddressSepolia,poolABISepolia,
-
-    borrowAddressMumbai,borrowABIMumbai,
-    optionsAddressMumbai,optionsABIMumbai,
+    borrowAddressSepolia,borrowAddressBaseSepolia,
+    cdsAddressSepolia,cdsAddressBaseSepolia,
+    treasuryAddressSepolia,treasuryAddressBaseSepolia,
+    optionsAddressSepolia,optionsAddressBaseSepolia,
+    poolAddressSepolia,usdaAddressModeSepolia,
+    borrowABI,cdsABI,treasuryABI,optionsABI,poolABI,usdaABI,
+    eidSepolia,eidBaseSepolia
 
 } from '../utils/index';
 import { GetBorrowDepositByChainId } from './dto/get-borrow-deposit-by-chainid.dto';
@@ -34,6 +36,7 @@ import { AllTime } from './allTime-fetch.enum';
 import { AmintPrice } from './entities/amint-price.entity';
 import { Days } from './entities/day.entity';
 import { ConfigService } from '@nestjs/config';
+import { PointsService } from '../points/points.service';
 require('dotenv').config();
 
 @Injectable()
@@ -62,10 +65,12 @@ export class BorrowsService {
         private globalRepository: Repository<GlobalVariables>,
         @Inject(GlobalService)
         private globalService:GlobalService,
-        private configService:ConfigService
+        private configService:ConfigService,
+        @Inject(PointsService)
+        private pointsService:PointsService,
     ){}
 
-    private chainIds = [11155111,80001];
+    private chainIds = [11155111,84532];
 
     private exchange = new bybit({
         apiKey: 'T8SLTSFrNvRowNRUuL',
@@ -173,15 +178,15 @@ export class BorrowsService {
             return found.totalIndex;
             }
         }
-        async getBorrowLeaderboardData():Promise<BorrowerInfo[]>{
-            const data = await this.borrowerRepository.find({
-                order: {
-                    totalAmint: 'DESC'
-                },
-                take: 25
-              });
-            return data;
-        }
+    async getBorrowLeaderboardData():Promise<BorrowerInfo[]>{
+        const data = await this.borrowerRepository.find({
+            order: {
+                totalAmint: 'DESC'
+            },
+            take: 25
+        });
+        return data;
+    }
     
     
         /**
@@ -228,10 +233,9 @@ export class BorrowsService {
         await this.globalService.setBatchNo(chainId);
         const batchNo = await this.globalService.getBatchNo(chainId);
         const currentIndex = await this.getDepositorIndexByAddress(address,chainId);
-        const strikePriceCalculated = (ethPrice * (1 + strikePrice/100));
         const noOfAmintInEther = (parseFloat(noOfAmintMinted)/1e6).toString();
         const optionFeesInEther = (parseFloat(optionFees)/1e6).toString();
-        if(currentIndex == (index-1) || currentIndex == 0){
+        if(currentIndex >= (index-1) || currentIndex == 0){
             // Calculating liquidation eth price as 80% of current eth price
             const liquidationEthPrice = (ethPrice*80)/100;
             // Calculating critical eth price as 83% of current eth price
@@ -251,7 +255,7 @@ export class BorrowsService {
                 liquidationEthPrice,
                 criticalEthPrice,
                 noOfAmintMinted:noOfAmintInEther,
-                strikePrice:strikePriceCalculated,
+                strikePrice,
                 optionFees:optionFeesInEther,
                 downsideProtectionStatus:true,
                 totalFeesDeducted:(parseFloat(optionFeesInEther)/30).toString(),
@@ -307,6 +311,8 @@ export class BorrowsService {
             }else{
                 await this.globalService.setTotalBorrowDepositedETH(chainId,parseFloat(depositedETH.toString()) + parseFloat(depositedAmount)); 
             }
+
+            await this.pointsService.setBorrowPoints(address,chainId,ethers.parseEther(depositedAmount).toString(),Date.now().toString());
             await this.borrowRepository.save(borrow);
             await this.borrowerRepository.save(borrower);
             await this.batchRepository.save(batch);
@@ -329,7 +335,6 @@ export class BorrowsService {
             index,
             withdrawTime,
             withdrawAmount,
-            amountYetToWithdraw,
             noOfAbond,
             totalDebtAmount
         } = withdrawDto;
@@ -342,28 +347,23 @@ export class BorrowsService {
             }});
         const borrower = await this.borrowerRepository.findOne({where:{address:address}});
         // Formatting the values in wei to Ether
-        const withdrawAmountInEther = ethers.utils.formatEther(withdrawAmount);
-        const amountYetToWithdrawInEther = ethers.utils.formatEther(amountYetToWithdraw);
+        const withdrawAmountInEther = ethers.formatEther(withdrawAmount);
         const noOfAbondInEther = (parseFloat(noOfAbond)/1e18).toString();
         const totalDebtAmountInEther = (parseFloat(totalDebtAmount)/1e6).toString();
 
-        if(!found.withdrawAmount1 && found.status != PositionStatus.LIQUIDATED){
-            found.withdrawTime1 = withdrawTime;
-            found.withdrawAmount1 = withdrawAmountInEther;
+        if(found.status == PositionStatus.DEPOSITED){
+            found.withdrawTime = withdrawTime;
+            found.withdrawAmount = withdrawAmountInEther;
             found.noOfAbondMinted = parseFloat(noOfAbondInEther);
-            found.amountYetToWithdraw = amountYetToWithdrawInEther;
             found.totalDebtAmount = totalDebtAmountInEther;
-            found.status = PositionStatus.WITHDREW1;
+            found.status = PositionStatus.WITHDREW;
             borrower.totalDepositedAmount = parseFloat(borrower.totalDepositedAmount.toString()) - parseFloat(found.depositedAmount);
             borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) - parseFloat(found.noOfAmintMinted);
             borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) +  parseFloat(noOfAbondInEther);
-
-        }else{
-            found.withdrawTime2 = withdrawTime;  
-            found.withdrawAmount2 = withdrawAmountInEther;
-            borrower.totalAbond = parseFloat(borrower.totalAbond.toString()) - parseFloat(noOfAbondInEther);
-            found.amountYetToWithdraw = '0';
-            found.status = PositionStatus.WITHDREW2;      
+        }else if(found.status == PositionStatus.WITHDREW){
+            throw new NotFoundException('Already Withdrawn') ; 
+        }else {
+            throw new NotFoundException('Position Liquidated') ;
         }
 
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
@@ -385,37 +385,48 @@ export class BorrowsService {
      * @returns Critical Positions array
      */
     @Cron("0 0 */3 * *")
-    async createCriticalPositions():Promise<CriticalPositions[]>{
-        const provider = await this.getSignerOrProvider(80001,false);
-        const borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,provider);
-        const currentEthPrice = await borrowingContract.getUSDValue();
-        const ethPrice = (currentEthPrice.toNumber())/100;
+    async createCriticalPositions(){
 
-        //Filtering the positions based on current eth price
-        const positions = await this.borrowRepository.findBy({
-             criticalEthPrice:MoreThanOrEqual(ethPrice)
-        });
+        for (let i = 0;i < this.chainIds.length;i++){
+            const provider = await this.getSignerOrProvider(this.chainIds[i],false);
 
-        // Creating critical position by deposit data
-        const criticalPositions = positions.map((position) =>{
-            const criticalPosition = new CriticalPositions();
-            criticalPosition.positionId = position.id
-            criticalPosition.address = position.address
-            criticalPosition.index = position.index
-            criticalPosition.depositedEthAmount = position.depositedAmount
-            criticalPosition.ethPriceAtDeposit = position.ethPrice
-            criticalPosition.ethPriceAtLiquidation = position.liquidationEthPrice
-            criticalPosition.criticalEthPrice = position.criticalEthPrice
-            return criticalPosition;
-        })
+            let borrowingContract;
 
-        // Getting all the entities in critical postions
-        const existingEntities = await this.criticalPositionsRepository.find();
-        // Check whether the positions are already not stored 
-        const liquidationPositions = criticalPositions.filter(criticalPosition => !existingEntities.some(existingEntity => existingEntity.positionId === criticalPosition.positionId));
+            if(this.chainIds[i] == 11155111){
+                borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,provider);
+            }else if(this.chainIds[i] == 84532){
+                borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,provider);
+            }
+            const currentEthPrice = await borrowingContract.getUSDValue();
+            const ethPrice = Number(currentEthPrice)/100;
 
-        await this.criticalPositionsRepository.save(liquidationPositions);
-        return liquidationPositions;
+            //Filtering the positions based on current eth price
+            const positions = await this.borrowRepository.findBy({
+                status:Not(PositionStatus.LIQUIDATED),
+                criticalEthPrice:MoreThanOrEqual(ethPrice)
+            });
+    
+            // Creating critical position by deposit data
+            const criticalPositions = positions.map((position) =>{
+                const criticalPosition = new CriticalPositions();
+                criticalPosition.positionId = position.id
+                criticalPosition.chainId = position.chainId
+                criticalPosition.address = position.address
+                criticalPosition.index = position.index
+                criticalPosition.depositedEthAmount = position.depositedAmount
+                criticalPosition.ethPriceAtDeposit = position.ethPrice
+                criticalPosition.ethPriceAtLiquidation = position.liquidationEthPrice
+                criticalPosition.criticalEthPrice = position.criticalEthPrice
+                return criticalPosition;
+            })
+    
+            // Getting all the entities in critical postions
+            const existingEntities = await this.criticalPositionsRepository.find();
+            // Check whether the positions are already not stored 
+            const liquidationPositions = criticalPositions.filter(criticalPosition => !existingEntities.some(existingEntity => existingEntity.positionId === criticalPosition.positionId));
+    
+            await this.criticalPositionsRepository.save(liquidationPositions);
+        }        
     }
 
     /**
@@ -424,61 +435,89 @@ export class BorrowsService {
      */
     @Cron(CronExpression.EVERY_5_MINUTES)
     async liquidate():Promise<CriticalPositions[]>{
-        const signerMumbai = await this.getSignerOrProvider(80001,true);
-        const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
-        const signerSepolia = await this.getSignerOrProvider(11155111,true);
-        const borrowingContractSepolia = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signerSepolia);
 
         let borrowingContract;
-        const currentEthPrice = await borrowingContractMumbai.getUSDValue();
-        const ethPrice = currentEthPrice.toNumber()/100;
-        const liquidationPositions = await this.criticalPositionsRepository.findBy({
-            ethPriceAtLiquidation:MoreThanOrEqual(ethPrice)
-        });
-        if(liquidationPositions.length != 0){
-        let liquidatedPositions:BorrowInfo[];
-        for(let i=0;i<liquidationPositions.length;i++){
-            if(!liquidatedPositions){
-                liquidatedPositions = [await this.borrowRepository.findOne({where:
-                    {id:Equal(liquidationPositions[i].positionId)}})]
-            }else{
-                liquidatedPositions.push(await this.borrowRepository.findOne({where:
-                    {id:Equal(liquidationPositions[i].positionId)}
-                }));
+        let cdsContract;
+        let treasuryContract;
+        let nativeFee = 0
+        let nativeFee1 = 0
+        let nativeFee2 = 0
+        const options = Options.newOptions().addExecutorLzReceiveOption(500000, 0).toHex().toString()
+
+        for (let i = 0;i < this.chainIds.length;i++){
+            const signer = await this.getSignerOrProvider(this.chainIds[i],true);
+
+            if(this.chainIds[i] == 11155111){
+                borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
+                cdsContract = new ethers.Contract(cdsAddressSepolia,cdsABI,signer);;
+                treasuryContract = new ethers.Contract(treasuryAddressSepolia,treasuryABI,signer);;
+
+                ;[nativeFee] = await cdsContract.quote(eidBaseSepolia,1,123,123,123,[0,0,0,0],0,options, false)
+                ;[nativeFee1] = await borrowingContract.quote(eidBaseSepolia, [5,10,15,20,25,30,35,40], options, false)
+                ;[nativeFee2] = await treasuryContract.quote(eidBaseSepolia,1, [ZeroAddress,0],[ZeroAddress,0],options, false)
+
+            }else if(this.chainIds[i] == 84532){
+                borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signer);
+                cdsContract = new ethers.Contract(cdsAddressBaseSepolia,cdsABI,signer);;
+                treasuryContract = new ethers.Contract(treasuryAddressBaseSepolia,treasuryABI,signer);;
+
+                ;[nativeFee] = await cdsContract.quote(eidSepolia,1,123,123,123,[0,0,0,0],0,options, false)
+                ;[nativeFee1] = await borrowingContract.quote(eidSepolia, [5,10,15,20,25,30,35,40], options, false)
+                ;[nativeFee2] = await treasuryContract.quote(eidSepolia,1, [ZeroAddress,0],[ZeroAddress,0],options, false)
             }
+
+            const currentEthPrice = await borrowingContract.getUSDValue();
+            const ethPrice = Number(currentEthPrice)/100;
+            const liquidationPositions = await this.criticalPositionsRepository.findBy({
+                status:Not(PositionStatus.LIQUIDATED),
+                chainId:Equal(this.chainIds[i]),
+                ethPriceAtLiquidation:MoreThanOrEqual(ethPrice)
+            });
+            if(liquidationPositions.length != 0){
+                let liquidatedPositions:BorrowInfo[];
+                for(let j=0;j<liquidationPositions.length;j++){
+                    if(!liquidatedPositions){
+                        liquidatedPositions = [await this.borrowRepository.findOne({where:
+                            {id:Equal(liquidationPositions[j].positionId)}})]
+                    }else{
+                        liquidatedPositions.push(await this.borrowRepository.findOne({where:
+                            {id:Equal(liquidationPositions[j].positionId)}
+                        }));
+                    }
+                    liquidationPositions[j].status = PositionStatus.LIQUIDATED;
+                }
+
+                // Liquidate the positions by calling liquidation function in borrowing contract
+                liquidatedPositions.map(async (liquidatedPosition) =>{
+                    await borrowingContract.liquidate(
+                        liquidatedPosition.address,
+                        liquidatedPosition.index,
+                        {value: nativeFee1 + nativeFee2 + nativeFee});
+                    liquidatedPosition.status = PositionStatus.LIQUIDATED;
+                    const chainId = liquidatedPosition.chainId;      
+                    borrowingContract.on('Liquidate',async (index,liquidationAmount,profits,ethAmount,availableLiquidationAmount) => {
+                        const liquidationInfo = this.liquidationInfoRepository.create({
+                            chainId:chainId,
+                            index,
+                            liquidationAmount,
+                            profits,
+                            ethAmount,
+                            availableLiquidationAmount,
+                        })
+                        await this.liquidationInfoRepository.save(liquidationInfo);
+                        //Update the liquidationIndex i.e no of liquidations done so far
+                        await this.globalService.setLiquidationIndex(chainId,index);
+                        const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
+                        // Update the amint and liquidation amount balance in treasury
+                        await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(liquidationAmount))
+                        await this.globalService.setTotalAvailableLiquidationAmount(chainId,availableLiquidationAmount);
+                    })
+                });
+                await this.criticalPositionsRepository.remove(liquidationPositions);
+                await this.borrowRepository.save(liquidatedPositions);
+            }
+            return liquidationPositions;
         }
-        // Liquidate the positions by calling liquidation function in borrowing contract
-        liquidatedPositions.map(async (liquidatedPosition) =>{
-            if(liquidatedPosition.chainId == 80001){
-                borrowingContract = borrowingContractMumbai;
-            }else if(liquidatedPosition.chainId == 11155111){
-                borrowingContract = borrowingContractSepolia
-            }
-            await borrowingContract.liquidate(liquidatedPosition.address,liquidatedPosition.index,currentEthPrice);
-            liquidatedPosition.status = PositionStatus.LIQUIDATED;
-            const chainId = liquidatedPosition.chainId;      
-            borrowingContract.on('Liquidate',async (index,liquidationAmount,profits,ethAmount,availableLiquidationAmount) => {
-                const liquidationInfo = this.liquidationInfoRepository.create({
-                    chainId:chainId,
-                    index,
-                    liquidationAmount,
-                    profits,
-                    ethAmount,
-                    availableLiquidationAmount,
-                })
-                await this.liquidationInfoRepository.save(liquidationInfo);
-                //Update the liquidationIndex i.e no of liquidations done so far
-                await this.globalService.setLiquidationIndex(chainId,index);
-                const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
-                // Update the amint and liquidation amount balance in treasury
-                await this.globalService.setTreasuryAmintBalance(chainId,parseFloat(amintBalance.toString()) - parseFloat(liquidationAmount))
-                await this.globalService.setTotalAvailableLiquidationAmount(chainId,availableLiquidationAmount);
-            })
-        });
-        await this.criticalPositionsRepository.remove(liquidationPositions);
-        await this.borrowRepository.save(liquidatedPositions);
-    }
-        return liquidationPositions;
     }
 
     async getSignerOrProvider(chainId:number,needSigner = false){
@@ -487,11 +526,11 @@ export class BorrowsService {
         if(chainId == 11155111){
             rpcUrl = "https://sepolia.infura.io/v3/e9cf275f1ddc4b81aa62c5aa0b11ac0f"
             pKey = 'ec619e44ab8377982c53722fbb1a39549c8e927f440f769e5c74313fb7e7eb3f'
-        }else if(chainId == 80001){
-            rpcUrl = "https://capable-stylish-general.matic-testnet.discover.quiknode.pro/25a44b3acd03554fa9450fe0a0744b1657132cb1/"
+        }else if(chainId == 84532){
+            rpcUrl = "https://base-sepolia.g.alchemy.com/v2/0-Lgk-tQKxb3V75IGadDVifTUua8H0W2"
             pKey = '3cdf792b14656fcdcc415ba2fde3c7fbadacdcc887778f36e8ce98db34021e15';
         }
-        const provider =  new ethers.providers.JsonRpcProvider(rpcUrl);
+        const provider =  new ethers.JsonRpcProvider(rpcUrl);
         if(needSigner){
                 const wallet = new ethers.Wallet(pKey,provider);
                 return wallet;
@@ -508,19 +547,21 @@ export class BorrowsService {
     async getEthVolatility(chainId:number,amount:string,ethPrice:number,strikePricePercent:number):Promise<[number,number]>{
         const abc = await this.exchange.fetchVolatilityHistory('ETH',{period:30});
         const volatility = (abc.map(item => item.info[0].value)[0] * 1e8);
-        if(await this.globalService.getTotalCdsDepositedAmount(chainId) == 0){
+        if(
+            await this.globalService.getTotalCdsDepositedAmount(this.chainIds[0]) == 0 &&
+            await this.globalService.getTotalCdsDepositedAmount(this.chainIds[1]) == 0){
             return [Math.floor(volatility),0];
         }else{
             const signer = await this.getSignerOrProvider(chainId,true);
             let optionsContract;
             if(chainId == 11155111){
-                optionsContract = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signer);
-            }else if(chainId == 80001){
-                optionsContract = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signer);
+                optionsContract = new ethers.Contract(optionsAddressSepolia,optionsABI,signer);
+            }else if(chainId == 84532){
+                optionsContract = new ethers.Contract(optionsAddressBaseSepolia,optionsABI,signer);
             }
             const optionFees = await optionsContract.calculateOptionPrice(ethPrice,Math.floor(volatility),BigInt(amount),strikePricePercent);
     
-            return[Math.floor(volatility),optionFees.toNumber()];
+            return[Math.floor(volatility),Number(optionFees)];
         }
     }
 
@@ -532,15 +573,18 @@ export class BorrowsService {
 
     async getRatio(chainId:number,ethPrice:number):Promise<number>{
         const signer = await this.getSignerOrProvider(chainId,true);
-        let borrowingContract;
+        let borrowingContract:Contract;
+        let treasuryContract:Contract;
         if(chainId == 11155111){
-            borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
-        }else if(chainId == 80001){
-            borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
+            borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
+            treasuryContract = new ethers.Contract(treasuryAddressSepolia,treasuryABI,signer);
+        }else if(chainId == 84532){
+            borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signer);
+            treasuryContract = new ethers.Contract(treasuryAddressBaseSepolia,treasuryABI,signer);
         }
-        const ethVaultValue = await borrowingContract.lastEthVaultValue();
-        const cdsPoolValue = await borrowingContract.lastCDSPoolValue();
-        const ratio = ((cdsPoolValue * 1e14)/ethVaultValue);
+        const ethVaultValue = await treasuryContract.omniChainTreasuryTotalVolumeOfBorrowersAmountinUSD();
+        const cdsPoolValue = await borrowingContract.omniChainBorrowingCDSPoolValue();
+        const ratio = ((Number(cdsPoolValue) * 1e14)/Number(ethVaultValue));
 
         return ratio;
     }
@@ -571,15 +615,15 @@ export class BorrowsService {
 
                 let borrowingContract;
                 let poolContract;
-                poolContract = new ethers.Contract(poolAddressSepolia,poolABISepolia,signerSepolia);
+                poolContract = new ethers.Contract(poolAddressSepolia,poolABI,signerSepolia);
 
                 if(this.chainIds[i] == 11155111){
-                    borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
-                }else if(this.chainIds[i] == 80001){
-                    borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
+                    borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
+                }else if(this.chainIds[i] == 84532){
+                    borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signer);
                 }
                 const currentEthPrice = await borrowingContract.getUSDValue();
-                const optionfees = await this.getEthVolatility(this.chainIds[i],(ethers.utils.parseEther('1')).toString(),currentEthPrice,0);
+                const optionfees = await this.getEthVolatility(this.chainIds[i],(ethers.parseEther('1')).toString(),currentEthPrice,0);
                 const ratio = await this.getRatio(this.chainIds[i],currentEthPrice);
                 const slot0 = await poolContract.slot0();
 
@@ -597,45 +641,45 @@ export class BorrowsService {
         }
     }
 
-    // Runs every day
-    @Cron('0 0 0/24 * * *',{name:'Create chart data'})
-    // @Cron(CronExpression.EVERY_10_SECONDS,{name:'Create chart data'})
-    async createAmintPriceChart(){
-        for (let i = 0;i < this.chainIds.length;i++){
+    // // Runs every day
+    // @Cron('0 0 0/24 * * *',{name:'Create chart data'})
+    // // @Cron(CronExpression.EVERY_10_SECONDS,{name:'Create chart data'})
+    // async createAmintPriceChart(){
+    //     for (let i = 0;i < this.chainIds.length;i++){
 
-            const signerSepolia = await this.getSignerOrProvider(11155111,true);
+    //         const signerSepolia = await this.getSignerOrProvider(11155111,true);
 
-            let poolContract;
-            poolContract = new ethers.Contract(poolAddressSepolia,poolABISepolia,signerSepolia);
-            const slot0 = await poolContract.slot0();
+    //         let poolContract;
+    //         poolContract = new ethers.Contract(poolAddressSepolia,poolABI,signerSepolia);
+    //         const slot0 = await poolContract.slot0();
 
-            let newChart:AmintPrice
-            let found = await this.daysRepository.findOne({where:{chainId:this.chainIds[i]}});
+    //         let newChart:AmintPrice
+    //         let found = await this.daysRepository.findOne({where:{chainId:this.chainIds[i]}});
 
-            if(!found){
-                found = new Days();
-                found.chainId = this.chainIds[i]
-                found.days = 1
+    //         if(!found){
+    //             found = new Days();
+    //             found.chainId = this.chainIds[i]
+    //             found.days = 1
 
-                newChart = this.amintPriceRepository.create({
-                    chainId:this.chainIds[i],
-                    day:1,
-                    amintPrice:this.getAmintPrice(slot0[0]),
-                })
-            }else{
-                newChart = this.amintPriceRepository.create({
-                    chainId:this.chainIds[i],
-                    day:parseInt(found? (found.days).toString() : '0') + 1,
-                    amintPrice:this.getAmintPrice(slot0[0]),
-                })
+    //             newChart = this.amintPriceRepository.create({
+    //                 chainId:this.chainIds[i],
+    //                 day:1,
+    //                 amintPrice:this.getAmintPrice(slot0[0]),
+    //             })
+    //         }else{
+    //             newChart = this.amintPriceRepository.create({
+    //                 chainId:this.chainIds[i],
+    //                 day:parseInt(found? (found.days).toString() : '0') + 1,
+    //                 amintPrice:this.getAmintPrice(slot0[0]),
+    //             })
     
-                found.days = parseInt(found.days? (found.days).toString() : '0') + 1;
-            }
+    //             found.days = parseInt(found.days? (found.days).toString() : '0') + 1;
+    //         }
 
-            await this.amintPriceRepository.save(newChart);
-            await this.daysRepository.save(found);
-        }
-    }
+    //         await this.amintPriceRepository.save(newChart);
+    //         await this.daysRepository.save(found);
+    //     }
+    // }
 
     /**
      * 
@@ -758,25 +802,25 @@ export class BorrowsService {
     //  */
     // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
     // async calculatePeriodicFee(){
-    //     const signerMumbai = await this.getSignerOrProvider(80001,true);
-    //     const optionsContractMumbai = new ethers.Contract(optionsAddressMumbai,optionsABIMumbai,signerMumbai);
+    //     const signerBaseSepolia = await this.getSignerOrProvider(84532,true);
+    //     const optionsContractBaseSepolia = new ethers.Contract(optionsAddressBaseSepolia,optionsABIBaseSepolia,signerBaseSepolia);
     //     const signerSepolia = await this.getSignerOrProvider(11155111,true);
     //     const optionsContractSepolia = new ethers.Contract(optionsAddressSepolia,optionsABISepolia,signerSepolia);
     //     const abc = await this.exchange.fetchVolatilityHistory('ETH',{period:30});
     //     const volatility = abc.map(item => item.info[0].value)[0];
-    //     let optionsFeesMumbai;
+    //     let optionsFeesBaseSepolia;
     //     let optionsFeesSepolia;
     //     //Get the option fees for all strike prices
     //     for(let i=0;i<5;i++){
-    //         if(!optionsFeesMumbai){
-    //             optionsFeesMumbai = [await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i)]
+    //         if(!optionsFeesBaseSepolia){
+    //             optionsFeesBaseSepolia = [await optionsContractBaseSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i)]
     //         }else if(!optionsFeesSepolia){
     //             optionsFeesSepolia = [await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i)]
     //         }else {
-    //             optionsFeesMumbai.push(await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
+    //             optionsFeesBaseSepolia.push(await optionsContractBaseSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
     //             optionsFeesSepolia.push(await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
     //         }
-    //         optionsFeesMumbai.push(await optionsContractMumbai.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
+    //         optionsFeesBaseSepolia.push(await optionsContractBaseSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
     //         optionsFeesSepolia.push(await optionsContractSepolia.calculateOptionPrice(volatility,ethers.utils.parseEther('1'),i));
     //     }
 
@@ -786,17 +830,17 @@ export class BorrowsService {
     //             chainId:Equal(11155111),
     //             status:Equal(PositionStatus.DEPOSITED)
     //         });
-    //     const activePositionsMumbai = await this.borrowRepository.findBy(
+    //     const activePositionsBaseSepolia = await this.borrowRepository.findBy(
     //         {                    
-    //             chainId:Equal(80001),
+    //             chainId:Equal(84532),
     //             status:Equal(PositionStatus.DEPOSITED)
     //         });
     //     //Loop through all the deposits and deduct option fees based on their strike prices and deposited amount
     //     for(let i=0;i<5;i++){
-    //         if(activePositionsMumbai.length != 0){
-    //             activePositionsMumbai.map(activePosition =>{
+    //         if(activePositionsBaseSepolia.length != 0){
+    //             activePositionsBaseSepolia.map(activePosition =>{
     //                 if(Object.keys(StrikePricePercent).indexOf(activePosition.strikePricePercent) == i){
-    //                     activePosition.totalFeesDeducted = (parseFloat(activePosition.totalFeesDeducted) + ((optionsFeesMumbai[i] * parseFloat(activePosition.depositedAmount))/30)).toString();
+    //                     activePosition.totalFeesDeducted = (parseFloat(activePosition.totalFeesDeducted) + ((optionsFeesBaseSepolia[i] * parseFloat(activePosition.depositedAmount))/30)).toString();
     //                 }
     //             })                
     //         }
@@ -809,7 +853,7 @@ export class BorrowsService {
     //         }
     //     }
     //     // Save the updated data
-    //     await this.borrowRepository.save(activePositionsMumbai);
+    //     await this.borrowRepository.save(activePositionsBaseSepolia);
     //     await this.borrowRepository.save(activePositionsSepolia);
     // }
 
@@ -847,26 +891,26 @@ export class BorrowsService {
             }
         }
         // //Getting current batch number
-        // const currentBatchnNoMumbai = await this.globalService.getBatchNo(80001);
+        // const currentBatchnNoBaseSepolia = await this.globalService.getBatchNo(84532);
         // const currentBatchnNoSepolia = await this.globalService.getBatchNo(11155111);
         // //If current batch number is less than or equal to 30,return
-        // if(currentBatchnNoMumbai > 30){
+        // if(currentBatchnNoBaseSepolia > 30){
         //     // Getting positions based on batch number starting from 1
-        //     const updatingPositionsMumbai = await this.batchRepository.findOne({where:{
-        //         chainId:80001,
-        //         batchNo:Equal(currentBatchnNoMumbai - 30)
+        //     const updatingPositionsBaseSepolia = await this.batchRepository.findOne({where:{
+        //         chainId:84532,
+        //         batchNo:Equal(currentBatchnNoBaseSepolia - 30)
         //     }});
 
         //     // If the status of the position is deposited only,then update the liquidationEthPrice
-        //     updatingPositionsMumbai.deposits.map(updatingPosition =>{
+        //     updatingPositionsBaseSepolia.deposits.map(updatingPosition =>{
         //         if(updatingPosition.status == PositionStatus.DEPOSITED){
         //             updatingPosition.downsideProtectionStatus = false;
         //             updatingPosition.liquidationEthPrice = (updatingPosition.ethPrice * 90)/100;            
         //         }
         //     })
         //     // Update the changes
-        //     await this.borrowRepository.save(updatingPositionsMumbai.deposits);
-        //     await this.batchRepository.save(updatingPositionsMumbai);
+        //     await this.borrowRepository.save(updatingPositionsBaseSepolia.deposits);
+        //     await this.batchRepository.save(updatingPositionsBaseSepolia);
         // }
         // //If current batch number is less than or equal to 30,return
         // if(currentBatchnNoSepolia > 30){
@@ -910,19 +954,38 @@ export class BorrowsService {
             }
 
             let borrowingContract;
+            let cdsContract;
+            let treasuryContract;
+            let nativeFee = 0
+            let nativeFee1 = 0
+            let nativeFee2 = 0
+            const options = Options.newOptions().addExecutorLzReceiveOption(500000, 0).toHex().toString()
             const signer = await this.getSignerOrProvider(this.chainIds[i],true);
 
             if(this.chainIds[i] == 11155111){
-                borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
-            }else if(this.chainIds[i] == 80001){
-                borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
+                borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
+                cdsContract = new ethers.Contract(cdsAddressSepolia,cdsABI,signer);;
+                treasuryContract = new ethers.Contract(treasuryAddressSepolia,treasuryABI,signer);;
+
+                ;[nativeFee] = await cdsContract.quote(eidSepolia,1,123,123,123,[0,0,0,0],0,options, false)
+                ;[nativeFee1] = await borrowingContract.quote(eidSepolia, [5,10,15,20,25,30,35,40], options, false)
+                ;[nativeFee2] = await treasuryContract.quote(eidSepolia,1, [ZeroAddress,0],[ZeroAddress,0],options, false)
+
+            }else if(this.chainIds[i] == 84532){
+                borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signer);
+                cdsContract = new ethers.Contract(cdsAddressBaseSepolia,cdsABI,signer);;
+                treasuryContract = new ethers.Contract(treasuryAddressBaseSepolia,treasuryABI,signer);;
+
+                ;[nativeFee] = await cdsContract.quote(eidSepolia,1,123,123,123,[0,0,0,0],0,options, false)
+                ;[nativeFee1] = await borrowingContract.quote(eidSepolia, [5,10,15,20,25,30,35,40], options, false)
+                ;[nativeFee2] = await treasuryContract.quote(eidSepolia,1, [ZeroAddress,0],[ZeroAddress,0],options, false)
             }
 
             // Get the current eth price
             const currentEthPrice = await borrowingContract.getUSDValue();
             //Get the LTV
             const ltv = await borrowingContract.getLTV();
-            const ethPrice = currentEthPrice.toNumber()/100;
+            const ethPrice = Number(currentEthPrice)/100;
 
             // If ltv is less than 90,liquidate the positions
             if(ltv <= 90){
@@ -931,7 +994,10 @@ export class BorrowsService {
                         // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
                         if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
                             // Call the liquidate function in blockchain
-                            await borrowingContract.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+                            await borrowingContract.liquidate(
+                                liquidationPosition.address,
+                                liquidationPosition.index,
+                                {value: nativeFee1 + nativeFee2 + nativeFee});
                             // Update the status of the position as Liquidated
                             liquidationPosition.status = PositionStatus.LIQUIDATED;
                             const chainId = liquidationPosition.chainId;      
@@ -980,16 +1046,16 @@ export class BorrowsService {
             }
         }
         // // Get current batch number
-        // const currentBatchnNoMumbai = await this.globalService.getBatchNo(80001);
+        // const currentBatchnNoBaseSepolia = await this.globalService.getBatchNo(84532);
         // const currentBatchnNoSepolia = await this.globalService.getBatchNo(11155111);
-        // let liquidationPositionsMumbaiFromBatch:Batch;
+        // let liquidationPositionsBaseSepoliaFromBatch:Batch;
         // let liquidationPositionsSepoliaFromBatch:Batch;
 
-        // if(currentBatchnNoMumbai > 30){
+        // if(currentBatchnNoBaseSepolia > 30){
         //     // Getting positions based on batch number starting from 1
-        //     liquidationPositionsMumbaiFromBatch = await this.batchRepository.findOne({where:{
-        //         chainId:80001,
-        //         batchNo:Equal(currentBatchnNoMumbai - 30)
+        //     liquidationPositionsBaseSepoliaFromBatch = await this.batchRepository.findOne({where:{
+        //         chainId:84532,
+        //         batchNo:Equal(currentBatchnNoBaseSepolia - 30)
         //     }});
         // }
         // if(currentBatchnNoSepolia > 30){
@@ -1000,23 +1066,23 @@ export class BorrowsService {
         //     }});
         // }
 
-        // const positionsMumbaiFromHighLtv = await this.highLtvPositionsRepository.findBy({
-        //     chainId:80001
+        // const positionsBaseSepoliaFromHighLtv = await this.highLtvPositionsRepository.findBy({
+        //     chainId:84532
         // });
         // const positionsSepoliaFromHighLtv = await this.highLtvPositionsRepository.findBy({
         //     chainId:11155111
         // });
 
-        // let liquidationPositionsMumbaiFromHighLtv:BorrowInfo[];
+        // let liquidationPositionsBaseSepoliaFromHighLtv:BorrowInfo[];
         // let liquidationPositionsSepoliaFromHighLtv:BorrowInfo[];
 
-        // for(let i=0;i<positionsMumbaiFromHighLtv.length;i++){
-        //     if(!liquidationPositionsMumbaiFromHighLtv){
-        //         liquidationPositionsMumbaiFromHighLtv = [await this.borrowRepository.findOne({where:
-        //             {id:Equal(positionsMumbaiFromHighLtv[i].positionId)}})]
+        // for(let i=0;i<positionsBaseSepoliaFromHighLtv.length;i++){
+        //     if(!liquidationPositionsBaseSepoliaFromHighLtv){
+        //         liquidationPositionsBaseSepoliaFromHighLtv = [await this.borrowRepository.findOne({where:
+        //             {id:Equal(positionsBaseSepoliaFromHighLtv[i].positionId)}})]
         //     }else{
-        //         liquidationPositionsMumbaiFromHighLtv.push(await this.borrowRepository.findOne({where:
-        //             {id:Equal(positionsMumbaiFromHighLtv[i].positionId)}
+        //         liquidationPositionsBaseSepoliaFromHighLtv.push(await this.borrowRepository.findOne({where:
+        //             {id:Equal(positionsBaseSepoliaFromHighLtv[i].positionId)}
         //         }));
         //     }
         // }
@@ -1032,33 +1098,33 @@ export class BorrowsService {
         //     }
         // }
 
-        // let liquidationPositionsMumbai:BorrowInfo[];
+        // let liquidationPositionsBaseSepolia:BorrowInfo[];
         // let liquidationPositionsSepolia:BorrowInfo[];
 
-        // liquidationPositionsMumbai = liquidationPositionsMumbaiFromBatch.deposits.concat(liquidationPositionsMumbaiFromHighLtv);
+        // liquidationPositionsBaseSepolia = liquidationPositionsBaseSepoliaFromBatch.deposits.concat(liquidationPositionsBaseSepoliaFromHighLtv);
         // liquidationPositionsSepolia = liquidationPositionsSepoliaFromBatch.deposits.concat(liquidationPositionsSepoliaFromHighLtv);
 
-        // const signerMumbai = await this.getSignerOrProvider(80001,true);
-        // const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
+        // const signerBaseSepolia = await this.getSignerOrProvider(84532,true);
+        // const borrowingContractBaseSepolia = new ethers.Contract(borrowAddressBaseSepolia,borrowABIBaseSepolia,signerBaseSepolia);
 
         // const signerSepolia = await this.getSignerOrProvider(11155111,true);
         // const borrowingContractSepolia = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signerSepolia);
 
         // // Get the current eth price
-        // const currentEthPrice = await borrowingContractMumbai.getUSDValue();
+        // const currentEthPrice = await borrowingContractBaseSepolia.getUSDValue();
 
         // //Get the LTV
-        // const ltv = await borrowingContractMumbai.getLTV();
+        // const ltv = await borrowingContractBaseSepolia.getLTV();
         // const ethPrice = currentEthPrice.toNumber()/100;
 
         // // If ltv is less than 90,liquidate the positions
         // if(ltv <= 90){
-        //     if(liquidationPositionsMumbaiFromBatch && liquidationPositionsMumbaiFromBatch.deposits.length != 0){
-        //         liquidationPositionsMumbaiFromBatch.deposits.map(async (liquidationPosition) =>{
+        //     if(liquidationPositionsBaseSepoliaFromBatch && liquidationPositionsBaseSepoliaFromBatch.deposits.length != 0){
+        //         liquidationPositionsBaseSepoliaFromBatch.deposits.map(async (liquidationPosition) =>{
         //             // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
         //             if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
         //                 // Call the liquidate function in blockchain
-        //                 await borrowingContractMumbai.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+        //                 await borrowingContractBaseSepolia.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
         //                 // Update the status of the position as Liquidated
         //                 liquidationPosition.status = PositionStatus.LIQUIDATED;
         //             }else{
@@ -1066,8 +1132,8 @@ export class BorrowsService {
         //             }
         //         })
         //         // Update the position data
-        //         await this.batchRepository.save(liquidationPositionsMumbaiFromBatch);
-        //         await this.borrowRepository.save(liquidationPositionsMumbaiFromBatch.deposits);
+        //         await this.batchRepository.save(liquidationPositionsBaseSepoliaFromBatch);
+        //         await this.borrowRepository.save(liquidationPositionsBaseSepoliaFromBatch.deposits);
         //     }
 
         //     if(liquidationPositionsSepoliaFromBatch && liquidationPositionsSepoliaFromBatch.deposits.length != 0){
@@ -1088,9 +1154,9 @@ export class BorrowsService {
         //     }
 
 
-        //     // liquidationPositionsMumbaiFromHighLtv.map(async (liquidationPosition) =>{
+        //     // liquidationPositionsBaseSepoliaFromHighLtv.map(async (liquidationPosition) =>{
         //     //     if(liquidationPosition.liquidationEthPrice == ethPrice && !liquidationPosition.downsideProtectionStatus){
-        //     //         await borrowingContractMumbai.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+        //     //         await borrowingContractBaseSepolia.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
         //     //         liquidationPosition.status = PositionStatus.LIQUIDATED;
         //     //     }else{
         //     //         return;
@@ -1110,15 +1176,15 @@ export class BorrowsService {
         //     const existingEntities = await this.highLtvPositionsRepository.find();
 
         //     // Create entities in HighLtvPositions
-        //     const highLtvPositionsMumbai = liquidationPositionsMumbaiFromBatch.deposits.map(position =>{
-        //         const highLtvPositionMumbai = new HighLTVPositions();
-        //         highLtvPositionMumbai.batchNo = position.batchNo;
-        //         highLtvPositionMumbai.chainId = 80001;
-        //         highLtvPositionMumbai.positionId = position.id;
-        //         highLtvPositionMumbai.address = position.address;
-        //         highLtvPositionMumbai.index = position.index;
-        //         highLtvPositionMumbai.status = position.status;
-        //         return highLtvPositionMumbai;
+        //     const highLtvPositionsBaseSepolia = liquidationPositionsBaseSepoliaFromBatch.deposits.map(position =>{
+        //         const highLtvPositionBaseSepolia = new HighLTVPositions();
+        //         highLtvPositionBaseSepolia.batchNo = position.batchNo;
+        //         highLtvPositionBaseSepolia.chainId = 84532;
+        //         highLtvPositionBaseSepolia.positionId = position.id;
+        //         highLtvPositionBaseSepolia.address = position.address;
+        //         highLtvPositionBaseSepolia.index = position.index;
+        //         highLtvPositionBaseSepolia.status = position.status;
+        //         return highLtvPositionBaseSepolia;
         //     })
         //     const highLtvPositionsSepolia = liquidationPositionsSepoliaFromBatch.deposits.map(position =>{
         //         const highLtvPositionSepolia = new HighLTVPositions();
@@ -1132,7 +1198,7 @@ export class BorrowsService {
         //     })
 
         //     // Combination of high ltv positions in all chains
-        //     const combinedHighLtvPositions = highLtvPositionsMumbai.concat(highLtvPositionsSepolia);
+        //     const combinedHighLtvPositions = highLtvPositionsBaseSepolia.concat(highLtvPositionsSepolia);
         //     // Check whether the positions are already not stored 
         //     const liquidationPositions = combinedHighLtvPositions.filter(combinedPosition => !existingEntities.some(existingEntity => existingEntity.positionId === combinedPosition.positionId));
         //     // Save them
@@ -1148,19 +1214,38 @@ export class BorrowsService {
 
         for (let i = 0;i < this.chainIds.length;i++){
             let borrowingContract;
+            let cdsContract;
+            let treasuryContract;
+            let nativeFee = 0
+            let nativeFee1 = 0
+            let nativeFee2 = 0
+            const options = Options.newOptions().addExecutorLzReceiveOption(500000, 0).toHex().toString()
             const signer = await this.getSignerOrProvider(this.chainIds[i],true);
 
             if(this.chainIds[i] == 11155111){
-                borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signer);
-            }else if(this.chainIds[i] == 80001){
-                borrowingContract = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signer);
+                borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
+                cdsContract = new ethers.Contract(cdsAddressSepolia,cdsABI,signer);;
+                treasuryContract = new ethers.Contract(treasuryAddressSepolia,treasuryABI,signer);;
+
+                ;[nativeFee] = await cdsContract.quote(eidBaseSepolia,1,123,123,123,[0,0,0,0],0,options, false)
+                ;[nativeFee1] = await borrowingContract.quote(eidBaseSepolia, [5,10,15,20,25,30,35,40], options, false)
+                ;[nativeFee2] = await treasuryContract.quote(eidBaseSepolia,1, [ZeroAddress,0],[ZeroAddress,0],options, false)
+
+            }else if(this.chainIds[i] == 84532){
+                borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signer);
+                cdsContract = new ethers.Contract(cdsAddressBaseSepolia,cdsABI,signer);;
+                treasuryContract = new ethers.Contract(treasuryAddressBaseSepolia,treasuryABI,signer);;
+
+                ;[nativeFee] = await cdsContract.quote(eidSepolia,1,123,123,123,[0,0,0,0],0,options, false)
+                ;[nativeFee1] = await borrowingContract.quote(eidSepolia, [5,10,15,20,25,30,35,40], options, false)
+                ;[nativeFee2] = await treasuryContract.quote(eidSepolia,1, [ZeroAddress,0],[ZeroAddress,0],options, false)
             }
 
             // Get the current eth price
             const currentEthPrice = await borrowingContract.getUSDValue();
             // Get the current ltv
             const ltv = await borrowingContract.getLTV();
-            const ethPrice = currentEthPrice.toNumber()/100;
+            const ethPrice = Number(currentEthPrice)/100;
 
             // If ltv is below 90 liquidate
             if(ltv <= 90){
@@ -1173,13 +1258,13 @@ export class BorrowsService {
                 let liquidationPositionsFromHighLtv:BorrowInfo[];
                 if(positionsFromHighLtv && positionsFromHighLtv.length != 0){
                     // get the equivalent BorrowInfo
-                    for(let i=0;i<positionsFromHighLtv.length;i++){
+                    for(let j=0;j<positionsFromHighLtv.length;j++){
                         if(!liquidationPositionsFromHighLtv){
                             liquidationPositionsFromHighLtv = [await this.borrowRepository.findOne({where:
-                                {id:Equal(positionsFromHighLtv[i].positionId)}})]
+                                {id:Equal(positionsFromHighLtv[j].positionId)}})]
                         }else{
                             liquidationPositionsFromHighLtv.push(await this.borrowRepository.findOne({where:
-                                {id:Equal(positionsFromHighLtv[i].positionId)}
+                                {id:Equal(positionsFromHighLtv[j].positionId)}
                             }));
                         }
                     }
@@ -1190,7 +1275,10 @@ export class BorrowsService {
                         // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
                         if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
                             // Call the liquidate function in blockchain
-                            await borrowingContract.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+                            await borrowingContract.liquidate(
+                                liquidationPosition.address,
+                                liquidationPosition.index,
+                                {value: nativeFee1 + nativeFee2 + nativeFee});
                             // Get the equivalent high ltv position
                             const liquidatedPosition = await this.highLtvPositionsRepository.findOne({where:
                                 {positionId:Equal(liquidationPosition.id)}})
@@ -1225,23 +1313,23 @@ export class BorrowsService {
         }
         
 
-        // const signerMumbai = await this.getSignerOrProvider(80001,true);
-        // const borrowingContractMumbai = new ethers.Contract(borrowAddressMumbai,borrowABIMumbai,signerMumbai);
+        // const signerBaseSepolia = await this.getSignerOrProvider(84532,true);
+        // const borrowingContractBaseSepolia = new ethers.Contract(borrowAddressBaseSepolia,borrowABIBaseSepolia,signerBaseSepolia);
 
         // const signerSepolia = await this.getSignerOrProvider(11155111,true);
         // const borrowingContractSepolia = new ethers.Contract(borrowAddressSepolia,borrowABISepolia,signerSepolia);
 
         // // Get the current eth price
-        // const currentEthPrice = await borrowingContractMumbai.getUSDValue();
+        // const currentEthPrice = await borrowingContractBaseSepolia.getUSDValue();
         // // Get the current ltv
-        // const ltv = await borrowingContractMumbai.getLTV();
+        // const ltv = await borrowingContractBaseSepolia.getLTV();
         // const ethPrice = currentEthPrice.toNumber()/100;
 
         // // If ltv is below 90 liquidate
         // if(ltv <= 90){
         //     // Get the positions based on status of the position
-        //     const positionsMumbaiFromHighLtv = await this.highLtvPositionsRepository.findBy({
-        //         chainId:80001,
+        //     const positionsBaseSepoliaFromHighLtv = await this.highLtvPositionsRepository.findBy({
+        //         chainId:84532,
         //         status:Not(PositionStatus.LIQUIDATED)
         //     });
 
@@ -1250,17 +1338,17 @@ export class BorrowsService {
         //         status:Not(PositionStatus.LIQUIDATED)
         //     });
 
-        //     let liquidationPositionsMumbaiFromHighLtv:BorrowInfo[];
+        //     let liquidationPositionsBaseSepoliaFromHighLtv:BorrowInfo[];
         //     let liquidationPositionsSepoliaFromHighLtv:BorrowInfo[];
-        //     if(positionsMumbaiFromHighLtv && positionsMumbaiFromHighLtv.length != 0){
+        //     if(positionsBaseSepoliaFromHighLtv && positionsBaseSepoliaFromHighLtv.length != 0){
         //         // get the equivalent BorrowInfo
-        //         for(let i=0;i<positionsMumbaiFromHighLtv.length;i++){
-        //             if(!liquidationPositionsMumbaiFromHighLtv){
-        //                 liquidationPositionsMumbaiFromHighLtv = [await this.borrowRepository.findOne({where:
-        //                     {id:Equal(positionsMumbaiFromHighLtv[i].positionId)}})]
+        //         for(let i=0;i<positionsBaseSepoliaFromHighLtv.length;i++){
+        //             if(!liquidationPositionsBaseSepoliaFromHighLtv){
+        //                 liquidationPositionsBaseSepoliaFromHighLtv = [await this.borrowRepository.findOne({where:
+        //                     {id:Equal(positionsBaseSepoliaFromHighLtv[i].positionId)}})]
         //             }else{
-        //                 liquidationPositionsMumbaiFromHighLtv.push(await this.borrowRepository.findOne({where:
-        //                     {id:Equal(positionsMumbaiFromHighLtv[i].positionId)}
+        //                 liquidationPositionsBaseSepoliaFromHighLtv.push(await this.borrowRepository.findOne({where:
+        //                     {id:Equal(positionsBaseSepoliaFromHighLtv[i].positionId)}
         //                 }));
         //             }
         //         }
@@ -1280,12 +1368,12 @@ export class BorrowsService {
         //         }
         //     }
 
-        //     if(liquidationPositionsMumbaiFromHighLtv && liquidationPositionsMumbaiFromHighLtv.length != 0){
-        //         liquidationPositionsMumbaiFromHighLtv.map(async (liquidationPosition) =>{
+        //     if(liquidationPositionsBaseSepoliaFromHighLtv && liquidationPositionsBaseSepoliaFromHighLtv.length != 0){
+        //         liquidationPositionsBaseSepoliaFromHighLtv.map(async (liquidationPosition) =>{
         //             // Liquidate only if current eth price == liquidationEthPrice and downsideProtectionStatus is false
         //             if(liquidationPosition.liquidationEthPrice >= ethPrice && !liquidationPosition.downsideProtectionStatus){
         //                 // Call the liquidate function in blockchain
-        //                 //await borrowingContractMumbai.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
+        //                 //await borrowingContractBaseSepolia.liquidate(liquidationPosition.address,liquidationPosition.index,currentEthPrice);
         //                 // Get the equivalent high ltv position
         //                 const liquidatedPosition = await this.highLtvPositionsRepository.findOne({where:
         //                     {positionId:Equal(liquidationPosition.id)}})
@@ -1298,7 +1386,7 @@ export class BorrowsService {
         //                 return;
         //             }
         //         })
-        //         await this.borrowRepository.save(liquidationPositionsMumbaiFromHighLtv);
+        //         await this.borrowRepository.save(liquidationPositionsBaseSepoliaFromHighLtv);
 
         //     }
 
@@ -1328,4 +1416,47 @@ export class BorrowsService {
         //     return;
         // }
     }
+
+    // async listenEvents():Promise<number[]> {
+
+    //     let borrowingContractSepolia: Contract;
+    //     let cdsContractSepolia: Contract;
+    //     let borrowingContractBaseSepolia: Contract;
+    //     let cdsContractBaseSepolia: Contract;
+    //     let usdaContractMode:Contract
+
+    //     const signerSepolia = await this.getSignerOrProvider(11155111,true);
+    //     borrowingContractSepolia = new ethers.Contract('0xfBAE0d4337d936538995A26685f69644e6427213',borrowABI,signerSepolia);
+    //     cdsContractSepolia = new ethers.Contract(cdsAddressSepolia,cdsABI,signerSepolia);
+
+    //     const signerBaseSepolia = await this.getSignerOrProvider(84532,true);
+    //     borrowingContractBaseSepolia = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signerBaseSepolia);
+    //     cdsContractBaseSepolia = new ethers.Contract(cdsAddressBaseSepolia,cdsABI,signerBaseSepolia);
+
+    //     const signerMode = await this.getSignerOrProvider(919,true);
+    //     usdaContractMode = new ethers.Contract(usdaAddressModeSepolia,usdaABI,signerMode);
+
+    //     let result:number[];
+
+    //     borrowingContractSepolia.on('Deposit',async (index,depositingAmount,tokensToLend,normalizedAmount) => {
+    //         result = [index,depositingAmount,tokensToLend,normalizedAmount];
+    //     })
+    //     cdsContractSepolia.on('Deposit',async (totalDepositingAmount,usdaAmount,usdtAmount,index,liquidationAmount,normalizedAmount,depositValue) => {
+    //         result = [totalDepositingAmount,usdaAmount,usdtAmount,index,liquidationAmount,normalizedAmount,depositValue];
+    //     })
+    //     borrowingContractBaseSepolia.on('Deposit',async (index,depositingAmount,tokensToLend,normalizedAmount) => {
+    //         result = [index,depositingAmount,tokensToLend,normalizedAmount];
+    //     })
+    //     cdsContractBaseSepolia.on('Deposit',async (totalDepositingAmount,usdaAmount,usdtAmount,index,liquidationAmount,normalizedAmount,depositValue) => {
+    //         result = [totalDepositingAmount,usdaAmount,usdtAmount,index,liquidationAmount,normalizedAmount,depositValue];
+    //     })
+    //     usdaContractMode.on('OFTReceived',async(guid,srcEid,toAddress,amountReceivedLD) => {
+    //         result = [guid,srcEid,toAddress,amountReceivedLD]
+    //     })
+
+    //     console.log(result);
+
+    //     return result;
+
+    // }
 }

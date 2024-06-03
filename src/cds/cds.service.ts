@@ -12,6 +12,7 @@ import { GetCdsDepositByChainId } from './dto/get-cds-deposit-by-chainid.dto';
 import { CdsAmountToReturn } from './dto/cdsAmountToReturn.dto';
 import { GlobalService } from '../global/global.service';
 import { LiquidationInfo } from '../borrows/entities/liquidatedInfo.entity';
+import { PointsService } from '../points/points.service';
 
 @Injectable()
 export class CdsService {
@@ -22,7 +23,8 @@ export class CdsService {
         private cdsDepositorRepository: Repository<CdsDepositorInfo>,
         @InjectRepository(LiquidationInfo)
         private liquidationInfoRepository: Repository<LiquidationInfo>,
-        private globalService:GlobalService
+        private globalService:GlobalService,
+        private pointsService:PointsService
     ){}
      /**
       * Return cds deposit info
@@ -118,15 +120,14 @@ export class CdsService {
             ethPriceAtDeposit,
             lockingPeriod,
             liquidationAmount,
-            optedForLiquidation,
-            depositVal
+            optedForLiquidation
         } = addCdsDto;
 
         await this.globalService.setBatchNo(chainId);
         const currentIndex = await this.getCdsDepositorIndexByAddress(address,chainId);
         const initialLiquidationAmount = liquidationAmount.toString();
         const totalDepositedAmount = (parseFloat(depositedAmint) + parseFloat(depositedUsdt)).toString();
-        if(currentIndex == (index-1) || currentIndex == 0){
+        if(currentIndex >= (index-1) || currentIndex == 0){
             const result = await this.calculateValue(ethPriceAtDeposit,chainId);
             await this.setCumulativeValue(chainId,result[0],result[1]);
             const cds = this.cdsRepository.create({
@@ -203,6 +204,8 @@ export class CdsService {
             await this.globalService.setEthPrice(chainId,ethPriceAtDeposit);
             await this.cdsRepository.save(cds);
             await this.cdsDepositorRepository.save(cdsDepositor);
+            await this.pointsService.setUSDTCDSPoints(address,chainId,depositedUsdt,depositedTime);
+            await this.pointsService.setUSDaCDSPoints(address,chainId,depositedAmint,depositedTime);
             return cds;
         }else{
             throw new NotFoundException('Incorrect index');
@@ -233,7 +236,7 @@ export class CdsService {
                 chainId:chainId,
                 index:index
             }});
-        const withdrawEthAmountInEther = ethers.utils.formatEther(withdrawEthAmount);
+        const withdrawEthAmountInEther = ethers.formatEther(withdrawEthAmount);
         const withdrawAmountFormated = (parseFloat(withdrawAmount)/1e6).toString();
         const feesFormated = (parseFloat(fees)/1e6).toString();
         const feesWithdrawnFormated = (parseFloat(feesWithdrawn)/1e6).toString();
