@@ -103,7 +103,7 @@ export class GlobalService {
             found = this.globalRepository.create({
                     chainId,
                     lastEthPrice:ethPrice,
-                    fallbackEthPrice:0
+                    fallbackEthPrice:ethPrice
             })
         }else{
             found.lastEthPrice = ethPrice;

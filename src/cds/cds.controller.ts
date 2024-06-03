@@ -39,13 +39,6 @@ export class CdsController {
         return this.cdsService.getCdsDepositorByAddress(address,chainId);
     }
 
-   
-    // To get the withdraw amount of the cds depositor
-    @Post('/withdraw/calculateWithdrawAmount')
-    getWithdrawAmount(@Body() cdsAmountToReturn:CdsAmountToReturn):Promise<number[]>{
-        return this.cdsService.calculateWithdrawAmount(cdsAmountToReturn);
-    }
-
     // To add the deposit in borrowing
     @Post('/depositAmint')
     @Header("Access-Control-Allow-Origin" , "*")
@@ -68,5 +61,11 @@ export class CdsController {
         const address = params.address;
         const chainId = params.chainId;
         return this.cdsService.getDepositsByChainId(address,chainId);
+    }
+
+    // To get the withdraw amount of the cds depositor
+    @Post('/calculateWithdrawAmount')
+    getWithdrawAmount(@Body() cdsAmountToReturn:CdsAmountToReturn):Promise<number[]>{
+        return this.cdsService.calculateWithdrawAmount(cdsAmountToReturn);
     }
 }
