@@ -46,7 +46,23 @@ export class EventListeners{
         const providerMode = this.getProvider(919);
         usdaContractMode = new ethers.Contract(usdaAddressModeSepolia,usdaABI,providerMode);
 
-
+      
+/**
+ * Listens for the 'Deposit' event on the borrowingContractSepolia contract.
+ * When the event is triggered, it constructs an AddBorrowDto object with the event parameters
+ * and calls the borrowService.addBorrow method with the constructed object.
+ *
+ * @param address - The address of the depositor.
+ * @param index - The index of the deposit.
+ * @param depositedAmount - The amount deposited.
+ * @param normalizedAmount - The normalized amount of the deposit.
+ * @param depositedTime - The time the deposit was made.
+ * @param ethPrice - The price of ETH at the time of deposit.
+ * @param noOfAmintMinted - The number of AMINT minted.
+ * @param strikePrice - The strike price of the deposit.
+ * @param optionFees - The fees for the option.
+ * @param strikePricePercent - The strike price percent of the deposit.
+ */
         borrowingContractSepolia.on('Deposit',async (            
             address,
             index,
@@ -83,6 +99,22 @@ export class EventListeners{
             await borrowService.addBorrow(result);
         })
 
+
+        /**
+ * Listens for the 'Deposit' event on the cdsContractSepolia contract.
+ * When the event is triggered, it constructs an AddCdsDto object with the event parameters
+ * and calls the cdsService.addCds method with the constructed object.
+ *
+ * @param address - The address of the depositor.
+ * @param index - The index of the deposit.
+ * @param depositedAmint - The amount of AMINT deposited.
+ * @param depositedUsdt - The amount of USDT deposited.
+ * @param depositedTime - The time the deposit was made.
+ * @param ethPriceAtDeposit - The price of ETH at the time of deposit.
+ * @param lockingPeriod - The locking period of the deposit.
+ * @param liquidationAmount - The liquidation amount of the deposit.
+ * @param optedForLiquidation - Whether the depositor opted for liquidation.
+ */
         cdsContractSepolia.on('Deposit',async (            
             address,
             index,
@@ -123,6 +155,23 @@ export class EventListeners{
 
         })
 
+/**
+ * Listens for the 'Deposit' event on the borrowingContractBaseSepolia contract.
+ * When the event is triggered, it constructs an AddBorrowDto object with the event parameters
+ * and calls the borrowService.addBorrow method with the constructed object.
+ *
+ * @param address - The address of the depositor.
+ * @param index - The index of the deposit.
+ * @param depositedAmount - The amount deposited.
+ * @param normalizedAmount - The normalized amount of the deposit.
+ * @param depositedTime - The time the deposit was made.
+ * @param ethPrice - The price of ETH at the time of deposit.
+ * @param noOfAmintMinted - The number of AMINT minted.
+ * @param strikePrice - The strike price of the deposit.
+ * @param optionFees - The fees for the option.
+ * @param strikePricePercent - The strike price percent of the deposit.
+ */
+
         borrowingContractBaseSepolia.on('Deposit',async (
             address,
             index,
@@ -159,6 +208,21 @@ export class EventListeners{
             await borrowService.addBorrow(result);
         })
 
+/**
+ * Listens for the 'Deposit' event on the cdsContractBaseSepolia contract.
+ * When the event is triggered, it constructs an AddCdsDto object with the event parameters
+ * and calls the cdsService.addCds method with the constructed object.
+ *
+ * @param address - The address of the depositor.
+ * @param index - The index of the deposit.
+ * @param depositedAmint - The amount of AMINT deposited.
+ * @param depositedUsdt - The amount of USDT deposited.
+ * @param depositedTime - The time the deposit was made.
+ * @param ethPriceAtDeposit - The price of ETH at the time of deposit.
+ * @param lockingPeriod - The locking period of the deposit.
+ * @param liquidationAmount - The liquidation amount of the deposit.
+ * @param optedForLiquidation - Whether the depositor opted for liquidation.
+ */
         cdsContractBaseSepolia.on('Deposit',async (            
             address,
             index,
@@ -198,6 +262,19 @@ export class EventListeners{
             await cdsService.addCds(result);
         })
 
+
+/**
+ * Listens for the 'Withdraw' event on the borrowingContractSepolia contract.
+ * When the event is triggered, it constructs a WithdrawDto object with the event parameters
+ * and calls the borrowService.withdraw method with the constructed object.
+ *
+ * @param address - The address of the borrower.
+ * @param index - The index of the withdrawal.
+ * @param withdrawTime - The time the withdrawal was made.
+ * @param withdrawAmount - The amount withdrawn.
+ * @param noOfAbond - The number of ABOND withdrawn.
+ * @param totalDebtAmount - The total debt amount after the withdrawal.
+ */
         borrowingContractSepolia.on('Withdraw',async (            
             address,
             index,
@@ -218,6 +295,21 @@ export class EventListeners{
             };
             await borrowService.withdraw(result);
         })
+
+/**
+ * Listens for the 'Withdraw' event on the cdsContractSepolia contract.
+ * When the event is triggered, it constructs a WithdrawCdsDto object with the event parameters
+ * and calls the cdsService.cdsWithdraw method with the constructed object.
+ *
+ * @param address - The address of the borrower.
+ * @param index - The index of the withdrawal.
+ * @param ethPriceAtWithdraw - The price of ETH at the time of withdrawal.
+ * @param withdrawTime - The time the withdrawal was made.
+ * @param withdrawAmount - The amount withdrawn.
+ * @param withdrawEthAmount - The amount of ETH withdrawn.
+ * @param fees - The fees for the withdrawal.
+ * @param feesWithdrawn - The fees withdrawn.
+ */
 
         cdsContractSepolia.on('Withdraw',async (            
             address,
@@ -243,6 +335,18 @@ export class EventListeners{
             await cdsService.cdsWithdraw(result);
         })
 
+/**
+ * Listens for the 'Withdraw' event on the borrowingContractBaseSepolia contract.
+ * When the event is triggered, it constructs a WithdrawDto object with the event parameters
+ * and calls the borrowService.withdraw method with the constructed object.
+ *
+ * @param address - The address of the borrower.
+ * @param index - The index of the withdrawal.
+ * @param withdrawTime - The time the withdrawal was made.
+ * @param withdrawAmount - The amount withdrawn.
+ * @param noOfAbond - The number of ABOND withdrawn.
+ * @param totalDebtAmount - The total debt amount after the withdrawal.
+ */
         borrowingContractBaseSepolia.on('Withdraw',async (
             address,
             index,
@@ -264,6 +368,20 @@ export class EventListeners{
             await borrowService.withdraw(result);
         })
 
+/**
+ * Listens for the 'Withdraw' event on the cdsContractBaseSepolia contract.
+ * When the event is triggered, it constructs a WithdrawCdsDto object with the event parameters
+ * and calls the cdsService.cdsWithdraw method with the constructed object.
+ *
+ * @param address - The address of the borrower.
+ * @param index - The index of the withdrawal.
+ * @param ethPriceAtWithdraw - The price of ETH at the time of withdrawal.
+ * @param withdrawTime - The time the withdrawal was made.
+ * @param withdrawAmount - The amount withdrawn.
+ * @param withdrawEthAmount - The amount of ETH withdrawn.
+ * @param fees - The fees for the withdrawal.
+ * @param feesWithdrawn - The fees withdrawn.
+ */
         cdsContractBaseSepolia.on('Withdraw',async (            
             address,
             index,
@@ -287,7 +405,15 @@ export class EventListeners{
                 feesWithdrawn:Number(feesWithdrawn).toString()};
             await cdsService.cdsWithdraw(result);
         })
-        
+        /**
+ * Listens for the 'OFTReceived' event on the usdaContractMode contract.
+ * When the event is triggered, it calls the pointsService.setUSDaBridgeToModePoints method with the appropriate parameters.
+ *
+ * @param guid - The unique identifier of the transaction.
+ * @param srcEid - The source EID of the transaction.
+ * @param toAddress - The address to which the OFT was received.
+ * @param amountReceivedLD - The amount of LD received.
+ */
         usdaContractMode.on('OFTReceived',async(guid,srcEid,toAddress,amountReceivedLD) => {
             await this.pointsService.setUSDaBridgeToModePoints(toAddress,919,Number(amountReceivedLD).toString(),Date.now().toString())
         })
