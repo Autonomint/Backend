@@ -46,4 +46,9 @@ export class GlobalController {
     setAvailableLiquidationAmount(@Body() chainId:number,liquidationAmount:number){
         return this.globalService.setTotalAvailableLiquidationAmount(chainId,liquidationAmount);
     }
+
+    @Get('/noOfUsers')
+    getNoOfUsers():Promise<number>{
+        return this.globalService.getNoOfUsers();
+    }
 }

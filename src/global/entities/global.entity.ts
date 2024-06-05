@@ -63,4 +63,7 @@ export class GlobalVariables{
 
     @Column({nullable:true})
     day: number;
+
+    @Column({ nullable:true })
+    noOfUsers: number;
 }
