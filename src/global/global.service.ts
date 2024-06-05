@@ -15,7 +15,7 @@ export class GlobalService {
         private batchRepository: Repository<Batch>
     ){}
 
-    private chainIds = [5,11155111,80001];
+    private chainIds = [11155111,84532];
 
     // Set amint balance in treasury
     async setTreasuryAmintBalance(chainId:number,amintBalance:number){
@@ -162,6 +162,30 @@ export class GlobalService {
             }
         }
     }
+
+    async updateNoOfUsers(chainId:number,operation:boolean){
+        const found = await this.globalRepository.findOne({where:{chainId:chainId}});
+        if(found){
+            if(operation){
+                found.noOfUsers++;
+            }else{
+                found.noOfUsers--;
+            }
+            await this.globalRepository.save(found);
+        }
+    }
+
+    async getNoOfUsers():Promise<number>{
+        let totalUsers = 0;
+        for (let i = 0;i < this.chainIds.length;i++){
+            const found = await this.globalRepository.findOne({where:{chainId:this.chainIds[i]}});
+            if(found){
+                totalUsers += found.noOfUsers;
+            }
+        }
+        return totalUsers; 
+    }
+
     // Get amint balance in treasury
     async getTreasuryAmintBalance(chainId:number):Promise<number>{
         const found = await this.globalRepository.findOne({where:{chainId:chainId}});

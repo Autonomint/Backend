@@ -99,6 +99,10 @@ export class CdsService {
             },
             take: 25
           });
+        for(let i = 0; i < data.length; i++){
+            const userPoints = await this.pointsService.getUserPoints(data[i].chainId,data[i].address);
+            data[i].points = userPoints;
+        }
         return data;
     }
 
@@ -160,6 +164,7 @@ export class CdsService {
                 cdsDepositor.totalDepositedUsdt = parseFloat(depositedUsdt);
                 cdsDepositor.totalDepositedAmount = parseFloat(totalDepositedAmount);
                 cdsDepositor.deposits = [cds]
+                await this.globalService.updateNoOfUsers(chainId,true);
             }else{
                 cdsDepositor.totalDepositedAmint = parseFloat(cdsDepositor.totalDepositedAmint.toString()) + parseFloat(depositedAmint);
                 cdsDepositor.totalDepositedUsdt = parseFloat(cdsDepositor.totalDepositedUsdt.toString()) + parseFloat(depositedUsdt);
@@ -261,6 +266,9 @@ export class CdsService {
         cdsDepositor.totalDepositedAmount = parseFloat(cdsDepositor.totalDepositedAmount.toString()) - parseFloat(found.totalDepositedAmount);
 
         found.status = CdsPositionStatus.WITHDREW;
+        if(cdsDepositor.totalDepositedAmount <= 0){
+            await this.globalService.updateNoOfUsers(chainId,false);
+        }
 
         const amintBalance = await this.globalService.getTreasuryAmintBalance(chainId);
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);

@@ -185,6 +185,10 @@ export class BorrowsService {
             },
             take: 25
         });
+        for(let i = 0; i < data.length; i++){
+            const userPoints = await this.pointsService.getUserPoints(data[i].chainId,data[i].address);
+            data[i].points = userPoints;
+        }
         return data;
     }
     
@@ -275,6 +279,7 @@ export class BorrowsService {
                 borrower.totalAbond = 0;
                 borrower.totalIndex = index;
                 borrower.borrows = [borrow];
+                await this.globalService.updateNoOfUsers(chainId,true);
             }else{
                 borrower.totalDepositedAmount = parseFloat(borrower.totalDepositedAmount.toString()) + parseFloat(depositedAmount);
                 borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) +  parseFloat(noOfAmintInEther);
@@ -364,6 +369,10 @@ export class BorrowsService {
             throw new NotFoundException('Already Withdrawn') ; 
         }else {
             throw new NotFoundException('Position Liquidated') ;
+        }
+
+        if(borrower.totalDepositedAmount <= 0){
+            await this.globalService.updateNoOfUsers(chainId,false);
         }
 
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
