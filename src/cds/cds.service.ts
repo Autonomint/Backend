@@ -131,7 +131,7 @@ export class CdsService {
         const currentIndex = await this.getCdsDepositorIndexByAddress(address,chainId);
         const initialLiquidationAmount = liquidationAmount.toString();
         const totalDepositedAmount = (parseFloat(depositedAmint) + parseFloat(depositedUsdt)).toString();
-        if(currentIndex >= (index-1) || currentIndex == 0){
+        if(currentIndex <= (index-1) || currentIndex == 0){
             const result = await this.calculateValue(ethPriceAtDeposit,chainId);
             await this.setCumulativeValue(chainId,result[0],result[1]);
             const cds = this.cdsRepository.create({
