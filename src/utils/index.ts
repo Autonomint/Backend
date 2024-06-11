@@ -268,6 +268,12 @@ export const borrowABI= [
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
         "internalType": "uint64",
         "name": "index",
         "type": "uint64"
@@ -281,14 +287,44 @@ export const borrowABI= [
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "borrowAmount",
+        "name": "normalizedAmount",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "normalizedAmount",
+        "name": "depositedTime",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "ethPrice",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "borrowAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "strikePrice",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "optionsFees",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "enum IOptions.StrikePrice",
+        "name": "strikePricePercent",
+        "type": "uint8"
       }
     ],
     "name": "Deposit",
@@ -400,8 +436,20 @@ export const borrowABI= [
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "index",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
-        "name": "borrowDebt",
+        "name": "withdrawTime",
         "type": "uint256"
       },
       {
@@ -415,6 +463,12 @@ export const borrowABI= [
         "internalType": "uint128",
         "name": "noOfAbond",
         "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "borrowDebt",
+        "type": "uint256"
       }
     ],
     "name": "Withdraw",
@@ -428,6 +482,19 @@ export const borrowABI= [
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "admin",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -986,6 +1053,52 @@ export const borrowABI= [
   {
     "inputs": [
       {
+        "internalType": "uint32",
+        "name": "_dstEid",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_message",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_options",
+        "type": "bytes"
+      },
+      {
+        "internalType": "bool",
+        "name": "_payInLzToken",
+        "type": "bool"
+      }
+    ],
+    "name": "quoteDummy",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "nativeFee",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lzTokenFee",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct MessagingFee",
+        "name": "fee",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "user",
         "type": "address"
@@ -1191,6 +1304,19 @@ export const borrowABI= [
     "name": "upgradeToAndCall",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "usda",
+    "outputs": [
+      {
+        "internalType": "contract IUSDa",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1422,9 +1548,9 @@ export const cdsABI = [
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "depositedUSDa",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
       },
       {
         "indexed": false,
@@ -1435,20 +1561,44 @@ export const cdsABI = [
       {
         "indexed": false,
         "internalType": "uint128",
-        "name": "liquidationAmount",
+        "name": "depositedUSDa",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "depositedUSDT",
         "type": "uint128"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "normalizedAmount",
+        "name": "depositedTime",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint128",
-        "name": "depositVal",
+        "name": "ethPriceAtDeposit",
         "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "lockingPeriod",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "liquidationAmount",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "optedForLiquidation",
+        "type": "bool"
       }
     ],
     "name": "Deposit",
@@ -1523,8 +1673,26 @@ export const cdsABI = [
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint64",
+        "name": "index",
+        "type": "uint64"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
-        "name": "withdrewUSDa",
+        "name": "withdrawUSDa",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "withdrawTime",
         "type": "uint256"
       },
       {
@@ -1532,6 +1700,24 @@ export const cdsABI = [
         "internalType": "uint128",
         "name": "withdrawETH",
         "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint128",
+        "name": "ethPriceAtWithdraw",
+        "type": "uint128"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "optionsFees",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "optionsFeesWithdrawn",
+        "type": "uint256"
       }
     ],
     "name": "Withdraw",
@@ -1545,6 +1731,19 @@ export const cdsABI = [
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "admin",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1722,6 +1921,19 @@ export const cdsABI = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "cdsCount",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -1765,6 +1977,11 @@ export const cdsABI = [
       {
         "internalType": "uint128",
         "name": "_liquidationAmount",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "lockingPeriod",
         "type": "uint128"
       }
     ],
@@ -2537,6 +2754,45 @@ export const cdsABI = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "usdaLimit",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "usdtAmountDepositedTillNow",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "usdtLimit",
+    "outputs": [
+      {
+        "internalType": "uint64",
+        "name": "",
+        "type": "uint64"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint64",
@@ -2547,19 +2803,6 @@ export const cdsABI = [
     "name": "withdraw",
     "outputs": [],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "withdrawTimeLimit",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   }
 ]
@@ -4526,6 +4769,19 @@ export const treasuryABI = [
   },
   {
     "inputs": [],
+    "name": "usda",
+    "outputs": [
+      {
+        "internalType": "contract IUSDa",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "usdaGainedFromLiquidation",
     "outputs": [
       {
@@ -5254,83 +5510,6 @@ export const usdaABI = [
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_owner",
-        "type": "address"
-      }
-    ],
-    "name": "__OAppOptionsType3_init",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_owner",
-        "type": "address"
-      }
-    ],
-    "name": "__OAppPreCrimeSimulator_init",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint8",
-        "name": "_localDecimals",
-        "type": "uint8"
-      },
-      {
-        "internalType": "address",
-        "name": "_endpoint",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_delegate",
-        "type": "address"
-      }
-    ],
-    "name": "__OFTCore_init",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "_name",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_symbol",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "_lzEndpoint",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_delegate",
-        "type": "address"
-      }
-    ],
-    "name": "__OFT_init",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
