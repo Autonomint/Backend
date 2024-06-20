@@ -77,6 +77,7 @@ export class BorrowsService {
         secret: '6YpoYGG4wib9BlReoisyZAT4YyG5iDQSPWb5',
     });
 
+
     getDeposits(getBorrowFilterDto:GetBorrowFilterDto):Promise<BorrowInfo[]>{
         const {
             address,
@@ -185,12 +186,16 @@ export class BorrowsService {
             },
             take: 25
         });
-        for(let i = 0; i < data.length; i++){
-            const userPoints = await this.pointsService.getUserPoints(data[i].chainId,data[i].address);
-            data[i].points = userPoints;
-        }
         return data;
     }
+    // Delay funtion for cron job
+    private delay(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+
+
+  
     
     
         /**
@@ -239,7 +244,7 @@ export class BorrowsService {
         const currentIndex = await this.getDepositorIndexByAddress(address,chainId);
         const noOfAmintInEther = (parseFloat(noOfAmintMinted)/1e6).toString();
         const optionFeesInEther = (parseFloat(optionFees)/1e6).toString();
-        if(currentIndex <= (index-1) || currentIndex == 0){
+        if(currentIndex >= (index-1) || currentIndex == 0){
             // Calculating liquidation eth price as 80% of current eth price
             const liquidationEthPrice = (ethPrice*80)/100;
             // Calculating critical eth price as 83% of current eth price
@@ -279,7 +284,6 @@ export class BorrowsService {
                 borrower.totalAbond = 0;
                 borrower.totalIndex = index;
                 borrower.borrows = [borrow];
-                await this.globalService.updateNoOfUsers(chainId,true);
             }else{
                 borrower.totalDepositedAmount = parseFloat(borrower.totalDepositedAmount.toString()) + parseFloat(depositedAmount);
                 borrower.totalAmint = parseFloat(borrower.totalAmint.toString()) +  parseFloat(noOfAmintInEther);
@@ -369,10 +373,6 @@ export class BorrowsService {
             throw new NotFoundException('Already Withdrawn') ; 
         }else {
             throw new NotFoundException('Position Liquidated') ;
-        }
-
-        if(borrower.totalDepositedAmount <= 0){
-            await this.globalService.updateNoOfUsers(chainId,false);
         }
 
         const ethBalance = await this.globalService.getTreasuryEthBalance(chainId);
@@ -605,6 +605,38 @@ export class BorrowsService {
         const buyOneOfToken0 = ((sqrtPriceX96 / 2**96)**2) / (Number((10**Decimal1 / 10**Decimal0).toFixed(Decimal1)));
         const buyOneOfToken1 = Number((1 / Number(buyOneOfToken0))).toFixed(Decimal0);
         return Number(buyOneOfToken0) * Number(buyOneOfToken1);
+    }
+
+    @Cron('0 * * * *') // Runs at the start of every hour
+    async handleUpdateBorrowingFees() {
+    // Update borrowing fees every hour for both chain from Eth/Usda sepolia pool
+      const values: number[] = [];
+      for (let i = 0; i < 240; i++) {
+        const signerSepolia = await this.getSignerOrProvider(11155111,true);
+        let poolContract;
+        poolContract = new ethers.Contract(poolAddressSepolia,poolABI,signerSepolia);
+        const slot0 = await poolContract.slot0();
+        const value = this.getAmintPrice(slot0[0])
+        values.push(value);
+        if (i < 239) { // Prevent delay after the last fetch
+          await this.delay(15000); // Wait for 15 seconds
+        }
+      }
+      for (let i = 0;i < this.chainIds.length;i++){
+            const found = await this.globalRepository.findOne({where:{
+                chainId:this.chainIds[i],
+                treasuryEthBalance:Not(0),
+                treasuryAmintBalance:Not(0)
+            }});
+            if(found){
+                const signer = await this.getSignerOrProvider(this.chainIds[i],true);
+                let borrowingContract;
+                borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
+                const average = values.reduce((acc, val) => acc + val, 0) / values.length;
+                // Update borrowing fees
+                await borrowingContract.updateBorrowingFees(Math.round(average*10**4));
+            }
+        }
     }
 
     // Create chart data
@@ -1468,4 +1500,6 @@ export class BorrowsService {
     //     return result;
 
     // }
+
+
 }
