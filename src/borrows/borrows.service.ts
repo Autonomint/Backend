@@ -610,7 +610,7 @@ export class BorrowsService {
     @Cron('0 * * * *') // Runs at the start of every hour
     async handleUpdateBorrowingFees() {
     // Update borrowing fees every hour for both chain from Eth/Usda sepolia pool
-      const values: number[] = [];
+      let values: number[] = [];
       for (let i = 0; i < 240; i++) {
         const signerSepolia = await this.getSignerOrProvider(11155111,true);
         let poolContract;
@@ -637,6 +637,9 @@ export class BorrowsService {
                 await borrowingContract.updateBorrowingFees(Math.round(average*10**4));
             }
         }
+
+        // reset values array
+        values = []
     }
 
     // Create chart data
