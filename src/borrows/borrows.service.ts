@@ -1504,7 +1504,7 @@ export class BorrowsService {
 
     // }
 
-<<<<<<< HEAD
+
     async refreshUserData(address:string, chainId:number){
         const provider = await this.getSignerOrProvider(chainId,true);
         let treasuryContract:Contract;
@@ -1563,7 +1563,4 @@ export class BorrowsService {
             }
         }
     }
-=======
-
->>>>>>> ebbfecb49865355391abbd2d503952d7d54a3f78
 }
