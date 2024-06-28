@@ -1,15 +1,15 @@
-export const borrowAddressSepolia = '0xE5D4b991861E70D563e7d061e017e5566935941f';
-export const cdsAddressSepolia = '0x1ed5b275fE5eDcf7ddb9c6E253c77F6849E8A9df';
-export const treasuryAddressSepolia = '0x4037E8dFE4CC62070593fBCd8C2bC648D29D34dB';
-export const optionsAddressSepolia = '0x7C6441B23f21A7A5cd5965B516D8054F119bA53f';
+export const borrowAddressSepolia = '0x9E86696B805B739ba42a2Ef91ae4d75380B681aA';
+export const cdsAddressSepolia = '0xE01ddEEe242c63f5c3f75fEe871d235FC3D32c3F';
+export const treasuryAddressSepolia = '0xd7A5b9386554BC146fBcbdeEA2a5DaF7819676F6';
+export const optionsAddressSepolia = '0xc28aED6c4b9C05B457fa2367799B803B02785972';
 export const poolAddressSepolia = '0x09732eef05D41773c3fFF7385E30D35605111f8F';
 
-export const borrowAddressBaseSepolia = '0x739E6a6C4233011D99F68d96D8A3560E690a64A3';
-export const cdsAddressBaseSepolia = '0x3e39681Db0F3E0E848f3F7B0835B8ad58639F49A';
-export const treasuryAddressBaseSepolia = '0x80f872b6402D1FB4BffF4837efe9E4b49cB91909';
-export const optionsAddressBaseSepolia = '0x10E070504eB1B4f03d29b9B5DeccAd3e49c134Ec';
+export const borrowAddressBaseSepolia = '0x6502432f446402B8F225E639B95d4d03317A26E4';
+export const cdsAddressBaseSepolia = '0x9Eb1FC4bDf917e75D455d70f38d6689b10ec6919';
+export const treasuryAddressBaseSepolia = '0x13a7b78e65c7E389cc56Fc66a0342F90730120A8';
+export const optionsAddressBaseSepolia = '0x6b6f84c22504c8E1E83d4c55C393Baf57E34D416';
 
-export const usdaAddressModeSepolia = '0x94ABB18eE78b3F4Ef303f24c50fd916cfB6f0742';
+export const usdaAddressModeSepolia = '0xac29627E717185B4bA755eb89247cDDd360d5c5B';
 
 export const eidSepolia = 40161;
 export const eidBaseSepolia = 40245;
@@ -24,17 +24,6 @@ export const borrowABI= [
       }
     ],
     "name": "AddressEmptyCode",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "AddressInsufficientBalance",
     "type": "error"
   },
   {
@@ -100,22 +89,7 @@ export const borrowABI= [
   },
   {
     "inputs": [],
-    "name": "EndPointUnavailable",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "FailedInnerCall",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidDelegate",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidEndpointCall",
     "type": "error"
   },
   {
@@ -136,61 +110,7 @@ export const borrowABI= [
   },
   {
     "inputs": [],
-    "name": "LzTokenUnavailable",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "eid",
-        "type": "uint32"
-      }
-    ],
-    "name": "NoPeer",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "msgValue",
-        "type": "uint256"
-      }
-    ],
-    "name": "NotEnoughNative",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "NotInitializing",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "addr",
-        "type": "address"
-      }
-    ],
-    "name": "OnlyEndpoint",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "eid",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "sender",
-        "type": "bytes32"
-      }
-    ],
-    "name": "OnlyPeer",
     "type": "error"
   },
   {
@@ -234,17 +154,6 @@ export const borrowABI= [
       }
     ],
     "name": "SafeCastOverflowedUintDowncast",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "SafeERC20FailedOperation",
     "type": "error"
   },
   {
@@ -325,6 +234,12 @@ export const borrowABI= [
         "internalType": "enum IOptions.StrikePrice",
         "name": "strikePricePercent",
         "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "APR",
+        "type": "uint8"
       }
     ],
     "name": "Deposit",
@@ -397,25 +312,6 @@ export const borrowABI= [
       }
     ],
     "name": "OwnershipTransferred",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint32",
-        "name": "eid",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "peer",
-        "type": "bytes32"
-      }
-    ],
-    "name": "PeerSet",
     "type": "event"
   },
   {
@@ -501,42 +397,6 @@ export const borrowABI= [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint32",
-            "name": "srcEid",
-            "type": "uint32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "sender",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          }
-        ],
-        "internalType": "struct Origin",
-        "name": "origin",
-        "type": "tuple"
-      }
-    ],
-    "name": "allowInitializePath",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "calculateCumulativeRate",
     "outputs": [
@@ -599,19 +459,6 @@ export const borrowABI= [
     "name": "depositTokens",
     "outputs": [],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "endpoint",
-    "outputs": [
-      {
-        "internalType": "contract ILayerZeroEndpointV2",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -708,64 +555,13 @@ export const borrowABI= [
       },
       {
         "internalType": "address",
-        "name": "_endpoint",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_delegate",
+        "name": "_globalVariables",
         "type": "address"
       }
     ],
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint32",
-            "name": "srcEid",
-            "type": "uint32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "sender",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          }
-        ],
-        "internalType": "struct Origin",
-        "name": "",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      },
-      {
-        "internalType": "address",
-        "name": "_sender",
-        "type": "address"
-      }
-    ],
-    "name": "isComposeMsgSender",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -800,124 +596,6 @@ export const borrowABI= [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint32",
-            "name": "srcEid",
-            "type": "uint32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "sender",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          }
-        ],
-        "internalType": "struct Origin",
-        "name": "_origin",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_guid",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_message",
-        "type": "bytes"
-      },
-      {
-        "internalType": "address",
-        "name": "_executor",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_extraData",
-        "type": "bytes"
-      }
-    ],
-    "name": "lzReceive",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "nextNonce",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "nonce",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "oAppVersion",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "senderVersion",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "receiverVersion",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "omniChainBorrowingCDSPoolValue",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "omniChainBorrowingNoOfLiquidations",
-    "outputs": [
-      {
-        "internalType": "uint128",
-        "name": "",
-        "type": "uint128"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "owner",
     "outputs": [
@@ -931,25 +609,6 @@ export const borrowABI= [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "eid",
-        "type": "uint32"
-      }
-    ],
-    "name": "peers",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "peer",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "proxiableUUID",
     "outputs": [
@@ -957,140 +616,6 @@ export const borrowABI= [
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_dstEid",
-        "type": "uint32"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "normalizedAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "ethVaultValue",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "cdsPoolValue",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "totalCDSPool",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint128",
-            "name": "noOfLiquidations",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint256",
-            "name": "ethRemainingInWithdraw",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "ethValueRemainingInWithdraw",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          }
-        ],
-        "internalType": "struct IBorrowing.OmniChainBorrowingData",
-        "name": "_message",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_options",
-        "type": "bytes"
-      },
-      {
-        "internalType": "bool",
-        "name": "_payInLzToken",
-        "type": "bool"
-      }
-    ],
-    "name": "quote",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "nativeFee",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lzTokenFee",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct MessagingFee",
-        "name": "fee",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_dstEid",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_message",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_options",
-        "type": "bytes"
-      },
-      {
-        "internalType": "bool",
-        "name": "_payInLzToken",
-        "type": "bool"
-      }
-    ],
-    "name": "quoteDummy",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "nativeFee",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lzTokenFee",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct MessagingFee",
-        "name": "fee",
-        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -1129,6 +654,11 @@ export const borrowABI= [
   },
   {
     "inputs": [
+      {
+        "internalType": "uint8",
+        "name": "_APR",
+        "type": "uint8"
+      },
       {
         "internalType": "uint128",
         "name": "_ratePerSec",
@@ -1182,32 +712,6 @@ export const borrowABI= [
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_delegate",
-        "type": "address"
-      }
-    ],
-    "name": "setDelegate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_eid",
-        "type": "uint32"
-      }
-    ],
-    "name": "setDstEid",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint8",
         "name": "_LTV",
         "type": "uint8"
@@ -1227,24 +731,6 @@ export const borrowABI= [
       }
     ],
     "name": "setOptions",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_eid",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_peer",
-        "type": "bytes32"
-      }
-    ],
-    "name": "setPeer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1284,6 +770,19 @@ export const borrowABI= [
       }
     ],
     "name": "updateLastEthVaultValue",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint32",
+        "name": "usdaPrice",
+        "type": "uint32"
+      }
+    ],
+    "name": "updateRatePerSecByUSDaPrice",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1355,17 +854,6 @@ export const cdsABI = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "AddressInsufficientBalance",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "implementation",
         "type": "address"
       }
@@ -1380,22 +868,7 @@ export const cdsABI = [
   },
   {
     "inputs": [],
-    "name": "EndPointUnavailable",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "FailedInnerCall",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidDelegate",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidEndpointCall",
     "type": "error"
   },
   {
@@ -1416,61 +889,7 @@ export const cdsABI = [
   },
   {
     "inputs": [],
-    "name": "LzTokenUnavailable",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "eid",
-        "type": "uint32"
-      }
-    ],
-    "name": "NoPeer",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "msgValue",
-        "type": "uint256"
-      }
-    ],
-    "name": "NotEnoughNative",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "NotInitializing",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "addr",
-        "type": "address"
-      }
-    ],
-    "name": "OnlyEndpoint",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "eid",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "sender",
-        "type": "bytes32"
-      }
-    ],
-    "name": "OnlyPeer",
     "type": "error"
   },
   {
@@ -1514,17 +933,6 @@ export const cdsABI = [
       }
     ],
     "name": "SafeCastOverflowedUintDowncast",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "SafeERC20FailedOperation",
     "type": "error"
   },
   {
@@ -1640,25 +1048,6 @@ export const cdsABI = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint32",
-        "name": "eid",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "peer",
-        "type": "bytes32"
-      }
-    ],
-    "name": "PeerSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "implementation",
@@ -1752,172 +1141,20 @@ export const cdsABI = [
   {
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "uint32",
-            "name": "srcEid",
-            "type": "uint32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "sender",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          }
-        ],
-        "internalType": "struct Origin",
-        "name": "origin",
-        "type": "tuple"
-      }
-    ],
-    "name": "allowInitializePath",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint128",
         "name": "fees",
         "type": "uint128"
       }
     ],
     "name": "calculateCumulativeRate",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_dstEid",
-        "type": "uint32"
-      },
-      {
-        "internalType": "enum CDSInterface.FunctionToDo",
-        "name": "functionToDo",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "optionsFeesToGetFromOtherChain",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "cdsAmountToGetFromOtherChain",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "liqAmountToGetFromOtherChain",
-        "type": "uint256"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint128",
-            "name": "liquidationAmount",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "profits",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "ethAmount",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint256",
-            "name": "availableLiquidationAmount",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct CDSInterface.LiquidationInfo",
-        "name": "liquidationInfo",
-        "type": "tuple"
-      },
-      {
-        "internalType": "uint128",
-        "name": "liqIndex",
-        "type": "uint128"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "nativeFee",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lzTokenFee",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct MessagingFee",
-        "name": "fee",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_options",
-        "type": "bytes"
-      }
-    ],
-    "name": "callLzSendFromExternal",
     "outputs": [
       {
-        "components": [
-          {
-            "internalType": "bytes32",
-            "name": "guid",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "nativeFee",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "lzTokenFee",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct MessagingFee",
-            "name": "fee",
-            "type": "tuple"
-          }
-        ],
-        "internalType": "struct MessagingReceipt",
-        "name": "receipt",
-        "type": "tuple"
+        "internalType": "uint128",
+        "name": "",
+        "type": "uint128"
       }
     ],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1988,19 +1225,6 @@ export const cdsABI = [
     "name": "deposit",
     "outputs": [],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "endpoint",
-    "outputs": [
-      {
-        "internalType": "contract ILayerZeroEndpointV2",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -2084,6 +1308,41 @@ export const cdsABI = [
             "internalType": "uint256",
             "name": "normalizedAmount",
             "type": "uint256"
+          },
+          {
+            "internalType": "uint128",
+            "name": "lockingPeriod",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "depositedUSDa",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "depositedUSDT",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "withdrawETHAmount",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint128",
+            "name": "ethPriceAtWithdraw",
+            "type": "uint128"
+          },
+          {
+            "internalType": "uint256",
+            "name": "optionFees",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "optionFeesWithdrawn",
+            "type": "uint256"
           }
         ],
         "internalType": "struct CDSInterface.CdsAccountDetails",
@@ -2120,185 +1379,11 @@ export const cdsABI = [
         "internalType": "address",
         "name": "_multiSign",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_endpoint",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_delegate",
-        "type": "address"
       }
     ],
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint32",
-            "name": "srcEid",
-            "type": "uint32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "sender",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          }
-        ],
-        "internalType": "struct Origin",
-        "name": "",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      },
-      {
-        "internalType": "address",
-        "name": "_sender",
-        "type": "address"
-      }
-    ],
-    "name": "isComposeMsgSender",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint32",
-            "name": "srcEid",
-            "type": "uint32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "sender",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          }
-        ],
-        "internalType": "struct Origin",
-        "name": "_origin",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_guid",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_message",
-        "type": "bytes"
-      },
-      {
-        "internalType": "address",
-        "name": "_executor",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_extraData",
-        "type": "bytes"
-      }
-    ],
-    "name": "lzReceive",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "nextNonce",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "nonce",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "oAppVersion",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "senderVersion",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "receiverVersion",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "omniChainCDSTotalAvailableLiquidationAmount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "omniChainCDSTotalCdsDepositedAmount",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -2315,25 +1400,6 @@ export const cdsABI = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "eid",
-        "type": "uint32"
-      }
-    ],
-    "name": "peers",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "peer",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "proxiableUUID",
     "outputs": [
@@ -2341,99 +1407,6 @@ export const cdsABI = [
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_dstEid",
-        "type": "uint32"
-      },
-      {
-        "internalType": "enum CDSInterface.FunctionToDo",
-        "name": "_functionToDo",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "optionsFeesToGetFromOtherChain",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "cdsAmountToGetFromOtherChain",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "liqAmountToGetFromOtherChain",
-        "type": "uint256"
-      },
-      {
-        "components": [
-          {
-            "internalType": "uint128",
-            "name": "liquidationAmount",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "profits",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "ethAmount",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint256",
-            "name": "availableLiquidationAmount",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct CDSInterface.LiquidationInfo",
-        "name": "liquidationInfo",
-        "type": "tuple"
-      },
-      {
-        "internalType": "uint128",
-        "name": "liqIndex",
-        "type": "uint128"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_options",
-        "type": "bytes"
-      },
-      {
-        "internalType": "bool",
-        "name": "_payInLzToken",
-        "type": "bool"
-      }
-    ],
-    "name": "quote",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "nativeFee",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lzTokenFee",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct MessagingFee",
-        "name": "fee",
-        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -2512,42 +1485,11 @@ export const cdsABI = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "_delegate",
+        "name": "_address",
         "type": "address"
       }
     ],
-    "name": "setDelegate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_eid",
-        "type": "uint32"
-      }
-    ],
-    "name": "setDstEid",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_eid",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_peer",
-        "type": "bytes32"
-      }
-    ],
-    "name": "setPeer",
+    "name": "setGlobalVariables",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -3025,6 +1967,11 @@ export const optionsABI = [
         "internalType": "address",
         "name": "_borrowingAddress",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_globalVariables",
+        "type": "address"
       }
     ],
     "name": "initialize",
@@ -3114,17 +2061,6 @@ export const treasuryABI = [
     "inputs": [
       {
         "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "AddressInsufficientBalance",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "implementation",
         "type": "address"
       }
@@ -3139,22 +2075,7 @@ export const treasuryABI = [
   },
   {
     "inputs": [],
-    "name": "EndPointUnavailable",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "FailedInnerCall",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidDelegate",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidEndpointCall",
     "type": "error"
   },
   {
@@ -3163,73 +2084,8 @@ export const treasuryABI = [
     "type": "error"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint16",
-        "name": "optionType",
-        "type": "uint16"
-      }
-    ],
-    "name": "InvalidOptionType",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "LzTokenUnavailable",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "eid",
-        "type": "uint32"
-      }
-    ],
-    "name": "NoPeer",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "msgValue",
-        "type": "uint256"
-      }
-    ],
-    "name": "NotEnoughNative",
-    "type": "error"
-  },
-  {
     "inputs": [],
     "name": "NotInitializing",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "addr",
-        "type": "address"
-      }
-    ],
-    "name": "OnlyEndpoint",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "eid",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "sender",
-        "type": "bytes32"
-      }
-    ],
-    "name": "OnlyPeer",
     "type": "error"
   },
   {
@@ -3257,33 +2113,6 @@ export const treasuryABI = [
   {
     "inputs": [],
     "name": "ReentrancyGuardReentrantCall",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint8",
-        "name": "bits",
-        "type": "uint8"
-      },
-      {
-        "internalType": "uint256",
-        "name": "value",
-        "type": "uint256"
-      }
-    ],
-    "name": "SafeCastOverflowedUintDowncast",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "SafeERC20FailedOperation",
     "type": "error"
   },
   {
@@ -3440,25 +2269,6 @@ export const treasuryABI = [
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint32",
-        "name": "eid",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "peer",
-        "type": "bytes32"
-      }
-    ],
-    "name": "PeerSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "implementation",
@@ -3546,42 +2356,6 @@ export const treasuryABI = [
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint32",
-            "name": "srcEid",
-            "type": "uint32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "sender",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          }
-        ],
-        "internalType": "struct Origin",
-        "name": "origin",
-        "type": "tuple"
-      }
-    ],
-    "name": "allowInitializePath",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
       }
     ],
     "stateMutability": "view",
@@ -3689,11 +2463,6 @@ export const treasuryABI = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_depositingAmount",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "user",
         "type": "address"
@@ -3730,19 +2499,6 @@ export const treasuryABI = [
       }
     ],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "endpoint",
-    "outputs": [
-      {
-        "internalType": "contract ILayerZeroEndpointV2",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -3856,6 +2612,16 @@ export const treasuryABI = [
                 "internalType": "uint128",
                 "name": "optionFees",
                 "type": "uint128"
+              },
+              {
+                "internalType": "uint8",
+                "name": "APR",
+                "type": "uint8"
+              },
+              {
+                "internalType": "uint256",
+                "name": "totalDebtAmountPaid",
+                "type": "uint256"
               }
             ],
             "internalType": "struct ITreasury.DepositDetails",
@@ -3924,138 +2690,13 @@ export const treasuryABI = [
       },
       {
         "internalType": "address",
-        "name": "_endpoint",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_delegate",
+        "name": "_globalVariables",
         "type": "address"
       }
     ],
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint32",
-            "name": "srcEid",
-            "type": "uint32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "sender",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          }
-        ],
-        "internalType": "struct Origin",
-        "name": "",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      },
-      {
-        "internalType": "address",
-        "name": "_sender",
-        "type": "address"
-      }
-    ],
-    "name": "isComposeMsgSender",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint32",
-            "name": "srcEid",
-            "type": "uint32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "sender",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          }
-        ],
-        "internalType": "struct Origin",
-        "name": "_origin",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_guid",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_message",
-        "type": "bytes"
-      },
-      {
-        "internalType": "address",
-        "name": "_executor",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_extraData",
-        "type": "bytes"
-      }
-    ],
-    "name": "lzReceive",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "nextNonce",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "nonce",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -4066,158 +2707,6 @@ export const treasuryABI = [
         "internalType": "uint128",
         "name": "",
         "type": "uint128"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "oAppVersion",
-    "outputs": [
-      {
-        "internalType": "uint64",
-        "name": "senderVersion",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "receiverVersion",
-        "type": "uint64"
-      }
-    ],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "enum ITreasury.FunctionToDo",
-        "name": "_functionToDo",
-        "type": "uint8"
-      },
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "recipient",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokensToSend",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct ITreasury.USDaOftTransferData",
-        "name": "_oftTransferData",
-        "type": "tuple"
-      },
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "recipient",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nativeTokensToSend",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct ITreasury.NativeTokenTransferData",
-        "name": "_nativeTokenTransferData",
-        "type": "tuple"
-      }
-    ],
-    "name": "oftOrNativeReceiveFromOtherChains",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "bytes32",
-            "name": "guid",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint64",
-            "name": "nonce",
-            "type": "uint64"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint256",
-                "name": "nativeFee",
-                "type": "uint256"
-              },
-              {
-                "internalType": "uint256",
-                "name": "lzTokenFee",
-                "type": "uint256"
-              }
-            ],
-            "internalType": "struct MessagingFee",
-            "name": "fee",
-            "type": "tuple"
-          }
-        ],
-        "internalType": "struct MessagingReceipt",
-        "name": "receipt",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "omniChainTreasuryEthProfitsOfLiquidators",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "omniChainTreasuryNoOfBorrowers",
-    "outputs": [
-      {
-        "internalType": "uint128",
-        "name": "",
-        "type": "uint128"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "omniChainTreasuryTotalVolumeOfBorrowersAmountinUSD",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "omniChainTreasuryTotalVolumeOfBorrowersAmountinWei",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -4237,25 +2726,6 @@ export const treasuryABI = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "eid",
-        "type": "uint32"
-      }
-    ],
-    "name": "peers",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "peer",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "proxiableUUID",
     "outputs": [
@@ -4269,127 +2739,8 @@ export const treasuryABI = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_dstEid",
-        "type": "uint32"
-      },
-      {
-        "internalType": "enum ITreasury.FunctionToDo",
-        "name": "_functionToDo",
-        "type": "uint8"
-      },
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "recipient",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "tokensToSend",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct ITreasury.USDaOftTransferData",
-        "name": "_oftTransferData",
-        "type": "tuple"
-      },
-      {
-        "components": [
-          {
-            "internalType": "address",
-            "name": "recipient",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "nativeTokensToSend",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct ITreasury.NativeTokenTransferData",
-        "name": "_nativeTokenTransferData",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes",
-        "name": "_options",
-        "type": "bytes"
-      },
-      {
-        "internalType": "bool",
-        "name": "_payInLzToken",
-        "type": "bool"
-      }
-    ],
-    "name": "quote",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "uint256",
-            "name": "nativeFee",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lzTokenFee",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct MessagingFee",
-        "name": "fee",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "renounceOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_delegate",
-        "type": "address"
-      }
-    ],
-    "name": "setDelegate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_eid",
-        "type": "uint32"
-      }
-    ],
-    "name": "setDstEid",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_treasuryAddress",
-        "type": "address"
-      }
-    ],
-    "name": "setDstTreasuryAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -4423,24 +2774,6 @@ export const treasuryABI = [
       }
     ],
     "name": "setExternalProtocolAddresses",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint32",
-        "name": "_eid",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_peer",
-        "type": "bytes32"
-      }
-    ],
-    "name": "setPeer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -4485,6 +2818,24 @@ export const treasuryABI = [
       }
     ],
     "name": "transferEthToCdsLiquidators",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "usdaAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "ethAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "transferFundsToGlobal",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -4608,6 +2959,16 @@ export const treasuryABI = [
             "internalType": "uint128",
             "name": "optionFees",
             "type": "uint128"
+          },
+          {
+            "internalType": "uint8",
+            "name": "APR",
+            "type": "uint8"
+          },
+          {
+            "internalType": "uint256",
+            "name": "totalDebtAmountPaid",
+            "type": "uint256"
           }
         ],
         "internalType": "struct ITreasury.DepositDetails",
@@ -4616,24 +2977,6 @@ export const treasuryABI = [
       }
     ],
     "name": "updateDepositDetails",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bool",
-        "name": "operation",
-        "type": "bool"
-      }
-    ],
-    "name": "updateEthProfitsOfLiquidators",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -4665,6 +3008,19 @@ export const treasuryABI = [
       }
     ],
     "name": "updateInterestFromExternalProtocol",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateLiquidatedETHCollectedFromCdsWithdraw",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -4745,6 +3101,19 @@ export const treasuryABI = [
       }
     ],
     "name": "updateUSDaGainedFromLiquidation",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "updateUsdaCollectedFromCdsWithdraw",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

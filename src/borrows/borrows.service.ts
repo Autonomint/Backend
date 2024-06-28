@@ -1505,4 +1505,62 @@ export class BorrowsService {
     // }
 
 
+    async refreshUserData(address:string, chainId:number){
+        const provider = await this.getSignerOrProvider(chainId,true);
+        let treasuryContract:Contract;
+        if(chainId == 11155111){
+            treasuryContract = new ethers.Contract(treasuryAddressSepolia,treasuryABI,provider);
+        }else if(chainId == 84532){
+            treasuryContract = new ethers.Contract(treasuryAddressBaseSepolia,treasuryABI,provider);
+        }
+
+        const deposits = await treasuryContract.getBorrowing(address, 1);
+        for(let i = 1; i <= Number(deposits[0]); i++){
+            const found = await this.borrowRepository.findOne({where:{
+                chainId,address,index:i
+            }});
+            const userDepositsData = await treasuryContract.getBorrowing(address, i);
+            const individualDeposit = userDepositsData[1];
+            console.log(individualDeposit);
+
+            if(!found){
+                let depsoitDataToStore:AddBorrowDto;
+
+                const strikePriceIndex = (Number(individualDeposit[13]))/Number(individualDeposit[4]);
+                const strikePricePercent = strikePriceIndex == 5 ? 'FIVE' : strikePriceIndex == 10 ? 'TEN' : strikePriceIndex == 15 ? 'FIFTEEN' :
+                                        strikePriceIndex == 20 ? 'TWENTY' : 'TWENTY_FIVE';
+                depsoitDataToStore = {
+                    address,
+                    chainId:chainId,
+                    collateralType: chainId == 11155111 ? 'ETH' : 'BASE',
+                    index:i,
+                    downsideProtectionPercentage:20,
+                    aprAtDeposit:Number(individualDeposit[15])/10,
+                    depositedAmount:ethers.formatEther(individualDeposit[1]),
+                    normalizedAmount:(Number(individualDeposit[6])/1e6).toString(),
+                    depositedTime:Number(individualDeposit[0]).toString(),
+                    ethPrice:Number(individualDeposit[4]),
+                    noOfAmintMinted:Number(individualDeposit[5]).toString(),
+                    strikePrice:Number(individualDeposit[13]),
+                    optionFees:Number(individualDeposit[14]).toString(),
+                    strikePricePercent
+                }
+
+                await this.addBorrow(depsoitDataToStore);
+            }else if(found.status == PositionStatus.DEPOSITED && individualDeposit[7] == true){
+                let withdrawDataToStore:WithdrawDto;
+
+                withdrawDataToStore = {
+                    address,
+                    chainId:chainId,
+                    index:i,
+                    withdrawTime:Number(individualDeposit[11]).toString(),
+                    withdrawAmount:Number(individualDeposit[8]).toString(),
+                    noOfAbond:Number(individualDeposit[12]).toString(),
+                    totalDebtAmount:Number(individualDeposit[16]).toString()
+                }
+                await this.withdraw(withdrawDataToStore);
+            }
+        }
+    }
 }
