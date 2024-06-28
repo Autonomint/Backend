@@ -321,7 +321,7 @@ export class BorrowsService {
                 await this.globalService.setTotalBorrowDepositedETH(chainId,parseFloat(depositedETH.toString()) + parseFloat(depositedAmount)); 
             }
 
-            await this.pointsService.setBorrowPoints(address,chainId,ethers.parseEther(depositedAmount).toString(),Date.now().toString());
+            await this.pointsService.setBorrowPoints(address,chainId,ethers.parseEther(depositedAmount).toString());
             await this.borrowRepository.save(borrow);
             await this.borrowerRepository.save(borrower);
             await this.batchRepository.save(batch);

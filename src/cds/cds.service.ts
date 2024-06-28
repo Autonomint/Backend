@@ -209,8 +209,8 @@ export class CdsService {
             await this.globalService.setEthPrice(chainId,ethPriceAtDeposit);
             await this.cdsRepository.save(cds);
             await this.cdsDepositorRepository.save(cdsDepositor);
-            await this.pointsService.setUSDTCDSPoints(address,chainId,depositedUsdt,depositedTime);
-            await this.pointsService.setUSDaCDSPoints(address,chainId,depositedAmint,depositedTime);
+            await this.pointsService.setUSDTCDSPoints(address,chainId,depositedUsdt);
+            await this.pointsService.setUSDaCDSPoints(address,chainId,depositedAmint);
             return cds;
         }else{
             throw new NotFoundException('Incorrect index');

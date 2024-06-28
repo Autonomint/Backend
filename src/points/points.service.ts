@@ -184,14 +184,15 @@ export class PointsService {
         address:string,
         chainId:number,
         depositedAmount:string,
-        depositedTime:string,
     ){
         if(parseInt(depositedAmount) && parseInt(depositedAmount) >= 0.05){
             let found = await this.pointsRepository.findOne({ where:{
                 chainId:chainId,
                 address:address}
             })
-    
+            const now = new Date();
+            const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
+            
             if(!found){
                 found = this.pointsRepository.create({
                     chainId:chainId,
@@ -199,12 +200,13 @@ export class PointsService {
                     borrowIndex: 1,
                     perDayPoints:10,
                     lastUpdatedPoints:10,
-                    lastEventTime:depositedTime
+                    lastBorrowDepositTime:now
                 })
             }else {
-                if(found.borrowIndex == 0){
+                
+                if((now.getTime() - found.lastBorrowDepositTime.getTime()) > twentyFourHoursAgo.getTime()){
                     found.borrowIndex += 1;
-                    found.lastEventTime = depositedTime;
+                    found.lastBorrowDepositTime = now;
                     found.lastUpdatedPoints += 10;
                     // found.perDayPoints = found.perDayPoints + 10;
                 }
@@ -219,13 +221,14 @@ export class PointsService {
         address:string,
         chainId:number,
         depositedAmount:string,
-        depositedTime:string,
     ){
         if(parseInt(depositedAmount) && parseInt(depositedAmount) > 200){
             let found = await this.pointsRepository.findOne({ where:{
                 chainId:chainId,
                 address:address}
             })
+            const now = new Date();
+            const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
     
             if(!found){
                 found = this.pointsRepository.create({
@@ -234,12 +237,12 @@ export class PointsService {
                     usdaCDSIndexEligible: 1,
                     perDayPoints:10,
                     lastUpdatedPoints:10,
-                    lastEventTime:depositedTime
+                    lastCdsUSDaDepositTime:now
                 })
             }else{
-                if(found.usdaCDSIndexEligible == 0){
+                if((now.getTime() - found.lastCdsUSDaDepositTime.getTime()) > twentyFourHoursAgo.getTime()){
                     found.usdaCDSIndexEligible += 1;
-                    found.lastEventTime = depositedTime;
+                    found.lastCdsUSDaDepositTime = now;
                     found.lastUpdatedPoints += 10;
                     // found.perDayPoints = found.perDayPoints + 10;
                 }
@@ -253,13 +256,14 @@ export class PointsService {
         address:string,
         chainId:number,
         depositedAmount:string,
-        depositedTime:string,
     ){
         if(parseInt(depositedAmount) && parseInt(depositedAmount) > 200){
             let found = await this.pointsRepository.findOne({ where:{
                 chainId:chainId,
                 address:address}
             })
+            const now = new Date();
+            const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
     
             if(!found){
                 found = this.pointsRepository.create({
@@ -268,12 +272,12 @@ export class PointsService {
                     usdtCDSIndexEligible: 1,
                     perDayPoints:5,
                     lastUpdatedPoints:5,
-                    lastEventTime:depositedTime
+                    lastCdsUSDTDepositTime:now
                 })
             }else{
-                if(found.usdtCDSIndexEligible == 0){
+                if((now.getTime() - found.lastCdsUSDTDepositTime.getTime()) > twentyFourHoursAgo.getTime()){
                     found.usdtCDSIndexEligible += 1;
-                    found.lastEventTime = depositedTime;
+                    found.lastCdsUSDTDepositTime = now;
                     found.lastUpdatedPoints += 5;
                     // found.perDayPoints = found.perDayPoints + 5;
                 }
@@ -295,7 +299,8 @@ export class PointsService {
                 chainId:chainId,
                 address:address}
             })
-    
+            const now = new Date();
+            const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
             if(!found){
                 found = this.pointsRepository.create({
                     chainId:chainId,
@@ -303,14 +308,17 @@ export class PointsService {
                     usdaBridgedToMode: bridgedAmount,
                     perDayPoints:10,
                     lastUpdatedPoints:10,
-                    lastEventTime:depositedTime
+                    lastBridgeTime:now
                 })
             }else{
-                if(parseInt(found.usdaBridgedToMode) <= 200){
-                    found.usdaBridgedToMode = (parseInt(found.usdaBridgedToMode) + parseInt(bridgedAmount)).toString();
-                    found.lastEventTime = depositedTime;
-                    found.lastUpdatedPoints += 10;
-                    // found.perDayPoints = found.perDayPoints + 5;
+                if((now.getTime() - found.lastBridgeTime.getTime()) > twentyFourHoursAgo.getTime()){
+
+                    if(parseInt(found.usdaBridgedToMode) <= 200){
+                        found.usdaBridgedToMode = (parseInt(found.usdaBridgedToMode) + parseInt(bridgedAmount)).toString();
+                        found.lastEventTime = now;
+                        found.lastUpdatedPoints += 10;
+                        // found.perDayPoints = found.perDayPoints + 5;
+                    }
                 }
 
             }
