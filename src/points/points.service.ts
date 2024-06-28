@@ -315,7 +315,7 @@ export class PointsService {
 
                     if(parseInt(found.usdaBridgedToMode) <= 200){
                         found.usdaBridgedToMode = (parseInt(found.usdaBridgedToMode) + parseInt(bridgedAmount)).toString();
-                        found.lastEventTime = now;
+                        found.lastBridgeTime = now;
                         found.lastUpdatedPoints += 10;
                         // found.perDayPoints = found.perDayPoints + 5;
                     }
