@@ -62,6 +62,7 @@ export class EventListeners{
  * @param strikePrice - The strike price of the deposit.
  * @param optionFees - The fees for the option.
  * @param strikePricePercent - The strike price percent of the deposit.
+ * @param apr - APR at deposit
  */
         borrowingContractSepolia.on('Deposit',async (            
             address,
@@ -73,7 +74,8 @@ export class EventListeners{
             noOfAmintMinted,
             strikePrice,
             optionFees,
-            strikePricePercent) => {
+            strikePricePercent,
+            apr) => {
 
             let result:AddBorrowDto
             const strikePriceIndex = Number(strikePricePercent);
@@ -86,7 +88,7 @@ export class EventListeners{
                 collateralType: 'ETH',
                 index:Number(index),
                 downsideProtectionPercentage:20,
-                aprAtDeposit:5,
+                aprAtDeposit:Number(apr)/10,
                 depositedAmount:ethers.formatEther(depositedAmount),
                 normalizedAmount:(Number(normalizedAmount)/1e6).toString(),
                 depositedTime:Number(depositedTime).toString(),
@@ -170,6 +172,7 @@ export class EventListeners{
  * @param strikePrice - The strike price of the deposit.
  * @param optionFees - The fees for the option.
  * @param strikePricePercent - The strike price percent of the deposit.
+ * @param apr - APR at deposit
  */
 
         borrowingContractBaseSepolia.on('Deposit',async (
@@ -182,7 +185,8 @@ export class EventListeners{
             noOfAmintMinted,
             strikePrice,
             optionFees,
-            strikePricePercent) => {
+            strikePricePercent,
+            apr) => {
 
             let result:AddBorrowDto
             const strikePriceIndex = Number(strikePricePercent);
@@ -195,7 +199,7 @@ export class EventListeners{
                 collateralType: 'BASE',
                 index:Number(index),
                 downsideProtectionPercentage:20,
-                aprAtDeposit:5,
+                aprAtDeposit:Number(apr)/10,
                 depositedAmount:ethers.formatEther(depositedAmount),
                 normalizedAmount:(Number(normalizedAmount)/1e6).toString(),
                 depositedTime:Number(depositedTime).toString(),

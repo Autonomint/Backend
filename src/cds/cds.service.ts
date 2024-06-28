@@ -7,12 +7,16 @@ import { AddCdsDto } from './dto/create-cds.dto';
 import { CdsPositionStatus } from './cds-status.enum';
 import { WithdrawCdsDto } from './dto/withdraw-cds.dto';
 import { GetCdsDeposit } from './dto/get-cds-deposit.dto';
-import { ethers } from 'ethers';
+import { Contract, ethers } from 'ethers';
 import { GetCdsDepositByChainId } from './dto/get-cds-deposit-by-chainid.dto';
 import { CdsAmountToReturn } from './dto/cdsAmountToReturn.dto';
 import { GlobalService } from '../global/global.service';
 import { LiquidationInfo } from '../borrows/entities/liquidatedInfo.entity';
 import { PointsService } from '../points/points.service';
+import { 
+    treasuryAddressSepolia,
+    treasuryAddressBaseSepolia,
+    treasuryABI} from '../utils/index';
 
 @Injectable()
 export class CdsService {
@@ -26,6 +30,19 @@ export class CdsService {
         private globalService:GlobalService,
         private pointsService:PointsService
     ){}
+
+    getProvider(chainId:number){
+        let rpcUrl:string;
+        if(chainId == 11155111){
+            rpcUrl = "https://sepolia.infura.io/v3/e9cf275f1ddc4b81aa62c5aa0b11ac0f"
+        }else if(chainId == 84532){
+            rpcUrl = "https://base-sepolia.g.alchemy.com/v2/0-Lgk-tQKxb3V75IGadDVifTUua8H0W2"
+        }else if(chainId == 919){
+            rpcUrl = "https://sepolia.mode.network/" 
+        }
+        const provider =  new ethers.JsonRpcProvider(rpcUrl);
+        return provider;
+    };
      /**
       * Return cds deposit info
       * @param getCdsDeposit dto to get borrower's deposit based on index and chain id
@@ -427,5 +444,67 @@ export class CdsService {
             returnAmounts = [priceChangeGainOrLoss];
         }
         return returnAmounts;
+    }
+
+
+    async refreshUserData(address:string, chainId:number){
+
+        const provider = await this.getProvider(chainId);
+        let treasuryContract:Contract;
+        if(chainId == 11155111){
+            treasuryContract = new ethers.Contract(treasuryAddressSepolia,treasuryABI,provider);
+        }else if(chainId == 84532){
+            treasuryContract = new ethers.Contract(treasuryAddressBaseSepolia,treasuryABI,provider);
+        }
+
+        const deposits = await treasuryContract.getBorrowing(address, 1);
+        for(let i = 1; i <= deposits[1]; i++){
+            const found = await this.cdsRepository.findOne({where:{
+                chainId,address,index:i
+            }});
+            const userDepositsData = await treasuryContract.getBorrowing(address, i);
+            const individualDeposit = userDepositsData[0];
+            let collateralType:string;
+
+            if(Number(individualDeposit[14]) > 0 && Number(individualDeposit[15]) > 0){
+                collateralType = 'USDA&USDT'
+            }else if(Number(individualDeposit[14]) > 0 && Number(individualDeposit[15]) <= 0){
+                collateralType = 'USDA'
+            }else if(Number(individualDeposit[14]) <= 0 && Number(individualDeposit[15]) > 0){
+                collateralType = 'USDT'
+            }
+            if(!found){
+                let depsoitDataToStore:AddCdsDto;
+                depsoitDataToStore = {
+                    address,
+                    chainId:84532,
+                    collateralType,
+                    index: i,
+                    aprAtDeposit:5,
+                    depositedAmint:(Number(individualDeposit[14])/1e6).toString(),
+                    depositedUsdt:(Number(individualDeposit[15])/1e6).toString(),
+                    depositedTime:Number(individualDeposit[0]).toString(),
+                    ethPriceAtDeposit:Number(individualDeposit[5]),
+                    lockingPeriod:Number(individualDeposit[13]),
+                    optedForLiquidation:individualDeposit[8],
+                    liquidationAmount:Number(individualDeposit[10])
+                }
+                await this.addCds(depsoitDataToStore);
+            }else if(found.status == CdsPositionStatus.DEPOSITED && individualDeposit[4] == true){
+                let withdrawDataToStore:WithdrawCdsDto;
+                withdrawDataToStore = {
+                    address,
+                    chainId:84532,
+                    index:i,
+                    withdrawAmount:Number(individualDeposit[3]).toString(),
+                    withdrawTime:Number(individualDeposit[2]).toString(),
+                    withdrawEthAmount:Number(individualDeposit[16]).toString(),
+                    ethPriceAtWithdraw:Number(individualDeposit[17]),
+                    fees:Number(individualDeposit[18]).toString(),
+                    feesWithdrawn:Number(individualDeposit[19]).toString()
+                };
+                await this.cdsWithdraw(withdrawDataToStore);
+            }
+        }
     }
 }

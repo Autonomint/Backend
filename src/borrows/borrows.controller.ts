@@ -101,11 +101,16 @@ export class BorrowsController {
         const allTime = params.allTime;
         return this.borrowsService.getAmintPriceHistory(chainId,days,allTime);
     }
-        // To get the total deposits in all chains
-  @Get('/leaderboard')
-  getBorrowLeaderboard(): Promise<BorrowerInfo[]> {
-    return this.borrowsService.getBorrowLeaderboardData();
-  }
+    // To get the total deposits in all chains
+    @Get('/leaderboard')
+    getBorrowLeaderboard(): Promise<BorrowerInfo[]> {
+        return this.borrowsService.getBorrowLeaderboardData();
+    }
+
+    @Post('/refresh/:chainId/:address')
+    refreshUserData(@Param() params:{chainId:number;address:string}){
+        this.borrowsService.refreshUserData(params.address,params.chainId);
+    }
     
     // To add the deposit in borrowing
     @Post('/borrowAmint')

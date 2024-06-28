@@ -39,6 +39,10 @@ export class CdsController {
         return this.cdsService.getCdsDepositorByAddress(address,chainId);
     }
 
+    @Post('/refresh/:chainId/:address')
+    refreshUserData(@Param() params:{chainId:number;address:string}){
+        this.cdsService.refreshUserData(params.address,params.chainId);
+    }
    
     // To get the withdraw amount of the cds depositor
     @Post('/withdraw/calculateWithdrawAmount')
