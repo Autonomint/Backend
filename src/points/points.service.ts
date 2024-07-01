@@ -204,7 +204,7 @@ export class PointsService {
                 })
             }else {
                 
-                if((now.getTime() - found.lastBorrowDepositTime.getTime()) > twentyFourHoursAgo.getTime()){
+                if(!found.lastBorrowDepositTime || (now.getTime() - found.lastBorrowDepositTime.getTime()) > twentyFourHoursAgo.getTime()){
                     found.borrowIndex += 1;
                     found.lastBorrowDepositTime = now;
                     found.lastUpdatedPoints += 10;
@@ -240,7 +240,7 @@ export class PointsService {
                     lastCdsUSDaDepositTime:now
                 })
             }else{
-                if((now.getTime() - found.lastCdsUSDaDepositTime.getTime()) > twentyFourHoursAgo.getTime()){
+                if( !found.lastCdsUSDaDepositTime || (now.getTime() - found.lastCdsUSDaDepositTime.getTime()) > twentyFourHoursAgo.getTime()){
                     found.usdaCDSIndexEligible += 1;
                     found.lastCdsUSDaDepositTime = now;
                     found.lastUpdatedPoints += 10;
@@ -275,7 +275,7 @@ export class PointsService {
                     lastCdsUSDTDepositTime:now
                 })
             }else{
-                if((now.getTime() - found.lastCdsUSDTDepositTime.getTime()) > twentyFourHoursAgo.getTime()){
+                if(!found.lastCdsUSDTDepositTime || (now.getTime() - found.lastCdsUSDTDepositTime.getTime()) > twentyFourHoursAgo.getTime()){
                     found.usdtCDSIndexEligible += 1;
                     found.lastCdsUSDTDepositTime = now;
                     found.lastUpdatedPoints += 5;
@@ -311,7 +311,7 @@ export class PointsService {
                     lastBridgeTime:now
                 })
             }else{
-                if((now.getTime() - found.lastBridgeTime.getTime()) > twentyFourHoursAgo.getTime()){
+                if(!found.lastBridgeTime || (now.getTime() - found.lastBridgeTime.getTime()) > twentyFourHoursAgo.getTime()){
 
                     if(parseInt(found.usdaBridgedToMode) <= 200){
                         found.usdaBridgedToMode = (parseInt(found.usdaBridgedToMode) + parseInt(bridgedAmount)).toString();

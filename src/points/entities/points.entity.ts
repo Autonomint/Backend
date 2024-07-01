@@ -21,16 +21,28 @@ export class Points{
     @Column({ nullable:true })
     lastUpdatedPoints:number
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    @Column({ 
+        type: 'timestamp',
+        nullable:true
+    })
     lastBorrowDepositTime: Date;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    @Column({ 
+        type: 'timestamp',
+        nullable:true
+    })
     lastCdsUSDaDepositTime: Date;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    @Column({ 
+        type: 'timestamp',
+        nullable:true
+    })
     lastCdsUSDTDepositTime: Date;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    @Column({ 
+        type: 'timestamp',
+        nullable: true
+    })
     lastBridgeTime: Date;
     // @Column({
     //     type:'boolean',
