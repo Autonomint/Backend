@@ -18,8 +18,9 @@ import {
     cdsAddressSepolia,cdsAddressBaseSepolia,
     treasuryAddressSepolia,treasuryAddressBaseSepolia,
     optionsAddressSepolia,optionsAddressBaseSepolia,
+    globalAddressSepolia,globalAddressBaseSepolia,
     poolAddressSepolia,usdaAddressModeSepolia,
-    borrowABI,cdsABI,treasuryABI,optionsABI,poolABI,usdaABI,
+    borrowABI,cdsABI,treasuryABI,optionsABI,poolABI,usdaABI,globalABI,
     eidSepolia,eidBaseSepolia
 
 } from '../utils/index';
@@ -445,35 +446,24 @@ export class BorrowsService {
     @Cron(CronExpression.EVERY_5_MINUTES)
     async liquidate():Promise<CriticalPositions[]>{
 
-        let borrowingContract;
-        let cdsContract;
-        let treasuryContract;
+        let borrowingContract:Contract;
+        let globalContract:Contract
         let nativeFee = 0
-        let nativeFee1 = 0
-        let nativeFee2 = 0
-        const options = Options.newOptions().addExecutorLzReceiveOption(500000, 0).toHex().toString()
+        const options = Options.newOptions().addExecutorLzReceiveOption(1000000, 0).toHex().toString()
 
         for (let i = 0;i < this.chainIds.length;i++){
             const signer = await this.getSignerOrProvider(this.chainIds[i],true);
 
             if(this.chainIds[i] == 11155111){
                 borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
-                cdsContract = new ethers.Contract(cdsAddressSepolia,cdsABI,signer);;
-                treasuryContract = new ethers.Contract(treasuryAddressSepolia,treasuryABI,signer);;
-
-                ;[nativeFee] = await cdsContract.quote(eidBaseSepolia,1,123,123,123,[0,0,0,0],0,options, false)
-                ;[nativeFee1] = await borrowingContract.quote(eidBaseSepolia, [5,10,15,20,25,30,35,40], options, false)
-                ;[nativeFee2] = await treasuryContract.quote(eidBaseSepolia,1, [ZeroAddress,0],[ZeroAddress,0],options, false)
+                globalContract = new ethers.Contract(globalAddressSepolia,globalABI,signer);;
 
             }else if(this.chainIds[i] == 84532){
                 borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signer);
-                cdsContract = new ethers.Contract(cdsAddressBaseSepolia,cdsABI,signer);;
-                treasuryContract = new ethers.Contract(treasuryAddressBaseSepolia,treasuryABI,signer);;
+                globalContract = new ethers.Contract(globalAddressBaseSepolia,globalABI,signer);;
 
-                ;[nativeFee] = await cdsContract.quote(eidSepolia,1,123,123,123,[0,0,0,0],0,options, false)
-                ;[nativeFee1] = await borrowingContract.quote(eidSepolia, [5,10,15,20,25,30,35,40], options, false)
-                ;[nativeFee2] = await treasuryContract.quote(eidSepolia,1, [ZeroAddress,0],[ZeroAddress,0],options, false)
             }
+            ;[nativeFee] = await globalContract.quote(3,options, false)
 
             const currentEthPrice = await borrowingContract.getUSDValue();
             const ethPrice = Number(currentEthPrice)/100;
@@ -501,7 +491,7 @@ export class BorrowsService {
                     await borrowingContract.liquidate(
                         liquidatedPosition.address,
                         liquidatedPosition.index,
-                        {value: nativeFee1 + nativeFee2 + nativeFee});
+                        {value: nativeFee});
                     liquidatedPosition.status = PositionStatus.LIQUIDATED;
                     const chainId = liquidatedPosition.chainId;      
                     borrowingContract.on('Liquidate',async (index,liquidationAmount,profits,ethAmount,availableLiquidationAmount) => {
@@ -581,19 +571,15 @@ export class BorrowsService {
      */
 
     async getRatio(chainId:number,ethPrice:number):Promise<number>{
-        const signer = await this.getSignerOrProvider(chainId,true);
-        let borrowingContract:Contract;
-        let treasuryContract:Contract;
+        const provider = await this.getSignerOrProvider(chainId,false);
+        let globalContract:Contract;
         if(chainId == 11155111){
-            borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
-            treasuryContract = new ethers.Contract(treasuryAddressSepolia,treasuryABI,signer);
+            globalContract = new ethers.Contract(globalAddressSepolia,globalABI,provider);
         }else if(chainId == 84532){
-            borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signer);
-            treasuryContract = new ethers.Contract(treasuryAddressBaseSepolia,treasuryABI,signer);
+            globalContract = new ethers.Contract(globalAddressBaseSepolia,globalABI,provider);
         }
-        const ethVaultValue = await treasuryContract.omniChainTreasuryTotalVolumeOfBorrowersAmountinUSD();
-        const cdsPoolValue = await borrowingContract.omniChainBorrowingCDSPoolValue();
-        const ratio = ((Number(cdsPoolValue) * 1e14)/Number(ethVaultValue));
+        const globalData = await globalContract.getOmniChainData();
+        const ratio = ((Number(globalData[2]) * 1e14)/Number(globalData[18]));
 
         return ratio;
     }
@@ -997,33 +983,22 @@ export class BorrowsService {
                 return;
             }
 
-            let borrowingContract;
-            let cdsContract;
-            let treasuryContract;
+            let borrowingContract:Contract;
+            let globalContract:Contract
+
             let nativeFee = 0
-            let nativeFee1 = 0
-            let nativeFee2 = 0
-            const options = Options.newOptions().addExecutorLzReceiveOption(500000, 0).toHex().toString()
+            const options = Options.newOptions().addExecutorLzReceiveOption(1000000, 0).toHex().toString()
             const signer = await this.getSignerOrProvider(this.chainIds[i],true);
 
             if(this.chainIds[i] == 11155111){
                 borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
-                cdsContract = new ethers.Contract(cdsAddressSepolia,cdsABI,signer);;
-                treasuryContract = new ethers.Contract(treasuryAddressSepolia,treasuryABI,signer);;
-
-                ;[nativeFee] = await cdsContract.quote(eidSepolia,1,123,123,123,[0,0,0,0],0,options, false)
-                ;[nativeFee1] = await borrowingContract.quote(eidSepolia, [5,10,15,20,25,30,35,40], options, false)
-                ;[nativeFee2] = await treasuryContract.quote(eidSepolia,1, [ZeroAddress,0],[ZeroAddress,0],options, false)
+                globalContract = new ethers.Contract(globalAddressSepolia,globalABI,signer);;
 
             }else if(this.chainIds[i] == 84532){
                 borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signer);
-                cdsContract = new ethers.Contract(cdsAddressBaseSepolia,cdsABI,signer);;
-                treasuryContract = new ethers.Contract(treasuryAddressBaseSepolia,treasuryABI,signer);;
-
-                ;[nativeFee] = await cdsContract.quote(eidSepolia,1,123,123,123,[0,0,0,0],0,options, false)
-                ;[nativeFee1] = await borrowingContract.quote(eidSepolia, [5,10,15,20,25,30,35,40], options, false)
-                ;[nativeFee2] = await treasuryContract.quote(eidSepolia,1, [ZeroAddress,0],[ZeroAddress,0],options, false)
+                globalContract = new ethers.Contract(globalAddressBaseSepolia,globalABI,signer);;
             }
+            ;[nativeFee] = await globalContract.quote(3, options, false)
 
             // Get the current eth price
             const currentEthPrice = await borrowingContract.getUSDValue();
@@ -1041,7 +1016,7 @@ export class BorrowsService {
                             await borrowingContract.liquidate(
                                 liquidationPosition.address,
                                 liquidationPosition.index,
-                                {value: nativeFee1 + nativeFee2 + nativeFee});
+                                {value: nativeFee});
                             // Update the status of the position as Liquidated
                             liquidationPosition.status = PositionStatus.LIQUIDATED;
                             const chainId = liquidationPosition.chainId;      
@@ -1257,33 +1232,23 @@ export class BorrowsService {
     async liquidateHighLtvUsers(){
 
         for (let i = 0;i < this.chainIds.length;i++){
-            let borrowingContract;
-            let cdsContract;
-            let treasuryContract;
+            let borrowingContract:Contract;
+            let globalContract:Contract;
             let nativeFee = 0
-            let nativeFee1 = 0
-            let nativeFee2 = 0
-            const options = Options.newOptions().addExecutorLzReceiveOption(500000, 0).toHex().toString()
+
+            const options = Options.newOptions().addExecutorLzReceiveOption(1000000, 0).toHex().toString()
             const signer = await this.getSignerOrProvider(this.chainIds[i],true);
 
             if(this.chainIds[i] == 11155111){
                 borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
-                cdsContract = new ethers.Contract(cdsAddressSepolia,cdsABI,signer);;
-                treasuryContract = new ethers.Contract(treasuryAddressSepolia,treasuryABI,signer);;
-
-                ;[nativeFee] = await cdsContract.quote(eidBaseSepolia,1,123,123,123,[0,0,0,0],0,options, false)
-                ;[nativeFee1] = await borrowingContract.quote(eidBaseSepolia, [5,10,15,20,25,30,35,40], options, false)
-                ;[nativeFee2] = await treasuryContract.quote(eidBaseSepolia,1, [ZeroAddress,0],[ZeroAddress,0],options, false)
+                globalContract = new ethers.Contract(globalAddressSepolia,globalABI,signer);;
 
             }else if(this.chainIds[i] == 84532){
                 borrowingContract = new ethers.Contract(borrowAddressBaseSepolia,borrowABI,signer);
-                cdsContract = new ethers.Contract(cdsAddressBaseSepolia,cdsABI,signer);;
-                treasuryContract = new ethers.Contract(treasuryAddressBaseSepolia,treasuryABI,signer);;
+                globalContract = new ethers.Contract(globalAddressBaseSepolia,globalABI,signer);;
 
-                ;[nativeFee] = await cdsContract.quote(eidSepolia,1,123,123,123,[0,0,0,0],0,options, false)
-                ;[nativeFee1] = await borrowingContract.quote(eidSepolia, [5,10,15,20,25,30,35,40], options, false)
-                ;[nativeFee2] = await treasuryContract.quote(eidSepolia,1, [ZeroAddress,0],[ZeroAddress,0],options, false)
             }
+            ;[nativeFee] = await globalContract.quote(3,options, false)
 
             // Get the current eth price
             const currentEthPrice = await borrowingContract.getUSDValue();
@@ -1322,7 +1287,7 @@ export class BorrowsService {
                             await borrowingContract.liquidate(
                                 liquidationPosition.address,
                                 liquidationPosition.index,
-                                {value: nativeFee1 + nativeFee2 + nativeFee});
+                                {value: nativeFee});
                             // Get the equivalent high ltv position
                             const liquidatedPosition = await this.highLtvPositionsRepository.findOne({where:
                                 {positionId:Equal(liquidationPosition.id)}})
