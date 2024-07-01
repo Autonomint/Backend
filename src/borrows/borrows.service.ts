@@ -1475,7 +1475,7 @@ export class BorrowsService {
 
 
     async refreshUserData(address:string, chainId:number){
-        const provider = await this.getSignerOrProvider(chainId,true);
+        const provider = await this.getSignerOrProvider(chainId,false);
         let treasuryContract:Contract;
         if(chainId == 11155111){
             treasuryContract = new ethers.Contract(treasuryAddressSepolia,treasuryABI,provider);
