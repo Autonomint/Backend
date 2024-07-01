@@ -187,6 +187,10 @@ export class BorrowsService {
             },
             take: 25
         });
+        for(let i = 0; i < data.length; i++){
+            const userPoints = await this.pointsService.getUserPoints(data[i].chainId,data[i].address);
+            data[i].points = userPoints;
+        }
         return data;
     }
     // Delay funtion for cron job
