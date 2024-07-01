@@ -583,7 +583,7 @@ export class BorrowsService {
             globalContract = new ethers.Contract(globalAddressBaseSepolia,globalABI,provider);
         }
         const globalData = await globalContract.getOmniChainData();
-        const ratio = ((Number(globalData[2]) * 1e14)/Number(globalData[18]));
+        const ratio = ((Number(globalData[2]) * 1e14)/Number(globalData[16]));
 
         return ratio;
     }
