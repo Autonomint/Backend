@@ -624,7 +624,7 @@ export class BorrowsService {
                 borrowingContract = new ethers.Contract(borrowAddressSepolia,borrowABI,signer);
                 const average = values.reduce((acc, val) => acc + val, 0) / values.length;
                 // Update borrowing fees
-                await borrowingContract.updateBorrowingFees(Math.round(average*10**4));
+                await borrowingContract.updateRatePerSecByUSDaPrice(Math.round(average*10**4));
             }
         }
 
